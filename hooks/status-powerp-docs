@@ -28,11 +28,14 @@ def arguments():
     return payload, event
 
 payload, event = arguments()
-output = ''
+
+# Check test state and wait for success
+
 if payload['state'] != "success":
     print ('Waiting for the test to pass')
     exit()
 
+output = ''
 url = payload['repository']['ssh_url']
 repo_name = payload['repository']['name']
 branch_name = payload['branches'][0]['name']
