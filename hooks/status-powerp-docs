@@ -29,12 +29,13 @@ def arguments():
 
 payload, event = arguments()
 output = ''
-# url = 'git@github.com:gisce/powerp-docs.git'
+if payload['state'] != "success":
+    print ('Waiting for the test to pass')
+    exit()
+
 url = payload['repository']['ssh_url']
-# repo_name = 'powerp-docs'
 repo_name = payload['repository']['name']
-# branch_name = 'refs/heads/testing_hooks'
-branch_name = payload['ref'].split('/', 2)[2]
+branch_name = payload['branches'][0]['name']
 output += ('Rebut event de <{}> |'.format(event))
 
 # Directori on tenim la documentació en format html
