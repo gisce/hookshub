@@ -16,18 +16,31 @@ implemented in python
 ## Testing
 All the actions can and will be tested from the parent webhook
 
-The test_hooks script implements a test for all the hooks in .../hooks
-using a basic request structure by default. You must add the resources and
-profile the right test for any new hook inside that script.
+**This script will be used to test any new pull requests**
 
-This script will be used to test any new pull requests
+The test_hooks script implements a test for all the hooks in .../hooks
+
+This script:
+* Tries to execute each hook in the hooks directory (../project/hooks)
+* Calls each hook with each of the test_data events
+  * For each hook, there must be a test_data for each event that the
+    hook may need located in the testing data directory 
+    (..project/test_data/{webhook}/)
+  * The hooks themselves include a function (extended from base
+    webhook) that executes each action for the current event
+* If any of the actions fails with the given arguments, the hook test fails.
+* If any of the hook test fails or cannot be started, the test_hooks fails.
+
+**!!! TODO : Testing action may not execute them the same way as a functional hook may trigger !!!**
 
 # Webhooks structure
 
 ## Calling structure
 
 ```
-webhook (base webhook)
+hook_parse (checks JSON to find the origin, then instances a webhook)
+|------> webhook (base webhook)
+|         |----------> default_action
 |------> github_hook (webhook instance; extends webhook; executable)
 |         |----------> [action/hook](#requirements-for-the-hooks-actions)
 |         |----------> action/hook (for an event of the hook type request)
@@ -38,30 +51,31 @@ webhook (base webhook)
 
 ## Directory structure
 
-Base webhook location
+Base webhook location   
 ...project/webhook.py
 
-Other webhooks location
+Other webhooks location   
 ..project/hooks/{webhook}
 
-Actions location
+Actions location   
 ..project/hooks/{webhook}/{action}
+
+Test data location   
+..project/test_data/{webhook}/{event}
 
 ## Calling requirements
 
 **All webhooks must use at least 2 arguments being:**
+
 ```
-$ webhook \<data\> \<event\>
-```
-* Data:   A json string containing all the data(payload) from the hook
-* Event:  A string containing the event type
-It may also use these arguments:
-```
-$ webhook [-h] (or --help)   -   will trigger a display showing arguments
-$ webhook [-t] (or --test)   -   will trigger the test_actions function for the
-                            given data
+$ webhook [-h|--help] \<data\> \<event\> [-t|--test]
 ```
 
+* Data:   A string containing a file with json data from the request
+* Event:  A string containing the event type
+* [-h or --help]   -   will trigger a display showing arguments
+* [-t or --test]   -   will trigger the test_actions function for the
+                            given data
 
 ## Requirements for the hooks actions
 
