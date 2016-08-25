@@ -47,7 +47,24 @@ Other webhooks location
 Actions location
 ..project/hooks/{webhook}/{action}
 
+## Calling requirements
+
+**All webhooks must use at least 2 arguments being:**
+```
+$ webhook \<data\> \<event\>
+```
+* Data:   A json string containing all the data(payload) from the hook
+* Event:  A string containing the event type
+It may also use these arguments:
+```
+$ webhook [-h] (or --help)   -   will trigger a display showing arguments
+$ webhook [-t] (or --test)   -   will trigger the test_actions function for the
+                            given data
+```
+
+
 ## Requirements for the hooks actions
+
 ### Naming
 **The names of the hooks are important!**  
 The names MUST NOT HAVE ANY EXTENSION   
