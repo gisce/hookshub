@@ -36,12 +36,6 @@ class webhook(object):
                     isfile(join(self.actions_path, action))
                )]
 
-    @property
-    def event_actions_with_path(self):
-        return [
-            join(self.actions_path, action) for action in self.event_actions
-            ]
-
     def get_exe_action(self, action):
         exe_path = join(self.actions_path, action)
         if action == self.event:
