@@ -1,19 +1,18 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+from json import loads
 import sys
-import json
 
 # Carrega dels arguments. Conte els detalls del event
 def arguments():
-    with open(sys.argv[1], 'r') as jsf:
-        payload = json.loads(jsf.read())
+    payload = loads(sys.argv[1])
     event = sys.argv[2]
     return payload, event
 
 payload, event = arguments()
 
 print ' Default event:'
+print '[Default] JSON Data [hook]: {}'.format(payload['hook'])
 print '[Default] Event: {}'.format(event)
-print '[Default] JSON Data: {}'.format(payload)
 
 exit(0)
