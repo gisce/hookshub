@@ -36,9 +36,9 @@ if payload['state'] != "success":
     exit()
 
 output = ''
-url = payload['repository']['ssh_url']
-repo_name = payload['repository']['name']
-branch_name = payload['branches'][0]['name']
+url = payload['ssh_url']
+repo_name = payload['repo-name']
+branch_name = payload['branch-name']
 output += ('Rebut event de <{}> |'.format(event))
 
 # Directori on tenim la documentació en format html
