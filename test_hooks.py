@@ -1,68 +1,51 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
-from os.path import abspath, normpath, dirname, join, isfile
-from os import listdir
+from json import dumps
 from subprocess import Popen, PIPE
-from json import loads
+from os.path import abspath, normpath, dirname, join
+
+import tempfile
+import shutil
 
 
-def get_hook_data(hook):
-    test_data_path = join(path, 'test_data/{}'.format(hook))
-    res_data = []
-    for event in listdir(test_data_path):
-        with open(join(test_data_path, event), 'r') as data:
-            # If exists and can be readed
-            res_data.append((join(test_data_path, event), event))
-    return res_data
+class TempDir(object):
+    def __init__(self):
+        self.dir = tempfile.mkdtemp()
 
+    def __enter__(self):
+        return self
 
-def test_hooks():
-    for hook in get_hooks():
-        if hook in hooks.keys():
-            events = hooks.get(hook)
-        else:
-            print ('No test data for {}'.format(hook))
-            continue
-        for data, event in events:
-            proc = Popen(
-                [get_hook(hook), str(data), event, '--test'],
-                stdout=PIPE, stderr=PIPE
-            )
-            out, err = proc.communicate()
-            print (out)
-            print (err)
-            if proc.returncode != 0:
-                print (
-                    'Failed test on hook: "{0}" | With event: "{1}"'.format(
-                        hook, event
-                    )
-                )
-                exit(-1)
-            else:
-                print (
-                    'Successful test on hook: "{0}" | With event: "{1}"'.format(
-                        hook, event
-                    )
-                )
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        shutil.rmtree(self.dir)
 
-
-def get_hook(hook):
-    return join(hook_path, hook)
-
-
-def get_hooks():
-    return [
-        hook
-        for hook in listdir(hook_path)
-        if isfile(join(hook_path, hook))
-        ]
-
-
-path = normpath(abspath(dirname(__file__)))
-hook_path = join(path, 'hooks')
-hooks = {
-    'github': get_hook_data('github'),
-    'webhook.py': get_hook_data('webhook'),
+origin = {
+    'github': dumps({
+        'key': 'value'
+    }),
+    'gitlab': dumps({
+        'key': 'value',
+        'object_kind': 'something'
+    }),
+    'webhook': dumps({
+        'key': 'value',
+        'hook': 'webhook'
+    }),
 }
-test_hooks()
-print ('All test successful')
-exit(0)
+
+for source in origin:
+    print ('Testing Hooks for [{}]:'.format(source))
+    with TempDir() as temp_dir:
+        tmp_json = join(temp_dir.dir, 'json')
+        with open(tmp_json, 'w') as json:
+            json.write(origin[source])
+        listener_path = join(
+            normpath(abspath(dirname(__file__))), 'listener.py'
+        )
+        proc = Popen([listener_path, tmp_json, '--test'],
+                     stderr=PIPE, stdout=PIPE)
+        out, err = proc.communicate()
+        output = out
+        output += err
+        if proc.returncode != 0:
+            print ('{0}[test:{1}]Failed!\n'.format(output, source))
+        print ('{0}[test:{1}]Success!\n'.format(output, source))
