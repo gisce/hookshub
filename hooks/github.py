@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from json import dumps
+from os.path import join
 from webhook import webhook
 
 COMMIT_COMMENT = 'commit_comment'
@@ -31,10 +33,68 @@ class GitHubWebhook(webhook):
         self.origin = 'github'
 
     def ssh_url(self):
-        return self.json['repository']['ssh_url'] or 'None'
+        return self.json['repository']['ssh_url']
 
     def http_url(self):
-        return self.json['repository']['clone_url'] or 'None'
+        return self.json['repository']['clone_url']
+
+    def repo_name(self):
+        return self.json['repository']['name']
+
+    def branch_name(self):
+        branch = 'None'
+        try:
+            # Case 1: a ref_type indicates the type of ref.
+            # This true for create and delete events.
+            if 'ref_type' in self.json:
+                if self.json['ref_type'] == 'branch':
+                    branch = self.json['ref']
+            # Case 2: a pull_request object is involved.
+            # This is pull_request and pull_request_review_comment events.
+            elif 'pull_request' in self.json:
+                # This is the TARGET branch for the pull-request, not the source
+                # branch
+                branch = self.json['pull_request']['base']['ref']
+
+            elif self.event in ['push']:
+                # Push events provide a full Git ref in 'ref' and
+                #  not a 'ref_type'.
+                branch = self.json['ref'].split('/')[2]
+
+        except KeyError:
+            # If the self.json structure isn't what we expect,
+            #  we'll live without the branch name
+            pass
+        return branch
+
+    def status(self):
+        if self.event() == EVENT_STATUS:
+            return self.json['state']
+        return 'None'
+
+    def get_exe_action(self, action):
+        exe_path = join(self.actions_path, action)
+        if action == EVENT_STATUS:
+            json = {}
+            json.update({'ssh_url': self.ssh_url()})
+            json.update({'http_url': self.http_url()})
+            json.update({'repo-name': self.repo_name()})
+            json.update({'branch-name': self.branch_name()})
+            return [exe_path, dumps(json), self.event]
+        else:
+            super(GitHubWebhook, self).get_exe_action(action)
+
+    def get_test_action(self, action):
+        exe_path = join(self.actions_path, action)
+        if action == EVENT_STATUS:
+            json = {}
+            json.update({'ssh_url': self.ssh_url()})
+            json.update({'http_url': self.http_url()})
+            json.update({'repo-name': self.repo_name()})
+            json.update({'branch-name': self.branch_name()})
+            return [exe_path, dumps(json), self.event]
+        else:
+            super(GitHubWebhook, self).get_test_action(action)
 
     def event(self):
         if 'commits' in self.json.keys():
