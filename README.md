@@ -1,6 +1,11 @@
 # github-hooks
 Our hooks for github
 
+## References
+
+* [Github hooks](https://developer.github.com/v3/activity/events/types/)
+* [Gitlab hooks](https://gitlab.com/gitlab-org/gitlab-ce/blob/master/doc/web_hooks/web_hooks.md)
+
 ## Permissions
 * Listener must be executable
 * Webhooks must be readable
