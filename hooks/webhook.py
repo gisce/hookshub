@@ -18,14 +18,6 @@ class webhook(object):
         return 'default_event'
 
     @property
-    def ssh_url(self):
-        return ''
-
-    @property
-    def http_url(self):
-        return ''
-
-    @property
     def actions(self):
         return [
             action
