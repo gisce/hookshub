@@ -45,10 +45,11 @@ class hook_listener(object):
             print ('{0}[Running: <{1}/{2}> - {3}]'.format(
                 test_print, i, len(hook.event_actions), action)
             )
-            proc = Popen(
-                hook.get_exe_action(action),
-                stdout=PIPE, stderr=PIPE
-            )
+            if test:
+                args = hook.get_test_action(action)
+            else:
+                args = hook.get_exe_action(action)
+            proc = Popen(args, stdout=PIPE, stderr=PIPE)
             stdout, stderr = proc.communicate()
             output = ''
             output += ('{0}:{1}:ProcOut:\n{2}'.format(
