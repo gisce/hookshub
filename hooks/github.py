@@ -83,7 +83,7 @@ class GitHubWebhook(webhook):
             json.update({'branch-name': self.branch_name()})
             return [exe_path, dumps(json), self.event]
         else:
-            super(GitHubWebhook, self).get_exe_action(action)
+            return super(GitHubWebhook).get_exe_action(action)
 
     def get_test_action(self, action):
         exe_path = join(self.actions_path, action)
@@ -95,8 +95,9 @@ class GitHubWebhook(webhook):
             json.update({'branch-name': self.branch_name()})
             return [exe_path, dumps(json), self.event]
         else:
-            super(GitHubWebhook, self).get_test_action(action)
+            return super(GitHubWebhook).get_test_action(action)
 
+    @property
     def event(self):
         if 'commits' in self.json.keys():
             return 'push'
@@ -173,6 +174,7 @@ class GitHubWebhook(webhook):
             # As it has no specific payload, this one may be the last one
             return 'public'
 
+    @property
     def event_actions(self):
         # We start with all actions that start with {event}
         # Then we filter them to not execute the actions for the same event
