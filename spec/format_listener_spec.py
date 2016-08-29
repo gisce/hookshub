@@ -15,9 +15,9 @@ with description('Hook Listener'):
         hook = hook_listener.instancer(webhook_data)
         expect(hook.origin).to(equal('webhook'))
 
-    with _it('must return a hook with "gitlab" origin if used gitlab'
+    with it('must return a hook with "gitlab" origin if used gitlab'
             ' test_data on instancer method'):
-        webhook_data_path = join(data_path, join('gitlab', 'status'))
+        webhook_data_path = join(data_path, join('gitlab', 'issue.json'))
         webhook_data = loads(open(webhook_data_path, 'r').read())
         hook = hook_listener.instancer(webhook_data)
         expect(hook.origin).to(equal('gitlab'))
