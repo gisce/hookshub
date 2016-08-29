@@ -7,13 +7,13 @@ Our hooks for github
 * [Gitlab hooks](https://gitlab.com/gitlab-org/gitlab-ce/blob/master/doc/web_hooks/web_hooks.md)
 
 ## Permissions
-* Listener must be executable
+* Listener must be readable
 * Webhooks must be readable
 * Actions must be executables
 * Test data must be readable
 ```
-$ chmod 711 action-name // listener
-$ chmod 622 webhooks // test-data
+$ chmod 711 action-name
+$ chmod 622 webhooks // test-data // listener
 ```
 ## Coding
 The actions may use any coding language as long as the machine can
@@ -26,17 +26,15 @@ Test data is written under JSON string and it simulates the data of a request
 
 ## Testing
 
-All the actions can and will be tested from the parent webhook
-
-The test_hooks script will use the resources on /test_data/{hook} to test for
-each hook in /hooks/.
+All the actions can and will be tested from the /spec directory with mamba.
 
 The test data are simulated inputs for the events handled by the hook. There
 must be a test data for each event of the hook that is being used as an action
 in /hooks/{hook}/.
 
-The test data files must be named after the events they simulate, the same way
-the actions are named.
+The test data includes JSON of the tested events. Every time you add an event or
+that you want to add a new test you may need to add new test_data with even
+more data. Or use the default one but using the not parsed data.
 
 **This script will be used to test any new pull requests on the hooks repository**
 
@@ -77,7 +75,7 @@ Base listener location
 ...project/listener.py
 
 Test location
-...project/test_hooks.py
+...project/spec/*_spec.py
 
 Test Data location
 ...project/test_data/{webhook}/{action}
