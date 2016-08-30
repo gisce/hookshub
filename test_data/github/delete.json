@@ -1,6 +1,6 @@
 {
-  "ref": "simple-tag",
-  "ref_type": "tag",
+  "ref": "branch_to_delete",
+  "ref_type": "branch",
   "pusher_type": "user",
   "repository": {
     "id": 35129377,
