@@ -143,3 +143,19 @@ with description('Gitlab Hook'):
             json_data = loads(data)
             hook = gitlab(json_data)
             expect(hook.branch_name()).to(equal('None'))
+
+    with context('Merge Request Event'):
+        with it('must have "merge_request" as event'):
+            file = 'merge_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.event).to(equal('merge_request'))
+
+        with it('may return branch name if commenting request '
+                '(master on merge_request.json)'):
+            file = 'merge_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.branch_name()).to(equal('master'))
