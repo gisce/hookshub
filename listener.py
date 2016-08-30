@@ -25,9 +25,6 @@ class HookListener(object):
         else:
             return github(payload)
 
-    def get_args(self):
-        return self.payload, self.event
-
     def run_event_actions(self, test):
         hook = self.instancer(self.payload)
         test_print = ''
