@@ -96,10 +96,26 @@ with description('Gitlab Hook'):
                 json_data['repository']['name']
             ))
 
-        with it('may return the name of the branch or "None"'):
-            file = 'push.json'
+        with it('may return "None" when getting branch name '
+                'on non-branch event'):
+            file = 'tag_push.json'
             data = open(join(data_path, file)).read()
             json_data = loads(data)
-            branch_name = json_data['ref'].split('/', 2)[-1]
             hook = gitlab(json_data)
-            expect(hook.branch_name()).to(equal(branch_name))
+            expect(hook.branch_name()).to(equal('None'))
+
+    with context('Comment Event'):
+        with it('must have "note" as event'):
+            file = 'comment_code.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.event).to(equal('note'))
+
+        with it('may return branch name if commenting issue related to a branch'
+                ' or None if not related (None on comment_issue.json)'):
+            file = 'comment_issue.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.branch_name()).to(equal('None'))
