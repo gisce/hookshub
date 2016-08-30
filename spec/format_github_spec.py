@@ -145,6 +145,14 @@ with description('Github Hook'):
                 hook.get_exe_action(event)
             ))
 
+        with it('must return branch name from payload parse '
+                '("master" on pull_request_review_comment.json)'):
+            event = 'pull_request_review_comment'
+            file = 'pull_request_review_comment.json'
+            data = open(join(data_path, file)).read()
+            hook = github(loads(data))
+            expect(hook.branch_name()).to(equal('master'))
+
     with context('Push event'):
         with it('must have push as event'):
             event = 'push'
