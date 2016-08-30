@@ -25,10 +25,11 @@ class HookListener(object):
     def run_event_actions(self):
         hook = self.instancer(self.payload)
         i = 0
+        log = ''
         for action in hook.event_actions:
             i += 1
-            print ('{0}[Running: <{1}/{2}> - {3}]'.format(
-                test_print, i, len(hook.event_actions), action)
+            log += ('[Running: <{0}/{1}> - {2}]\n'.format(
+                i, len(hook.event_actions), action)
             )
             args = hook.get_exe_action(action)
             proc = Popen(args, stdout=PIPE, stderr=PIPE)
@@ -41,11 +42,11 @@ class HookListener(object):
                 action, stderr
             ))
             if proc.returncode != 0:
-                print ('{0}:{1}:{2}Failed!'.format(
-                    test_print, action, output
+                log += ('[{0}]:{1}Failed!\n'.format(
+                    action, output
                 ))
-                return -1
-            print ('{0}:{1}:{2}Success!'.format(
-                test_print, action, output
+                return -1, log
+            log += ('[{0}]:{1}Success!\n'.format(
+                action, output
             ))
-        return 0
+        return 0, log
