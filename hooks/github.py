@@ -69,7 +69,7 @@ class GitHubWebhook(webhook):
         return branch
 
     def status(self):
-        if self.event() == EVENT_STATUS:
+        if self.event == EVENT_STATUS:
             return self.json['state']
         return 'None'
 
