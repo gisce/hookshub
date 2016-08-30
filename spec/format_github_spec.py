@@ -113,6 +113,46 @@ with description('Github Hook'):
             hook.get_exe_action(event)
             ))
             
+    with context('Delete event'):
+        with it('must have delete as event'):
+            event = 'delete'
+            file = 'delete.json'
+            data = open(join(data_path, file)).read()
+            hook = github(loads(data))
+            expect(hook.event).to(equal('delete'))
+
+        with it('must return [exe_path, dump(json), event] when getting'
+                ' the execution params for the delete event'):
+            event = 'delete'
+            file = 'delete.json'
+            data = open(join(data_path, file)).read()
+            hook = github(loads(data))
+            exe_path = join(hook.actions_path, event)
+            from json import dumps
+
+            dict_json = loads(data)
+            json_data = dumps(dict_json)
+            exe_data = [exe_path, json_data, event]
+            expect(hook.get_exe_action(event)).to(equal(exe_data))
+
+        with it('must return the execution params to test the action, if there'
+                ' isn\'t any, it may return the same as the execution params'):
+            event = 'delete'
+            file = 'delete.json'
+            data = open(join(data_path, file)).read()
+            hook = github(loads(data))
+            expect(hook.get_test_action(event)).to(equal(
+                hook.get_exe_action(event)
+            ))
+
+        with it('must return branch name from payload if ref == branch '
+                '(branch_to_delete from delete.json)'):
+            event = 'delete'
+            file = 'delete.json'
+            data = open(join(data_path, file)).read()
+            hook = github(loads(data))
+            expect(hook.branch_name()).to(equal('branch_to_delete'))
+            
     with context('Deployment event'):
         with it('must have deployment as event'):
             event = 'deployment'
