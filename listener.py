@@ -3,9 +3,6 @@ from hooks.github import GitHubWebhook as github
 from hooks.gitlab import GitLabWebhook as gitlab
 from hooks.webhook import webhook
 from subprocess import Popen, PIPE
-from os.path import abspath, normpath, dirname, join, isfile, isdir
-from os import listdir
-import sys
 import json
 
 
