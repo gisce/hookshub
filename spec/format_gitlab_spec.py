@@ -122,7 +122,7 @@ with description('Gitlab Hook'):
 
         with it('may return branch name if commenting request '
                 '(markdown on comment_request.json)'):
-            file = 'comment_issue.json'
+            file = 'comment_request.json'
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             hook = gitlab(json_data)
