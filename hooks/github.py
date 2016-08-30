@@ -138,13 +138,11 @@ class GitHubWebhook(webhook):
         elif 'member' in self.json.keys():
             return 'member'
 
-        elif ['comment', 'pull_request'] in self.json.keys():
-            return 'pull_request_review_comment'
-
         elif 'comment' in self.json.keys():
-            # This case must be under 'pull_request_review_comment'
-            #   as it also has the 'comment' field on the payload
-            return 'commit_comment'
+            return ('pull_request_review_comment'
+                    if 'pull_request' in self.json.keys()
+                    else 'commit_comment'
+                    )
 
         elif 'pull_request' in self.json.keys():
             return 'pull_request'
