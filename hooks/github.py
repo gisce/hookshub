@@ -83,7 +83,7 @@ class GitHubWebhook(webhook):
             json.update({'branch-name': self.branch_name()})
             return [exe_path, dumps(json), self.event]
         else:
-            return super(GitHubWebhook).get_exe_action(action)
+            return super(GitHubWebhook, self).get_exe_action(action)
 
     def get_test_action(self, action):
         exe_path = join(self.actions_path, action)
@@ -95,7 +95,7 @@ class GitHubWebhook(webhook):
             json.update({'branch-name': self.branch_name()})
             return [exe_path, dumps(json), self.event]
         else:
-            return super(GitHubWebhook).get_test_action(action)
+            return super(GitHubWebhook, self).get_test_action(action)
 
     @property
     def event(self):
