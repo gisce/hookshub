@@ -127,3 +127,19 @@ with description('Gitlab Hook'):
             json_data = loads(data)
             hook = gitlab(json_data)
             expect(hook.branch_name()).to(equal('markdown'))
+
+    with context('Issue Event'):
+        with it('must have "issue" as event'):
+            file = 'issue.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.event).to(equal('issue'))
+
+        with it('may return branch name if the issue is related to a branch'
+                ' or None if not related (None on issue.json)'):
+            file = 'issue.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.branch_name()).to(equal('None'))
