@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 from hooks.github import GitHubWebhook as github
 from hooks.gitlab import GitLabWebhook as gitlab
