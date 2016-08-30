@@ -175,3 +175,11 @@ with description('Gitlab Hook'):
             json_data = loads(data)
             hook = gitlab(json_data)
             expect(hook.branch_name()).to(equal('master'))
+
+    with context('Tag Push Event'):
+        with it('must have "tag_push" as event'):
+            file = 'tag_push.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.event).to(equal('tag_push'))
