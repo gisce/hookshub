@@ -96,15 +96,24 @@ with description('Github Hook'):
                 json_data['repository']['name']
             ))
 
-        with it('may return the name of the branch or "None"'):
+        with it('may return "None" when trying to get branch name for a '
+                'non-branch event'):
             file = 'status.json'
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             hook = github(json_data)
             expect(hook.branch_name()).to(equal('None'))
 
-        with it('must return the same params with the get_exe_action and'
-                ' with the get_test_action'):
+        with it('may return "None" when trying to get status for an event '
+                'that isn\'t state'):
+            file = 'push.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = github(json_data)
+            expect(hook.status()).to(equal('None'))
+
+        with it('must return the execution params to test the action, if there'
+                ' isn\'t any, it may return the same as the execution params'):
             event = 'status'
             file = 'status.json'
             data = open(join(data_path, file)).read()
