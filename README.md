@@ -1,6 +1,9 @@
 # github-hooks
 Our hooks for github
 
+[![Build Status](https://travis-ci.org/gisce/github-hooks.svg?branch=master)](https://travis-ci.org/gisce/github-hooks)
+[![Coverage Status](https://coveralls.io/repos/github/gisce/github-hooks/badge.svg?branch=master)](https://coveralls.io/github/gisce/github-hooks?branch=master)
+
 ## References
 
 * [Github hooks](https://developer.github.com/v3/activity/events/types/)
