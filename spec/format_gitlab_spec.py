@@ -159,3 +159,19 @@ with description('Gitlab Hook'):
             json_data = loads(data)
             hook = gitlab(json_data)
             expect(hook.branch_name()).to(equal('master'))
+
+    with context('Push Event'):
+        with it('must have "push" as event'):
+            file = 'push.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.event).to(equal('push'))
+
+        with it('may return branch name if commenting request '
+                '(master on push.json)'):
+            file = 'push.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.branch_name()).to(equal('master'))
