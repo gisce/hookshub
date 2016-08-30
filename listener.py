@@ -22,34 +22,23 @@ class HookListener(object):
         else:
             return github(payload)
 
-    def run_event_actions(self, test):
+    def run_event_actions(self):
         hook = self.instancer(self.payload)
-        test_print = ''
-        if test:
-            test_print = '[test:{0}]'.format(hook.origin)
-            print ('{0}Origin: {1}'.format(test_print, hook.origin))
-            print ('{0}Event: {1}'.format(test_print, hook.event))
-            print ('{0}Actions: {1}'.format(
-                test_print, str(hook.event_actions or 'None')
-            ))
         i = 0
         for action in hook.event_actions:
             i += 1
             print ('{0}[Running: <{1}/{2}> - {3}]'.format(
                 test_print, i, len(hook.event_actions), action)
             )
-            if test:
-                args = hook.get_test_action(action)
-            else:
-                args = hook.get_exe_action(action)
+            args = hook.get_exe_action(action)
             proc = Popen(args, stdout=PIPE, stderr=PIPE)
             stdout, stderr = proc.communicate()
             output = ''
-            output += ('{0}:{1}:ProcOut:\n{2}'.format(
-                test_print,action, stdout
+            output += ('[{0}]:ProcOut:\n{1}'.format(
+                action, stdout
             ))
-            output += ('{0}:{1}:ProcErr:\n{2}'.format(
-                test_print, action, stderr
+            output += ('[{0}]:ProcErr:\n{1}'.format(
+                action, stderr
             ))
             if proc.returncode != 0:
                 print ('{0}:{1}:{2}Failed!'.format(
