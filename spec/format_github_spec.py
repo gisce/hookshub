@@ -273,6 +273,13 @@ with description('Github Hook'):
                 hook.get_exe_action(event)
             ))
 
+        with it('must return status from payload (success on status.json)'):
+            event = 'status'
+            file = 'status.json'
+            data = open(join(data_path, file)).read()
+            hook = github(loads(data))
+            expect(hook.status()).to(equal('success'))
+
     with context('Team Add event'):
         with it('must have team_add as event'):
             event = 'team_add'
