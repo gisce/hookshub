@@ -128,6 +128,14 @@ with description('Gitlab Hook'):
             hook = gitlab(json_data)
             expect(hook.branch_name()).to(equal('markdown'))
 
+        with it('may return none when getting branch name if commenting'
+                ' something else (not request or issue)'):
+            file = 'comment_commit.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.branch_name()).to(equal('None'))
+
     with context('Issue Event'):
         with it('must have "issue" as event'):
             file = 'issue.json'
@@ -152,8 +160,7 @@ with description('Gitlab Hook'):
             hook = gitlab(json_data)
             expect(hook.event).to(equal('merge_request'))
 
-        with it('may return branch name if commenting request '
-                '(master on merge_request.json)'):
+        with it('may return branch name (master on merge_request.json)'):
             file = 'merge_request.json'
             data = open(join(data_path, file)).read()
             json_data = loads(data)
@@ -168,8 +175,7 @@ with description('Gitlab Hook'):
             hook = gitlab(json_data)
             expect(hook.event).to(equal('push'))
 
-        with it('may return branch name if commenting request '
-                '(master on push.json)'):
+        with it('may return branch name (master on push.json)'):
             file = 'push.json'
             data = open(join(data_path, file)).read()
             json_data = loads(data)
@@ -183,3 +189,18 @@ with description('Gitlab Hook'):
             json_data = loads(data)
             hook = gitlab(json_data)
             expect(hook.event).to(equal('tag_push'))
+
+    with context('Bad JSON for push event'):
+        with it('must return push as event'):
+            file = 'bad_push.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.event).to(equal('push'))
+
+        with it('must return None as branch name'):
+            file = 'bad_push.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.branch_name()).to(equal('None'))

@@ -838,3 +838,18 @@ with description('Github Hook'):
             expect(hook.get_test_action(event)).to(equal(
                 hook.get_exe_action(event)
             ))
+
+    with context('Bad JSON for push event'):
+        with it('must return push as event'):
+            file = 'bad_push.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = github(json_data)
+            expect(hook.event).to(equal('push'))
+
+        with it('must return None as branch name'):
+            file = 'bad_push.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = github(json_data)
+            expect(hook.branch_name()).to(equal('None'))
