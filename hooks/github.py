@@ -160,15 +160,13 @@ class GitHubWebhook(webhook):
             # so this case may be under that case
             return 'team_add'
 
+        elif 'organization' in self.json.keys():
+            return 'repository'
+
         elif 'action' in self.json.keys():
             # Some other events use 'action' on its payload, so this case
             #   must be almost at the end where it's the last one to use it
             return 'watch'
-
-        elif 'repository' in self.json.keys():
-            # As almost every other event uses 'repository' this may be the
-            #  last one that uses it
-            return 'repository'
 
         else:
             # As it has no specific payload, this one may be the last one
