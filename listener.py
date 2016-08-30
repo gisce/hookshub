@@ -9,7 +9,7 @@ import sys
 import json
 
 
-class hook_listener(object):
+class HookListener(object):
     def __init__(self, payload_file, event):
         self.event = event
         self.payload = {}
