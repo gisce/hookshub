@@ -96,10 +96,90 @@ with description('Gitlab Hook'):
                 json_data['repository']['name']
             ))
 
-        with it('may return the name of the branch or "None"'):
+        with it('may return "None" when getting branch name '
+                'on non-branch event'):
+            file = 'tag_push.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.branch_name()).to(equal('None'))
+
+    with context('Comment Event'):
+        with it('must have "note" as event'):
+            file = 'comment_code.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.event).to(equal('note'))
+
+        with it('may return branch name if commenting issue related to a branch'
+                ' or None if not related (None on comment_issue.json)'):
+            file = 'comment_issue.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.branch_name()).to(equal('None'))
+
+        with it('may return branch name if commenting request '
+                '(markdown on comment_request.json)'):
+            file = 'comment_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.branch_name()).to(equal('markdown'))
+
+    with context('Issue Event'):
+        with it('must have "issue" as event'):
+            file = 'issue.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.event).to(equal('issue'))
+
+        with it('may return branch name if the issue is related to a branch'
+                ' or None if not related (None on issue.json)'):
+            file = 'issue.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.branch_name()).to(equal('None'))
+
+    with context('Merge Request Event'):
+        with it('must have "merge_request" as event'):
+            file = 'merge_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.event).to(equal('merge_request'))
+
+        with it('may return branch name if commenting request '
+                '(master on merge_request.json)'):
+            file = 'merge_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.branch_name()).to(equal('master'))
+
+    with context('Push Event'):
+        with it('must have "push" as event'):
             file = 'push.json'
             data = open(join(data_path, file)).read()
             json_data = loads(data)
-            branch_name = json_data['ref'].split('/', 2)[-1]
             hook = gitlab(json_data)
-            expect(hook.branch_name()).to(equal(branch_name))
+            expect(hook.event).to(equal('push'))
+
+        with it('may return branch name if commenting request '
+                '(master on push.json)'):
+            file = 'push.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.branch_name()).to(equal('master'))
+
+    with context('Tag Push Event'):
+        with it('must have "tag_push" as event'):
+            file = 'tag_push.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.event).to(equal('tag_push'))
