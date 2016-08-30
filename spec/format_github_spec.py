@@ -176,6 +176,14 @@ with description('Github Hook'):
                 hook.get_exe_action(event)
             ))
 
+        with it('must return branch name from payload parse '
+                '("changes" on push.json)'):
+            event = 'push'
+            file = 'push.json'
+            data = open(join(data_path, file)).read()
+            hook = github(loads(data))
+            expect(hook.branch_name()).to(equal('changes'))
+
     with context('Release event'):
         with it('must have release as event'):
             event = 'release'
