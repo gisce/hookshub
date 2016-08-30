@@ -69,7 +69,7 @@ class GitHubWebhook(webhook):
         return branch
 
     def status(self):
-        if self.event() == EVENT_STATUS:
+        if self.event == EVENT_STATUS:
             return self.json['state']
         return 'None'
 
@@ -138,13 +138,11 @@ class GitHubWebhook(webhook):
         elif 'member' in self.json.keys():
             return 'member'
 
-        elif ['comment', 'pull_request'] in self.json.keys():
-            return 'pull_request_review_comment'
-
         elif 'comment' in self.json.keys():
-            # This case must be under 'pull_request_review_comment'
-            #   as it also has the 'comment' field on the payload
-            return 'commit_comment'
+            return ('pull_request_review_comment'
+                    if 'pull_request' in self.json.keys()
+                    else 'commit_comment'
+                    )
 
         elif 'pull_request' in self.json.keys():
             return 'pull_request'
@@ -160,15 +158,13 @@ class GitHubWebhook(webhook):
             # so this case may be under that case
             return 'team_add'
 
+        elif 'organization' in self.json.keys():
+            return 'repository'
+
         elif 'action' in self.json.keys():
             # Some other events use 'action' on its payload, so this case
             #   must be almost at the end where it's the last one to use it
             return 'watch'
-
-        elif 'repository' in self.json.keys():
-            # As almost every other event uses 'repository' this may be the
-            #  last one that uses it
-            return 'repository'
 
         else:
             # As it has no specific payload, this one may be the last one
