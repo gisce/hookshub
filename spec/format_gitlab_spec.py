@@ -119,3 +119,11 @@ with description('Gitlab Hook'):
             json_data = loads(data)
             hook = gitlab(json_data)
             expect(hook.branch_name()).to(equal('None'))
+
+        with it('may return branch name if commenting request '
+                '(markdown on comment_request.json)'):
+            file = 'comment_issue.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.branch_name()).to(equal('markdown'))
