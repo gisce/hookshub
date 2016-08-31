@@ -1,4 +1,2 @@
 [run]
-source =
-    ./hookshub/hooks
-    ./hookshub/listener.py
+source = ./hookshub
