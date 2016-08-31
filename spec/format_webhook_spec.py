@@ -1,6 +1,6 @@
 from os.path import abspath, normpath, dirname, join
 from json import loads
-from hooks.webhook import webhook
+from hookshub.hooks.webhook import webhook
 from expects import *
 
 my_path = normpath(abspath(dirname(__file__)))
@@ -24,7 +24,9 @@ with description('Generic hook (webhook) - Default Event'):
     with it('must have project_path/hooks/webhook as actions_path'):
         hook = webhook(loads(data))
         expect(hook.actions_path).to(equal(join(
-            project_path, join('hooks', hook_testing)
+            project_path, join(
+                    'hookshub', join('hooks', hook_testing)
+            )
         )))
 
     with it('must only contain default_event within actions'):

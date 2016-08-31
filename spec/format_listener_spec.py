@@ -1,6 +1,6 @@
 from os.path import abspath, normpath, dirname, join
 from json import loads
-from listener import HookListener
+from hookshub.listener import HookListener
 from expects import *
 from mock import patch, Mock
 
@@ -25,7 +25,7 @@ with description('Hook Listener'):
                     data_path, join('webhook', 'default_event')
                 )
                 listener = HookListener(webhook_data_path, 'default_event')
-                with patch("listener.Popen") as popen:
+                with patch("hookshub.listener.Popen") as popen:
                     popen.start()
                     popen_mock = Mock()
                     popen_mock.communicate.return_value = ['All Ok\n', '']
@@ -41,7 +41,7 @@ with description('Hook Listener'):
                     data_path, join('webhook', 'default_event')
                 )
                 listener = HookListener(webhook_data_path, 'default_event')
-                with patch("listener.Popen") as popen:
+                with patch("hookshub.listener.Popen") as popen:
                     popen.start()
                     popen_mock = Mock()
                     popen_mock.communicate.return_value = ['', 'All bad\n']

@@ -1,7 +1,7 @@
 from os.path import abspath, normpath, dirname, join, isfile
 from os import listdir
 from json import loads
-from hooks.github import GitHubWebhook as github
+from hookshub.hooks.github import GitHubWebhook as github
 from expects import *
 
 my_path = normpath(abspath(dirname(__file__)))
@@ -23,7 +23,9 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             expect(hook.actions_path).to(equal(join(
-                project_path, join('hooks', hook_testing)
+                project_path, join(
+                    'hookshub', join('hooks', hook_testing)
+                )
             )))
 
         with it('must contain all actions in actions directory'):
