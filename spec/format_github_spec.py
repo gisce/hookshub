@@ -1,6 +1,6 @@
 from os.path import abspath, normpath, dirname, join, isfile
 from os import listdir
-from json import loads
+from json import loads, dumps
 from hookshub.hooks.github import GitHubWebhook as github
 from expects import *
 
@@ -630,3 +630,39 @@ with description('Github Hook'):
             json_data = loads(data)
             hook = github(json_data)
             expect(hook.branch_name).to(equal('None'))
+
+    with context('With powerp-docs repository events'):
+        with it('must return specific json data on get exe action with '
+                '"status-powerp-docs.py" action (must have: ssh_url, http_url, '
+                'repo-name, branch-name and state)'):
+            action = 'status-powerp-docs.py'
+            file = 'status.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            # Set required data from default data:
+            json_data['repository']['name'] = 'powerp-docs'
+            hook = github(json_data)
+            json = {}
+            json.update({'ssh_url': hook.ssh_url})
+            json.update({'http_url': hook.http_url})
+            json.update({'repo-name': hook.repo_name})
+            json.update({'branch-name': hook.branch_name})
+            json.update({'state': hook.status})
+            expect(hook.get_exe_action(action)[1]).to(equal(dumps(json)))
+
+        with it('must return specific json data on get exe action with '
+                '"push-powerp-docs.py" action (must have: ssh_url, http_url, '
+                'repo-name, branch-name and state)'):
+            action = 'push-powerp-docs.py'
+            file = 'push.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            # Set required data from default data:
+            json_data['repository']['name'] = 'powerp-docs'
+            hook = github(json_data)
+            json = {}
+            json.update({'ssh_url': hook.ssh_url})
+            json.update({'http_url': hook.http_url})
+            json.update({'repo-name': hook.repo_name})
+            json.update({'branch-name': hook.branch_name})
+            expect(hook.get_exe_action(action)[1]).to(equal(dumps(json)))
