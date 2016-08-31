@@ -72,7 +72,7 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             hook = github(json_data)
-            expect(hook.ssh_url()).to(equal(
+            expect(hook.ssh_url).to(equal(
                 json_data['repository']['ssh_url']
             ))
 
@@ -82,7 +82,7 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             hook = github(json_data)
-            expect(hook.http_url()).to(equal(
+            expect(hook.http_url).to(equal(
                 json_data['repository']['clone_url']
             ))
 
@@ -92,7 +92,7 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             hook = github(json_data)
-            expect(hook.repo_name()).to(equal(
+            expect(hook.repo_name).to(equal(
                 json_data['repository']['name']
             ))
 
@@ -102,7 +102,7 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             hook = github(json_data)
-            expect(hook.branch_name()).to(equal('None'))
+            expect(hook.branch_name).to(equal('None'))
 
         with it('may return "None" when trying to get status for an event '
                 'that isn\'t state'):
@@ -110,17 +110,7 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             hook = github(json_data)
-            expect(hook.status()).to(equal('None'))
-
-        with it('must return the execution params to test the action, if there'
-                ' isn\'t any, it may return the same as the execution params'):
-            event = 'status'
-            file = 'status.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            expect(hook.get_test_action(event)).to(equal(
-            hook.get_exe_action(event)
-            ))
+            expect(hook.status).to(equal('None'))
             
     with context('Commit Comment event'):
         with it('must have commit_comment as event'):
@@ -143,16 +133,6 @@ with description('Github Hook'):
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event)).to(equal(exe_data))
-
-        with it('must return the execution params to test the action, if there'
-                ' isn\'t any, it may return the same as the execution params'):
-            event = 'commit_comment'
-            file = 'commit_comment.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            expect(hook.get_test_action(event)).to(equal(
-                hook.get_exe_action(event)
-            ))
             
     with context('Create event'):
         with it('must have create as event'):
@@ -176,23 +156,13 @@ with description('Github Hook'):
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event)).to(equal(exe_data))
 
-        with it('must return the execution params to test the action, if there'
-                ' isn\'t any, it may return the same as the execution params'):
-            event = 'create'
-            file = 'create.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            expect(hook.get_test_action(event)).to(equal(
-                hook.get_exe_action(event)
-            ))
-
         with it('must return None from payload if ref != branch '
                 '(ref == tag on create.json)'):
             event = 'create'
             file = 'create.json'
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
-            expect(hook.branch_name()).to(equal('None'))
+            expect(hook.branch_name).to(equal('None'))
             
     with context('Delete event'):
         with it('must have delete as event'):
@@ -216,23 +186,13 @@ with description('Github Hook'):
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event)).to(equal(exe_data))
 
-        with it('must return the execution params to test the action, if there'
-                ' isn\'t any, it may return the same as the execution params'):
-            event = 'delete'
-            file = 'delete.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            expect(hook.get_test_action(event)).to(equal(
-                hook.get_exe_action(event)
-            ))
-
         with it('must return branch name from payload if ref == branch '
                 '(branch_to_delete from delete.json)'):
             event = 'delete'
             file = 'delete.json'
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
-            expect(hook.branch_name()).to(equal('branch_to_delete'))
+            expect(hook.branch_name).to(equal('branch_to_delete'))
             
     with context('Deployment event'):
         with it('must have deployment as event'):
@@ -255,16 +215,6 @@ with description('Github Hook'):
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event)).to(equal(exe_data))
-
-        with it('must return the execution params to test the action, if there'
-                ' isn\'t any, it may return the same as the execution params'):
-            event = 'deployment'
-            file = 'deployment.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            expect(hook.get_test_action(event)).to(equal(
-                hook.get_exe_action(event)
-            ))
             
     with context('Deployment Status event'):
         with it('must have deployment_status as event'):
@@ -287,16 +237,6 @@ with description('Github Hook'):
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event)).to(equal(exe_data))
-
-        with it('must return the execution params to test the action, if there'
-                ' isn\'t any, it may return the same as the execution params'):
-            event = 'deployment_status'
-            file = 'deployment_status.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            expect(hook.get_test_action(event)).to(equal(
-                hook.get_exe_action(event)
-            ))
             
     with context('Fork event'):
         with it('must have fork as event'):
@@ -319,16 +259,6 @@ with description('Github Hook'):
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event)).to(equal(exe_data))
-
-        with it('must return the execution params to test the action, if there'
-                ' isn\'t any, it may return the same as the execution params'):
-            event = 'fork'
-            file = 'fork.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            expect(hook.get_test_action(event)).to(equal(
-                hook.get_exe_action(event)
-            ))
             
     with context('Documentation (Gollum) event'):
         with it('must have gollum as event'):
@@ -351,16 +281,6 @@ with description('Github Hook'):
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event)).to(equal(exe_data))
-
-        with it('must return the execution params to test the action, if there'
-                ' isn\'t any, it may return the same as the execution params'):
-            event = 'gollum'
-            file = 'gollum.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            expect(hook.get_test_action(event)).to(equal(
-                hook.get_exe_action(event)
-            ))
             
     with context('Issue Comment event'):
         with it('must have issue_comment as event'):
@@ -383,16 +303,6 @@ with description('Github Hook'):
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event)).to(equal(exe_data))
-
-        with it('must return the execution params to test the action, if there'
-                ' isn\'t any, it may return the same as the execution params'):
-            event = 'issue_comment'
-            file = 'issue_comment.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            expect(hook.get_test_action(event)).to(equal(
-                hook.get_exe_action(event)
-            ))
             
     with context('Issues event'):
         with it('must have issues as event'):
@@ -415,16 +325,6 @@ with description('Github Hook'):
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event)).to(equal(exe_data))
-
-        with it('must return the execution params to test the action, if there'
-                ' isn\'t any, it may return the same as the execution params'):
-            event = 'issues'
-            file = 'issues.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            expect(hook.get_test_action(event)).to(equal(
-                hook.get_exe_action(event)
-            ))
             
     with context('Member event'):
         with it('must have member as event'):
@@ -447,16 +347,6 @@ with description('Github Hook'):
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event)).to(equal(exe_data))
-
-        with it('must return the execution params to test the action, if there'
-                ' isn\'t any, it may return the same as the execution params'):
-            event = 'member'
-            file = 'member.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            expect(hook.get_test_action(event)).to(equal(
-                hook.get_exe_action(event)
-            ))
             
     with context('Membership event'):
         with it('must have membership as event'):
@@ -479,16 +369,6 @@ with description('Github Hook'):
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event)).to(equal(exe_data))
-
-        with it('must return the execution params to test the action, if there'
-                ' isn\'t any, it may return the same as the execution params'):
-            event = 'membership'
-            file = 'membership.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            expect(hook.get_test_action(event)).to(equal(
-                hook.get_exe_action(event)
-            ))
             
     with context('Page Build event'):
         with it('must have page_build as event'):
@@ -511,16 +391,6 @@ with description('Github Hook'):
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event)).to(equal(exe_data))
-
-        with it('must return the execution params to test the action, if there'
-                ' isn\'t any, it may return the same as the execution params'):
-            event = 'page_build'
-            file = 'page_build.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            expect(hook.get_test_action(event)).to(equal(
-                hook.get_exe_action(event)
-            ))
             
     with context('Public event'):
         with it('must have public as event'):
@@ -544,16 +414,6 @@ with description('Github Hook'):
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event)).to(equal(exe_data))
 
-        with it('must return the execution params to test the action, if there'
-                ' isn\'t any, it may return the same as the execution params'):
-            event = 'public'
-            file = 'public.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            expect(hook.get_test_action(event)).to(equal(
-                hook.get_exe_action(event)
-            ))
-
     with context('Pull Request event'):
         with it('must have pull_request as event'):
             event = 'pull_request'
@@ -576,23 +436,13 @@ with description('Github Hook'):
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event)).to(equal(exe_data))
 
-        with it('must return the execution params to test the action, if there'
-                ' isn\'t any, it may return the same as the execution params'):
-            event = 'pull_request'
-            file = 'pull_request.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            expect(hook.get_test_action(event)).to(equal(
-                hook.get_exe_action(event)
-            ))
-
         with it('must return branch name from payload parse '
                 '("master" on pull_request.json)'):
             event = 'pull_request'
             file = 'pull_request.json'
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
-            expect(hook.branch_name()).to(equal('master'))
+            expect(hook.branch_name).to(equal('master'))
 
     with context('Review Comment on Pull Request event'):
         with it('must have pull_request_review_comment as event'):
@@ -616,23 +466,13 @@ with description('Github Hook'):
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event)).to(equal(exe_data))
 
-        with it('must return the execution params to test the action, if there'
-                ' isn\'t any, it may return the same as the execution params'):
-            event = 'pull_request_review_comment'
-            file = 'pull_request_review_comment.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            expect(hook.get_test_action(event)).to(equal(
-                hook.get_exe_action(event)
-            ))
-
         with it('must return branch name from payload parse '
                 '("master" on pull_request_review_comment.json)'):
             event = 'pull_request_review_comment'
             file = 'pull_request_review_comment.json'
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
-            expect(hook.branch_name()).to(equal('master'))
+            expect(hook.branch_name).to(equal('master'))
 
     with context('Push event'):
         with it('must have push as event'):
@@ -655,23 +495,13 @@ with description('Github Hook'):
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event)).to(equal(exe_data))
 
-        with it('must return the execution params to test the action, if there'
-                ' isn\'t any, it may return the same as the execution params'):
-            event = 'push'
-            file = 'push.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            expect(hook.get_test_action(event)).to(equal(
-                hook.get_exe_action(event)
-            ))
-
         with it('must return branch name from payload parse '
                 '("changes" on push.json)'):
             event = 'push'
             file = 'push.json'
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
-            expect(hook.branch_name()).to(equal('changes'))
+            expect(hook.branch_name).to(equal('changes'))
 
     with context('Release event'):
         with it('must have release as event'):
@@ -694,16 +524,6 @@ with description('Github Hook'):
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event)).to(equal(exe_data))
 
-        with it('must return the execution params to test the action, if there'
-                ' isn\'t any, it may return the same as the execution params'):
-            event = 'release'
-            file = 'release.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            expect(hook.get_test_action(event)).to(equal(
-                hook.get_exe_action(event)
-            ))
-
     with context('Repository event'):
         with it('must have repository as event'):
             event = 'repository'
@@ -724,17 +544,6 @@ with description('Github Hook'):
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event)).to(equal(exe_data))
-
-        with it('must return the execution params to test the action, if there'
-                ' isn\'t any, it may return the same as the execution params'):
-            event = 'repository'
-            file = 'repository.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            expect(hook.get_test_action(event)).to(equal(
-                hook.get_exe_action(event)
-            ))
-
     with context('Status event'):
         with it('must have status as event'):
             event = 'status'
@@ -751,31 +560,17 @@ with description('Github Hook'):
             hook = github(loads(data))
             exe_path = join(hook.actions_path, event)
             from json import dumps
-            dict_json = {}
-            dict_json.update({'ssh_url': hook.ssh_url()})
-            dict_json.update({'http_url': hook.http_url()})
-            dict_json.update({'repo-name': hook.repo_name()})
-            dict_json.update({'branch-name': hook.branch_name()})
+            dict_json = loads(data)
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event)).to(equal(exe_data))
-
-        with it('must return the execution params to test the action, if there'
-                ' isn\'t any, it may return the same as the execution params'):
-            event = 'status'
-            file = 'status.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            expect(hook.get_test_action(event)).to(equal(
-                hook.get_exe_action(event)
-            ))
 
         with it('must return status from payload (success on status.json)'):
             event = 'status'
             file = 'status.json'
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
-            expect(hook.status()).to(equal('success'))
+            expect(hook.status).to(equal('success'))
 
     with context('Team Add event'):
         with it('must have team_add as event'):
@@ -798,16 +593,6 @@ with description('Github Hook'):
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event)).to(equal(exe_data))
 
-        with it('must return the execution params to test the action, if there'
-                ' isn\'t any, it may return the same as the execution params'):
-            event = 'team_add'
-            file = 'team_add.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            expect(hook.get_test_action(event)).to(equal(
-                hook.get_exe_action(event)
-            ))
-
     with context('Watch event'):
         with it('must have watch as event'):
             event = 'watch'
@@ -829,16 +614,6 @@ with description('Github Hook'):
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event)).to(equal(exe_data))
 
-        with it('must return the execution params to test the action, if there'
-                ' isn\'t any, it may return the same as the execution params'):
-            event = 'watch'
-            file = 'watch.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            expect(hook.get_test_action(event)).to(equal(
-                hook.get_exe_action(event)
-            ))
-
     with context('Bad JSON for push event'):
         with it('must return push as event'):
             file = 'bad_push.json'
@@ -852,4 +627,4 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             hook = github(json_data)
-            expect(hook.branch_name()).to(equal('None'))
+            expect(hook.branch_name).to(equal('None'))

@@ -30,7 +30,7 @@ with description('Generic hook (webhook) - Default Event'):
     with it('must only contain default_event within actions'):
         hook = webhook(loads(data))
         expect(len(hook.actions)).to(equal(1))
-        expect(hook.actions[0]).to(equal(event))
+        expect(hook.actions[0]).to(equal('{}.py'.format(event)))
 
     with it('must have the same list on both, actions and event_actions'):
         hook = webhook(loads(data))
@@ -46,10 +46,3 @@ with description('Generic hook (webhook) - Default Event'):
         expect(hook.get_exe_action(event)[0]).to(equal(exe_path))
         expect(hook.get_exe_action(event)[1]).to(equal(json_data))
         expect(hook.get_exe_action(event)[2]).to(equal(event))
-
-    with it('must return the same params with the get_exe_action and'
-            ' with the get_test_action'):
-        hook = webhook(loads(data))
-        expect(hook.get_test_action(event)).to(equal(
-            hook.get_exe_action(event)
-        ))
