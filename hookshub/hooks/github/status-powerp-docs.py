@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 from __future__ import unicode_literals
 
 import sys
@@ -7,6 +8,7 @@ import json
 import tempfile
 import shutil
 from subprocess import Popen, PIPE
+from os.path import join
 
 
 class TempDir(object):
@@ -48,7 +50,7 @@ docs_dir = '/tmp/builtin/powerp'
 #   Si es master el directori sera  /powerp/
 #   Altrament el directori sera     /powerp_XXX/
 #       on XXX es el nom de la branca
-if branch_name != 'master':
+if branch_name != 'master' and branch_name != 'None':
     docs_dir += "_{}".format(branch_name)
 
 # Creem un directori temporal que guardarà les dades del clone
@@ -58,19 +60,32 @@ with TempDir() as temp:
 
     # Primer clonem el repositori
 
-    output += "Clonant el repositori '{0}', amb la branca '{1}' ...".format(
-        repo_name, branch_name
-    )
-    command = 'git clone {0} --branch {1}'.format(url, branch_name)
+    # Canviarà la forma de clonar segons tinguem o no branca:
+    if branch_name != 'None':
+        output += "Clonant el repositori '{0}', amb la branca '{1}' ...".format(
+            repo_name, branch_name
+        )
+        command = 'git clone {0} --branch {1}'.format(url, branch_name)
+    else:
+        output += "Clonant el repositori '{0}' ...".format(repo_name)
+        command = 'git clone {}'.format(url)
+
     new_clone = Popen(
         command.split(), cwd=temp.dir, stdout=PIPE, stderr=PIPE
     )
     out, err = new_clone.communicate()
+
+    if new_clone.returncode != 0:
+        # Could not clone >< => ABORT
+        output += 'FAILED TO CLONE: {}'.format(out, err)
+        print(output)
+        exit(-1)
+
     output += 'OK |'
     
     # Accedim al directori del clone utilitzant el nom del repositori
 
-    clone_dir = '{0}/{1}'.format(temp.dir, repo_name)
+    clone_dir = join(temp.dir, repo_name)
 
     # Instalem dependencies
 
@@ -92,4 +107,4 @@ with TempDir() as temp:
     out, err = new_build.communicate()
     output += 'OK |'
 
-print (output)
+print(output)
