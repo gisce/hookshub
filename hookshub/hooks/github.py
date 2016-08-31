@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from json import dumps
-from os.path import join, isfile
+from os.path import join
 
 from webhook import webhook
 
@@ -33,15 +33,19 @@ class GitHubWebhook(webhook):
         super(GitHubWebhook, self).__init__(data)
         self.origin = 'github'
 
+    @property
     def ssh_url(self):
         return self.json['repository']['ssh_url']
 
+    @property
     def http_url(self):
         return self.json['repository']['clone_url']
 
+    @property
     def repo_name(self):
         return self.json['repository']['name']
 
+    @property
     def branch_name(self):
         branch = 'None'
         try:
@@ -68,6 +72,7 @@ class GitHubWebhook(webhook):
             pass
         return branch
 
+    @property
     def status(self):
         if self.event == EVENT_STATUS:
             return self.json['state']
@@ -75,27 +80,24 @@ class GitHubWebhook(webhook):
 
     def get_exe_action(self, action):
         exe_path = join(self.actions_path, action)
-        if action == EVENT_STATUS:
+        # Action for 'status' event on repository 'powerp-docs'
+        if action.startswith('{}-powerp-docs'.format(EVENT_STATUS)):
             json = {}
-            json.update({'ssh_url': self.ssh_url()})
-            json.update({'http_url': self.http_url()})
-            json.update({'repo-name': self.repo_name()})
-            json.update({'branch-name': self.branch_name()})
+            json.update({'ssh_url': self.ssh_url})
+            json.update({'http_url': self.http_url})
+            json.update({'repo-name': self.repo_name})
+            json.update({'branch-name': self.branch_name})
+            json.update({'state': self.status})
+            return [exe_path, dumps(json), self.event]
+        elif action.startswith('{}-powerp-docs'.format(EVENT_PUSH)):
+            json = {}
+            json.update({'ssh_url': self.ssh_url})
+            json.update({'http_url': self.http_url})
+            json.update({'repo-name': self.repo_name})
+            json.update({'branch-name': self.branch_name})
             return [exe_path, dumps(json), self.event]
         else:
             return super(GitHubWebhook, self).get_exe_action(action)
-
-    def get_test_action(self, action):
-        exe_path = join(self.actions_path, action)
-        if action == EVENT_STATUS:
-            json = {}
-            json.update({'ssh_url': self.ssh_url()})
-            json.update({'http_url': self.http_url()})
-            json.update({'repo-name': self.repo_name()})
-            json.update({'branch-name': self.branch_name()})
-            return [exe_path, dumps(json), self.event]
-        else:
-            return super(GitHubWebhook, self).get_test_action(action)
 
     @property
     def event(self):
@@ -188,10 +190,10 @@ class GitHubWebhook(webhook):
             # If they start with {event}-{repository}_{name}
             event.startswith('{0}-{1}_'.format(self.event, self.repo_name)) or
             # If they are named after {event}-{repository}
-            event == '{0}-{1}'.format(self.event, self.repo_name) or
+            event == '{0}-{1}.py'.format(self.event, self.repo_name) or
             # If they start with {event}_{name}
             event.startswith('{0}_'.format(self.event)) or
             # If they are named after {event}
-            event == '{0}'.format(self.event)
+            event == '{0}.py'.format(self.event)
         ]
         return events
