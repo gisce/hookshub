@@ -61,8 +61,11 @@ with TempDir() as tmp:
 
     if new_clone.returncode != 0:
         # Could not clone >< => ABORT
-        output += 'FAILED TO CLONE: {0}::{1}'.format(out, err)
+        output += 'FAILED TO CLONE: {0}:{1}'.format(out)
         print(output)
+        sys.stderr.write(
+            '[merge_request_lektor]:clone_repository_fail::{}'.format(err)
+        )
         exit(-1)
 
     output += 'OK |'
@@ -71,15 +74,18 @@ with TempDir() as tmp:
 
     output += 'Creant virtualenv: {} ... '.format(tmp_dir)
     command = 'mkvirtualenv {}'.format(tmp_dir)
-    new_virtenv = Popen(
-        command.split(), cwd=clone_dir, stdout=PIPE, stderr=PIPE
-    )
-    out, err = new_virtenv.communicate()
-    virtenv = new_virtenv.returncode == 0
-    if not virtenv:
+    try:
+        new_virtenv = Popen(
+            command.split(), cwd=clone_dir, stdout=PIPE, stderr=PIPE
+        )
+        out, err = new_virtenv.communicate()
+        virtenv = new_virtenv.returncode == 0
+        if not virtenv:
+            output += 'FAILED to create virtualenv, installing on default env |'
+        output += 'OK |'
+    except OSError as err:
         output += 'FAILED to create virtualenv, installing on default env |'
-    output += 'OK |'
-
+        virtenv = False
     output += 'Instal.lant dependencies...'
     command = 'pip install -r requirements.txt'
     dependencies = Popen(
@@ -90,16 +96,18 @@ with TempDir() as tmp:
 
     # Fem build al directori on tenim la pagina des del directori del clone
 
-    command = 'lektor build -O {}'.format(lektor_path)
+    command = 'lektor --project gisce.net-lektor build -O {}'.format(lektor_path)
     output += 'Building lektor on {}...'.format(lektor_path)
     new_build = Popen(
         command.split(), cwd=clone_dir, stdout=PIPE, stderr=PIPE
     )
     out, err = new_build.communicate()
     if new_build.returncode != 0:
-        output += 'FAILED TO BUILD: {0}::{1}'.format(out, err)
+        output += 'FAILED TO BUILD! - Output::{0}'.format(out)
         print(output)
-        exit(-1)
+        sys.stderr.write(
+            '[merge_request_lektor]:build_lektor_error:{}'.format(err)
+        )
     output += 'OK |'
 
     if virtenv:
