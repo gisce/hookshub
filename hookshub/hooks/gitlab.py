@@ -40,10 +40,10 @@ class GitLabWebhook(webhook):
             elif self.event == EVENT_MERGE_REQ:
                 branch = self.json['object_attributes']['target_branch']
             elif self.event == EVENT_ISSUE:
-                branch = self.json['object_attributes']['branch_name']
+                branch = self.json['object_attributes']['branch_name'] or 'None'
             elif self.event == EVENT_COMMENT:
                 if 'issue' in self.json.keys():
-                    branch = self.json['issue']['branch_name']
+                    branch = self.json['issue']['branch_name'] or 'None'
                 elif 'merge_request' in self.json.keys():
                     branch = self.json['merge_request']['target_branch']
         except KeyError:
