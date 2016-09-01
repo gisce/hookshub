@@ -133,30 +133,6 @@ with description('Gitlab Hook'):
             hook = gitlab(json_data)
             expect(hook.event).to(equal('note'))
 
-        with it('may return branch name if commenting issue related to a branch'
-                ' or None if not related (None on comment_issue.json)'):
-            file = 'comment_issue.json'
-            data = open(join(data_path, file)).read()
-            json_data = loads(data)
-            hook = gitlab(json_data)
-            expect(hook.branch_name).to(equal('None'))
-
-        with it('may return source branch name if commenting request '
-                '(markdown on comment_request.json)'):
-            file = 'comment_request.json'
-            data = open(join(data_path, file)).read()
-            json_data = loads(data)
-            hook = gitlab(json_data)
-            expect(hook.branch_name).to(equal('markdown'))
-
-        with it('may return target branch name if commenting request '
-                '(master on comment_request.json)'):
-            file = 'comment_request.json'
-            data = open(join(data_path, file)).read()
-            json_data = loads(data)
-            hook = gitlab(json_data)
-            expect(hook.target_branch_name).to(equal('master'))
-
         with it('may return none when getting branch name if commenting'
                 ' something else (not request or issue)'):
             file = 'comment_commit.json'
@@ -164,6 +140,56 @@ with description('Gitlab Hook'):
             json_data = loads(data)
             hook = gitlab(json_data)
             expect(hook.branch_name).to(equal('None'))
+
+        with context('Commenting an Issue'):
+            with it('may return branch name if commenting issue related to a branch'
+                    ' or None if not related (None on comment_issue.json)'):
+                file = 'comment_issue.json'
+                data = open(join(data_path, file)).read()
+                json_data = loads(data)
+                hook = gitlab(json_data)
+                expect(hook.branch_name).to(equal('None'))
+
+        with context('Commenting a Merge Request'):
+            with it('may return source branch name if commenting request '
+                    '(markdown on comment_request.json)'):
+                file = 'comment_request.json'
+                data = open(join(data_path, file)).read()
+                json_data = loads(data)
+                hook = gitlab(json_data)
+                expect(hook.branch_name).to(equal('markdown'))
+
+            with it('may return target branch name if commenting request '
+                    '(master on comment_request.json)'):
+                file = 'comment_request.json'
+                data = open(join(data_path, file)).read()
+                json_data = loads(data)
+                hook = gitlab(json_data)
+                expect(hook.target_branch_name).to(equal('master'))
+
+            with it('must return ssh url from merge_request source'):
+                file = 'comment_request.json'
+                data = open(join(data_path, file)).read()
+                json_data = loads(data)
+                hook = gitlab(json_data)
+                url = json_data['merge_request']['source']['git_ssh_url']
+                expect(hook.ssh_url).to(equal(url))
+
+            with it('must return http url from merge_request source'):
+                file = 'comment_request.json'
+                data = open(join(data_path, file)).read()
+                json_data = loads(data)
+                hook = gitlab(json_data)
+                url = json_data['merge_request']['source']['git_http_url']
+                expect(hook.http_url).to(equal(url))
+
+            with it('must return repository name from merge_request source'):
+                file = 'comment_request.json'
+                data = open(join(data_path, file)).read()
+                json_data = loads(data)
+                hook = gitlab(json_data)
+                name = json_data['merge_request']['source']['name']
+                expect(hook.repo_name).to(equal(name))
 
     with context('Issue Event'):
         with it('must have "issue" as event'):
