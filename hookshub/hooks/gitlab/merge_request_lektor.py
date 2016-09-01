@@ -33,8 +33,8 @@ if not url:
     print (output)
     exit(-1)
 
-repo_name = payload['repo-name']
-source_branch = payload['branch-name']    # Source branch
+repo_name = payload['repo_name']
+source_branch = payload['branch_name']    # Source branch
 
 lektor_path = 'tmp/builtin/lektor'
 
