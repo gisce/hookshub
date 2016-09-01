@@ -81,3 +81,14 @@ class GitLabWebhook(webhook):
             event == '{0}.py'.format(self.event)
             ]
         return events
+
+    def get_exe_action(self, action):
+        args = super(GitLabWebhook, self).get_exe_action(action)
+        if action.startswith(EVENT_MERGE_REQ):
+            json = {}
+            json.update({'ssh_url': self.ssh_url})
+            json.update({'http_url': self.http_url})
+            json.update({'repo_name': self.repo_name})
+            json.update({'branch_name': self.source_branch_name})
+            args = [args[0], dumps(json)]
+        return args
