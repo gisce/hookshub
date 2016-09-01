@@ -141,7 +141,7 @@ with description('Gitlab Hook'):
             hook = gitlab(json_data)
             expect(hook.branch_name).to(equal('None'))
 
-        with it('may return branch name if commenting request '
+        with it('may return source branch name if commenting request '
                 '(markdown on comment_request.json)'):
             file = 'comment_request.json'
             data = open(join(data_path, file)).read()
@@ -181,7 +181,8 @@ with description('Gitlab Hook'):
             hook = gitlab(json_data)
             expect(hook.event).to(equal('merge_request'))
 
-        with it('may return branch name (master on merge_request.json)'):
+        with it('must return source branch name (ms-viewport on '
+                'merge_request.json)'):
             file = 'merge_request.json'
             data = open(join(data_path, file)).read()
             json_data = loads(data)
