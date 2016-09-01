@@ -44,22 +44,25 @@ class GitLabWebhook(webhook):
             if self.event == EVENT_PUSH:
                 branch = self.json['ref'].split('/', 2)[-1]
             elif self.event == EVENT_MERGE_REQ:
-                branch = self.json['object_attributes']['target_branch']
+                branch = self.json['object_attributes']['source_branch']
             elif self.event == EVENT_ISSUE:
                 branch = self.json['object_attributes']['branch_name'] or 'None'
             elif self.event == EVENT_COMMENT:
                 if 'issue' in self.json.keys():
                     branch = self.json['issue']['branch_name'] or 'None'
                 elif 'merge_request' in self.json.keys():
-                    branch = self.json['merge_request']['target_branch']
+                    branch = self.json['merge_request']['source_branch']
         except KeyError:
             pass
         return branch
 
     @property
-    def source_branch_name(self):
+    def target_branch_name(self):
         if self.event == EVENT_MERGE_REQ:
-            return self.json['merge_request']['target_branch']
+            return self.json['object_attributes']['target_branch']
+        elif self.event == EVENT_COMMENT \
+                and 'merge_request' in self.json.keys():
+                    return self.json['merge_request']['target_branch']
         return 'None'
 
     @property
@@ -95,6 +98,6 @@ class GitLabWebhook(webhook):
             json.update({'ssh_url': self.ssh_url})
             json.update({'http_url': self.http_url})
             json.update({'repo_name': self.repo_name})
-            json.update({'branch_name': self.source_branch_name})
+            json.update({'branch_name': self.branch_name})
             args = [args[0], dumps(json)]
         return args
