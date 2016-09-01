@@ -149,6 +149,14 @@ with description('Gitlab Hook'):
             hook = gitlab(json_data)
             expect(hook.branch_name).to(equal('markdown'))
 
+        with it('may return target branch name if commenting request '
+                '(master on comment_request.json)'):
+            file = 'comment_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.target_branch_name).to(equal('master'))
+
         with it('may return none when getting branch name if commenting'
                 ' something else (not request or issue)'):
             file = 'comment_commit.json'
@@ -187,7 +195,15 @@ with description('Gitlab Hook'):
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             hook = gitlab(json_data)
-            expect(hook.branch_name).to(equal('master'))
+            expect(hook.branch_name).to(equal('ms-viewport'))
+
+        with it('must return target branch name (master on'
+                'merge_request.json)'):
+            file = 'merge_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.target_branch_name).to(equal('master'))
 
     with context('Push Event'):
         with it('must have "push" as event'):
