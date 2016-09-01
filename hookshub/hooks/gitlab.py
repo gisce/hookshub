@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from webhook import webhook
+from json import dumps
 
 EVENT_COMMENT = 'note'
 EVENT_ISSUE = 'issue'
@@ -39,15 +40,21 @@ class GitLabWebhook(webhook):
             elif self.event == EVENT_MERGE_REQ:
                 branch = self.json['object_attributes']['target_branch']
             elif self.event == EVENT_ISSUE:
-                branch = self.json['object_attributes']['branch_name'] or 'None'
+                branch = self.json['object_attributes']['branch_name']
             elif self.event == EVENT_COMMENT:
                 if 'issue' in self.json.keys():
-                    branch = self.json['issue']['branch_name'] or 'None'
+                    branch = self.json['issue']['branch_name']
                 elif 'merge_request' in self.json.keys():
-                    branch = self.json['merge_request']['target_branch'] or 'None'
+                    branch = self.json['merge_request']['target_branch']
         except KeyError:
             pass
         return branch
+
+    @property
+    def source_branch_name(self):
+        if self.event == EVENT_MERGE_REQ:
+            return self.json['merge_request']['target_branch']
+        return 'None'
 
     @property
     def event_actions(self):
