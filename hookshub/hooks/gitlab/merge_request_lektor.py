@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 from subprocess import Popen, PIPE
 from os.path import join
 from json import loads
@@ -26,6 +27,7 @@ def arguments():
     return payload
 
 output = ''
+out = ''
 payload = arguments()
 url = payload['ssh_url'] or payload['http_url']
 if not url:
@@ -103,8 +105,7 @@ with TempDir() as tmp:
     )
     out, err = new_build.communicate()
     if new_build.returncode != 0:
-        output += 'FAILED TO BUILD! - Output::{0}'.format(out)
-        print(output)
+        out = 'FAILED TO BUILD! - Output::{0}'.format(out)
         sys.stderr.write(
             '[merge_request_lektor]:build_lektor_error:{}'.format(err)
         )
@@ -136,3 +137,4 @@ with TempDir() as tmp:
         output += 'OK |'
 
 print(output)
+print(out)
