@@ -17,10 +17,14 @@ class GitLabWebhook(webhook):
 
     @property
     def ssh_url(self):
+        if self.event == EVENT_MERGE_REQ:
+            return self.json['object_attributes']['source']['git_ssh_url']
         return self.json['repository']['git_ssh_url']
 
     @property
     def http_url(self):
+        if self.event == EVENT_MERGE_REQ:
+            return self.json['object_attributes']['source']['git_http_url']
         return self.json['repository']['git_http_url']
 
     @property
@@ -29,6 +33,8 @@ class GitLabWebhook(webhook):
 
     @property
     def repo_name(self):
+        if self.event == EVENT_MERGE_REQ:
+            return self.json['object_attributes']['source']['name']
         return self.json['repository']['name']
 
     @property
