@@ -1,6 +1,6 @@
 from os.path import abspath, normpath, dirname, join, isfile
 from os import listdir
-from json import loads
+from json import loads, dumps
 from hookshub.hooks.gitlab import GitLabWebhook as gitlab
 from expects import *
 
@@ -105,6 +105,25 @@ with description('Gitlab Hook'):
             json_data = loads(data)
             hook = gitlab(json_data)
             expect(hook.branch_name).to(equal('None'))
+
+        with it('may return [action path, dumps(payload), event] as default'
+                ' action args getter'):
+            file = 'tag_push.json'
+            action = 'tag_push_non_existing_action'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            action_path = join(hook.actions_path, action)
+            args = [action_path, dumps(json_data), 'tag_push']
+            expect(hook.get_exe_action(action)).to(equal(args))
+
+        with it('must return "None" when getting target branch on a non-target'
+                '-branch event'):
+            file = 'tag_push.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.target_branch_name).to(equal('None'))
 
     with context('Comment Event'):
         with it('must have "note" as event'):
