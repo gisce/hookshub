@@ -38,8 +38,4 @@ class webhook(object):
 
     def get_exe_action(self, action):
         exe_path = join(self.actions_path, action)
-        if action == self.event:
-            return [exe_path, dumps(self.json), self.event]
-
-    def get_test_action(self, action):
-        return self.get_exe_action(action)
+        return [exe_path, dumps(self.json), self.event]

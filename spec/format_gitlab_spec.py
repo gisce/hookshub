@@ -1,7 +1,7 @@
 from os.path import abspath, normpath, dirname, join, isfile
 from os import listdir
 from json import loads
-from hooks.gitlab import GitLabWebhook as gitlab
+from hookshub.hooks.gitlab import GitLabWebhook as gitlab
 from expects import *
 
 my_path = normpath(abspath(dirname(__file__)))
@@ -23,7 +23,9 @@ with description('Gitlab Hook'):
             data = open(join(data_path, file)).read()
             hook = gitlab(loads(data))
             expect(hook.actions_path).to(equal(join(
-                project_path, join('hooks', hook_testing)
+                project_path, join(
+                    'hookshub', join('hooks', hook_testing)
+                )
             )))
 
         with it('must contain all actions in actions directory'):
@@ -72,7 +74,7 @@ with description('Gitlab Hook'):
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             hook = gitlab(json_data)
-            expect(hook.ssh_url()).to(equal(
+            expect(hook.ssh_url).to(equal(
                 json_data['repository']['git_ssh_url']
             ))
 
@@ -82,7 +84,7 @@ with description('Gitlab Hook'):
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             hook = gitlab(json_data)
-            expect(hook.http_url()).to(equal(
+            expect(hook.http_url).to(equal(
                 json_data['repository']['git_http_url']
             ))
 
@@ -92,7 +94,7 @@ with description('Gitlab Hook'):
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             hook = gitlab(json_data)
-            expect(hook.repo_name()).to(equal(
+            expect(hook.repo_name).to(equal(
                 json_data['repository']['name']
             ))
 
@@ -102,7 +104,7 @@ with description('Gitlab Hook'):
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             hook = gitlab(json_data)
-            expect(hook.branch_name()).to(equal('None'))
+            expect(hook.branch_name).to(equal('None'))
 
     with context('Comment Event'):
         with it('must have "note" as event'):
@@ -118,7 +120,7 @@ with description('Gitlab Hook'):
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             hook = gitlab(json_data)
-            expect(hook.branch_name()).to(equal('None'))
+            expect(hook.branch_name).to(equal('None'))
 
         with it('may return branch name if commenting request '
                 '(markdown on comment_request.json)'):
@@ -126,7 +128,7 @@ with description('Gitlab Hook'):
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             hook = gitlab(json_data)
-            expect(hook.branch_name()).to(equal('markdown'))
+            expect(hook.branch_name).to(equal('markdown'))
 
         with it('may return none when getting branch name if commenting'
                 ' something else (not request or issue)'):
@@ -134,7 +136,7 @@ with description('Gitlab Hook'):
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             hook = gitlab(json_data)
-            expect(hook.branch_name()).to(equal('None'))
+            expect(hook.branch_name).to(equal('None'))
 
     with context('Issue Event'):
         with it('must have "issue" as event'):
@@ -150,7 +152,7 @@ with description('Gitlab Hook'):
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             hook = gitlab(json_data)
-            expect(hook.branch_name()).to(equal('None'))
+            expect(hook.branch_name).to(equal('None'))
 
     with context('Merge Request Event'):
         with it('must have "merge_request" as event'):
@@ -165,7 +167,7 @@ with description('Gitlab Hook'):
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             hook = gitlab(json_data)
-            expect(hook.branch_name()).to(equal('master'))
+            expect(hook.branch_name).to(equal('master'))
 
     with context('Push Event'):
         with it('must have "push" as event'):
@@ -180,7 +182,7 @@ with description('Gitlab Hook'):
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             hook = gitlab(json_data)
-            expect(hook.branch_name()).to(equal('master'))
+            expect(hook.branch_name).to(equal('master'))
 
     with context('Tag Push Event'):
         with it('must have "tag_push" as event'):
@@ -203,4 +205,4 @@ with description('Gitlab Hook'):
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             hook = gitlab(json_data)
-            expect(hook.branch_name()).to(equal('None'))
+            expect(hook.branch_name).to(equal('None'))

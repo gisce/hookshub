@@ -14,9 +14,11 @@ class GitLabWebhook(webhook):
         super(GitLabWebhook, self).__init__(data)
         self.origin = 'gitlab'
 
+    @property
     def ssh_url(self):
         return self.json['repository']['git_ssh_url']
 
+    @property
     def http_url(self):
         return self.json['repository']['git_http_url']
 
@@ -24,9 +26,11 @@ class GitLabWebhook(webhook):
     def event(self):
         return self.json['object_kind']
 
+    @property
     def repo_name(self):
         return self.json['repository']['name']
 
+    @property
     def branch_name(self):
         branch = 'None'
         try:
@@ -63,10 +67,10 @@ class GitLabWebhook(webhook):
             # If they start with {event}-{repository}_{name}
             event.startswith('{0}-{1}_'.format(self.event, self.repo_name)) or
             # If they are named after {event}-{repository}
-            event == '{0}-{1}'.format(self.event, self.repo_name) or
+            event == '{0}-{1}.py'.format(self.event, self.repo_name) or
             # If they start with {event}_{name}
             event.startswith('{0}_'.format(self.event)) or
             # If they are named after {event}
-            event == '{0}'.format(self.event)
+            event == '{0}.py'.format(self.event)
             ]
         return events

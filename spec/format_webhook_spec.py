@@ -1,6 +1,6 @@
 from os.path import abspath, normpath, dirname, join
 from json import loads
-from hooks.webhook import webhook
+from hookshub.hooks.webhook import webhook
 from expects import *
 
 my_path = normpath(abspath(dirname(__file__)))
@@ -24,13 +24,15 @@ with description('Generic hook (webhook) - Default Event'):
     with it('must have project_path/hooks/webhook as actions_path'):
         hook = webhook(loads(data))
         expect(hook.actions_path).to(equal(join(
-            project_path, join('hooks', hook_testing)
+            project_path, join(
+                    'hookshub', join('hooks', hook_testing)
+            )
         )))
 
     with it('must only contain default_event within actions'):
         hook = webhook(loads(data))
         expect(len(hook.actions)).to(equal(1))
-        expect(hook.actions[0]).to(equal(event))
+        expect(hook.actions[0]).to(equal('{}.py'.format(event)))
 
     with it('must have the same list on both, actions and event_actions'):
         hook = webhook(loads(data))
@@ -46,10 +48,3 @@ with description('Generic hook (webhook) - Default Event'):
         expect(hook.get_exe_action(event)[0]).to(equal(exe_path))
         expect(hook.get_exe_action(event)[1]).to(equal(json_data))
         expect(hook.get_exe_action(event)[2]).to(equal(event))
-
-    with it('must return the same params with the get_exe_action and'
-            ' with the get_test_action'):
-        hook = webhook(loads(data))
-        expect(hook.get_test_action(event)).to(equal(
-            hook.get_exe_action(event)
-        ))
