@@ -354,7 +354,8 @@ with description('Gitlab Hook'):
     with context('Lektor repository events'):
         with it('must return specific json on Merge_Request Event (must'
                 ' contain: ssh and http url, repository name and source'
-                ' branch name)'):
+                ' branch name, object and index id of the merge request'
+                'and the actions_path of the hook)'):
             file = 'merge_request.json'
             data = open(join(data_path, file)).read()
             json_data = loads(data)
@@ -367,6 +368,7 @@ with description('Gitlab Hook'):
             json.update({'index_id': hook.index_id})
             json.update({'object_id': hook.object_id})
             json.update({'project_id': hook.project_id})
+            json.update({'mypath': hook.actions_path})
             expect(hook.get_exe_action('merge_request_lektor.py')[1]).to(
                 equal(dumps(json))
             )
