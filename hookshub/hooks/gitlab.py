@@ -71,8 +71,44 @@ class GitLabWebhook(webhook):
             return self.json['object_attributes']['target_branch']
         elif self.event == EVENT_COMMENT \
                 and 'merge_request' in self.json.keys():
-                    return self.json['merge_request']['target_branch']
+            return self.json['merge_request']['target_branch']
         return 'None'
+
+    @property
+    def item_id(self):
+        if self.event == EVENT_MERGE_REQ:
+            return self.json['object_attributes']['iid']
+        elif self.event == EVENT_COMMENT \
+                and 'merge_request' in self.json.keys():
+            return self.json['merge_request']['iid']
+        return 'None'
+
+    @property
+    def merge_request_id(self):
+        if self.event == EVENT_MERGE_REQ:
+            return self.json['object_attributes']['id']
+        elif self.event == EVENT_COMMENT \
+                and 'merge_request' in self.json.keys():
+            return self.json['merge_request']['id']
+        return 'None'
+
+    @property
+    def project_id(self):
+        if self.event == EVENT_MERGE_REQ:
+            return self.json['object_attributes']['source_project_id']
+        elif self.event == EVENT_COMMENT \
+                and 'merge_request' in self.json.keys():
+            return self.json['merge_request']['source_project_id']
+        return None
+
+    @property
+    def target_project_id(self):
+        if self.event == EVENT_MERGE_REQ:
+            return self.json['object_attributes']['target_project_id']
+        elif self.event == EVENT_COMMENT \
+                and 'merge_request' in self.json.keys():
+            return self.json['merge_request']['target_project_id']
+        return None
 
     @property
     def event_actions(self):
@@ -108,5 +144,8 @@ class GitLabWebhook(webhook):
             json.update({'http_url': self.http_url})
             json.update({'repo_name': self.repo_name})
             json.update({'branch_name': self.branch_name})
+            json.update({'item_id': self.item_id})
+            json.update({'merge_request_id': self.merge_request_id})
+            json.update({'project_id': self.project_id})
             args = [args[0], dumps(json)]
         return args
