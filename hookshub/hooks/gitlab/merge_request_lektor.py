@@ -155,7 +155,7 @@ with TempDir() as tmp:
     try:
         import requests
         # POST /projects/:id/merge_requests/:merge_request_id/notes
-        req_url = u'{0}/projects/{1}/merge_requests/{2}/notes'.format(
+        req_url = '{0}/api/v3/projects/{1}/merge_requests/{2}/notes'.format(
             http_url, project_id, merge_id
         )
         url_branch = branch_path.split('/', 3)[3]       # Kick out /var/www/
