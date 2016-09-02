@@ -50,7 +50,7 @@ mypath = payload['mypath']              # action path
 conf_file = join(mypath, 'conf.json')
 with open(conf_file, 'r') as conf:
     json_conf = loads(conf.read())
-    lektor_path = json_conf['lektor_path']
+    lektor_path = json_conf['vhost_path']
     token = json_conf['private_token']
 
 branch_path = '{0}/branch/{1}'.format(lektor_path, source_branch)
