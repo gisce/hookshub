@@ -147,5 +147,6 @@ class GitLabWebhook(webhook):
             json.update({'index_id': self.index_id})
             json.update({'object_id': self.object_id})
             json.update({'project_id': self.project_id})
+            json.update({'mypath': self.actions_path})
             args = [args[0], dumps(json)]
         return args
