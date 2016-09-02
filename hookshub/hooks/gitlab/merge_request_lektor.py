@@ -43,10 +43,16 @@ if not url:
 repo_name = payload['repo_name']        # Source Repository Name
 source_branch = payload['branch_name']  # Source branch
 project_id = payload['project_id']      # Source Project ID
-item_id = payload['item_id']            # item PR id
-merge_id = payload['merge_request_id']  # action PR id
+index_id = payload['index_id']          # item PR id
+merge_id = payload['object_id']         # action PR id
+mypath = payload['mypath']              # action path
 
-lektor_path = '/var/www/devel.info'
+conf_file = join(mypath, 'conf.json')
+with open(conf_file, 'r') as conf:
+    json_conf = loads(conf.read())
+    lektor_path = json_conf['lektor_path']
+    token = json_conf['private_token']
+
 branch_path = '{0}/branch/{1}'.format(lektor_path, source_branch)
 mr_path = '{}/PR/'.format(lektor_path)
 
@@ -128,8 +134,8 @@ with TempDir() as tmp:
     out, err = mkdir.communicate()
 
     # Esborrem el directori per /PR/{id} de possibles copies anteriors
-    command = 'rm -r {0}{1}'.format(mr_path, item_id)
-    output += 'Removing dir {0}{1} ...'.format(mr_path, item_id)
+    command = 'rm -r {0}{1}'.format(mr_path, index_id)
+    output += 'Removing dir {0}{1} ...'.format(mr_path, index_id)
     rmdir = Popen(
         command.split(), stdout=PIPE, stderr=PIPE
     )
@@ -137,9 +143,9 @@ with TempDir() as tmp:
 
     # Enllaç simbolic per @ amb id
 
-    command = 'ln -s {0} {1}'.format(branch_path, item_id)
+    command = 'ln -s {0} {1}'.format(branch_path, index_id)
     output += 'Symbolic link from data in {0} to {1} ...'.format(
-        branch_path, item_id
+        branch_path, index_id
     )
     sym_link = Popen(
         command.split(), cwd=mr_path, stdout=PIPE, stderr=PIPE
@@ -160,15 +166,19 @@ with TempDir() as tmp:
         )
         url_branch = branch_path.split('/', 3)[3]       # Kick out /var/www/
         url_branch = 'www.{}'.format(url_branch)
-        url_request = '{0}{1}'.format(mr_path, item_id)
+        url_request = '{0}{1}'.format(mr_path, index_id)
         url_request = url_request.split('/', 3)[3]      # Kick out /var/www/
         url_request = 'www.{}'.format(url_request)
         comment = 'Branch URL: {0}\nPR URL: {1}'.format(url_branch, url_request)
         output += 'Build comment as {} | '.format(comment)
-        output += 'POSTing comment to {} ... '.format(req_url)
-        token = {'PRIVATE-TOKEN': 'WqrUus2jas9ibFyR5hQp'}
-        note = requests.post(req_url, headers=token)
-        output += '\n [Response] {} \n'.format(note.status_code)
+        output += 'POST comment to {} ... '.format(req_url)
+        head = {'PRIVATE-TOKEN': token}
+        payload = {'body': comment}
+        note = requests.post(req_url, headers=head, data=payload)
+        if note.status_code == 201:
+            output += 'OK |'.format(note.status_code)
+        else:
+            output += 'Failed to comment but server responded |'
     except requests.ConnectionError as err:
         sys.stderr.write('Failed to send comment to merge request -'
                          ' Connection [{}]'.format(err))
