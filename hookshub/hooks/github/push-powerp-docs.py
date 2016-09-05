@@ -1,14 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-from __future__ import unicode_literals
 
-import sys
-import json
-import tempfile
-import shutil
+from json import loads, dumps
 from subprocess import Popen, PIPE
 from os.path import join
+
+import sys
+import tempfile
+import shutil
 
 
 class TempDir(object):
