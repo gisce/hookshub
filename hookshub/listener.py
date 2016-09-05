@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from hooks.github import GitHubWebhook as github
 from hooks.gitlab import GitLabWebhook as gitlab
+from osconf import config_from_environment
 from hooks.webhook import webhook
 from subprocess import Popen, PIPE
 from os.path import join
@@ -36,16 +37,25 @@ class HookListener(object):
         else:
             return github(payload)
 
-    def run_event_actions(self):
+    def run_event_actions(self, config_file):
+
+        with open(config_file, 'r') as config:
+            def_conf = json.loads(config.read())
+
+        conf = config_from_environment('HOOKSHUB', [
+            'github_token', 'gitlab_token', 'docs_path', 'vhost_path'
+        ], **def_conf)
+
         hook = self.instancer(self.payload)
         i = 0
         log = 'Executed {} actions\n'.format(len(hook.event_actions))
+
         for action in hook.event_actions:
             i += 1
             log += ('[Running: <{0}/{1}> - {2}]\n'.format(
                 i, len(hook.event_actions), action)
             )
-            args = hook.get_exe_action(action)
+            args = hook.get_exe_action(action, conf)
             with TempDir() as tmp:
                 tmp_path = join(tmp.dir, action)
                 with open(tmp_path, 'w') as tmp_json:
