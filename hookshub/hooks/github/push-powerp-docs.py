@@ -25,25 +25,33 @@ class TempDir(object):
 # Carrega dels arguments. Conte els detalls del event
 def arguments():
     with open(sys.argv[1], 'r') as jsf:
-        payload = json.loads(jsf.read())
+        payload = loads(jsf.read())
     event = sys.argv[2]
     return payload, event
 
 payload, event = arguments()
 
 output = ''
+http_url = "https://api.github.com"
 url = payload['ssh_url'] or payload['http_url']
 if not url:
     output = 'Failed to get URL (was it in payload?)'
     print (output)
     exit(-1)
 
-repo_name = payload['repo-name']
-branch_name = payload['branch-name']
+repo_name = payload['repo_name']
+repo_full_name = payload['repo_full_name']
+branch_name = payload['branch_name']
 output += ('Rebut event de <{}> |'.format(event))
 
+conf_file = join(payload['actions_path'], 'conf.json')
 # Directori on tenim la documentació en format html
-docs_dir = '/tmp/builtin/powerp'
+with open(conf_file, 'r') as conf:
+    json_conf = loads(conf.read())
+    docs_path = json_conf['docs_path']
+    token = json_conf['private_token']
+
+docs_dir = 'powerp'
 
 # Mirem de quina branca es tracta i actualitzem el directori del build:
 #   Si es master el directori sera  /powerp/
@@ -51,6 +59,8 @@ docs_dir = '/tmp/builtin/powerp'
 #       on XXX es el nom de la branca
 if branch_name != 'master' and branch_name != 'None':
     docs_dir += "_{}".format(branch_name)
+
+docs_path = join(docs_path, docs_dir)
 
 # Creem un directori temporal que guardarà les dades del clone
 #   Per actualitzar la pagina de la documentacio
@@ -98,8 +108,8 @@ with TempDir() as temp:
 
     # Fem build al directori on tenim la pagina des del directori del clone
 
-    command = 'mkdocs build -d {} --clean'.format(docs_dir)
-    output += 'Building mkdocs on {}...'.format(docs_dir)
+    command = 'mkdocs build -d {} --clean'.format(docs_path)
+    output += 'Building mkdocs on {}...'.format(docs_path)
     new_build = Popen(
         command.split(), cwd=clone_dir, stdout=PIPE, stderr=PIPE
     )
