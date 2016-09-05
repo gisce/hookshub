@@ -113,7 +113,15 @@ with description('Github Hook'):
             json_data = loads(data)
             hook = github(json_data)
             expect(hook.status).to(equal('None'))
-            
+
+        with it('must return the repository ID from the repository of the hook'
+                '(35129377 on push.json)'):
+            file = 'push.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = github(json_data)
+            expect(hook.repo_id).to(equal(35129377))
+
     with context('Commit Comment event'):
         with it('must have commit_comment as event'):
             event = 'commit_comment'
