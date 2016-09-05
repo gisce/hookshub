@@ -120,4 +120,54 @@ with TempDir() as temp:
         exit(-1)
     output += 'OK |'
 
+    try:
+        import requests
+        output += ' Writting comment on PR ...'
+        # Necessitem agafar totes les pull request per trobar la nostra
+        # GET / repos / {:owner / :repo} / pulls
+        req_url = '{0}/repos/{1}/pulls'.format(
+            http_url, repo_full_name
+        )
+        head = dumps({'Authorization': 'token {}'.format(token)})
+        pulls = requests.get(req_url, headers=head)
+        if pulls.status_code != 200:
+            output += 'Could Not Get PULLS, omitting comment |'
+            pass
+        prs = loads(pulls.text)
+        # There are only opened PR, so the one that has the same branch name
+        #   is the one we are looking for
+        my_pr = [pr for pr in prs if pr['head']['ref'] == branch_name][0]
+        # Amb la pr, ja podem enviar el comentari
+        # POST /repos/{:owner /:repo}/pulls/{:pr_id}/comments
+        req_url = '{0}/repos/{1}/issues/{2}/comments'.format(
+            http_url, repo_full_name, my_pr['number']
+        )
+        docs_url = docs_path.split('/', 3)[3]   # Kick out /var/www/
+        docs_url = 'www.{}'.format(docs_url)    # Add www.URL
+        comment = 'Documentation build URL: {}'.format(
+            docs_url
+        )
+        payload = dumps({'body': comment})
+        post = requests.post(req_url, headers=head, data=payload)
+        output += 'URL: {}\n'.format(req_url)
+        output += 'HEAD: {}\n'.format(head)
+        output += 'DATA: {}\n'.format(payload)
+
+        if post.status_code == 201:
+            output += ' OK|'
+        else:
+            output += 'Failed to write comment. ' \
+                      'Server responded with {} |'.format(post.status_code)
+            # output += dumps(loads(post.text))
+
+    except requests.ConnectionError as err:
+        sys.stderr.write('Failed to send comment to merge request -'
+                         ' Connection [{}]'.format(err))
+    except requests.HTTPError as err:
+        sys.stderr.write('Failed to send comment to merge request -'
+                         ' HTTP [{}]'.format(err))
+    except requests.RequestException as err:
+        sys.stderr.write('Failed to send comment to merge request -'
+                         ' REQUEST [{}]'.format(err))
+
 print(output)
