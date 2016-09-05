@@ -36,6 +36,6 @@ class webhook(object):
                     isfile(join(self.actions_path, action))
                )]
 
-    def get_exe_action(self, action):
+    def get_exe_action(self, action, conf):
         exe_path = join(self.actions_path, action)
         return [exe_path, dumps(self.json), self.event]
