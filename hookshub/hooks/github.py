@@ -92,7 +92,6 @@ class GitHubWebhook(webhook):
         json.update({'token': conf['github_token']})
         # Action for 'status' event on repository 'powerp-docs'
         if action.startswith('{}-powerp-docs'.format(EVENT_STATUS)):
-            json = {}
             json.update({'ssh_url': self.ssh_url})
             json.update({'http_url': self.http_url})
             json.update({'repo-name': self.repo_name})
@@ -100,7 +99,6 @@ class GitHubWebhook(webhook):
             json.update({'state': self.status})
             return [exe_path, dumps(json), self.event]
         elif action.startswith('{}-powerp-docs'.format(EVENT_PUSH)):
-            json = {}
             json.update({'docs_path': conf['docs_path']})
             json.update({'ssh_url': self.ssh_url})
             json.update({'http_url': self.http_url})
@@ -110,7 +108,7 @@ class GitHubWebhook(webhook):
             json.update({'actions_path': self.actions_path})
             return [exe_path, dumps(json), self.event]
         else:
-            return super(GitHubWebhook, self).get_exe_action(action)
+            return super(GitHubWebhook, self).get_exe_action(action, conf)
 
     @property
     def event(self):
