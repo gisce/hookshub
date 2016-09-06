@@ -90,7 +90,23 @@ with TempDir() as temp:
         exit(-1)
 
     output += 'OK |'
-    
+
+
+    output += 'Entrant al virtualenv: lektor ... '
+    command = 'workon lektor'
+    try:
+        new_virtenv = Popen(
+            command.split(), cwd=clone_dir, stdout=PIPE, stderr=PIPE
+        )
+        out, err = new_virtenv.communicate()
+        virtenv = new_virtenv.returncode == 0
+        if not virtenv:
+            output += 'FAILED to enter virtualenv, installing on default env |'
+        output += 'OK |'
+    except OSError as err:
+        output += 'FAILED to enter virtualenv, installing on default env |'
+        virtenv = False
+
     # Accedim al directori del clone utilitzant el nom del repositori
 
     clone_dir = join(temp.dir, repo_name)
@@ -171,5 +187,18 @@ with TempDir() as temp:
     except Exception:
         sys.stderr.write('Failed to send comment to merge request, '
                          'INTERNAL ERROR |')
+
+    if virtenv:
+        output += 'Deactivate virtualenv ...'
+        command = 'deactivate'
+        deact = Popen(
+            command, cwd=clone_dir, stdout=PIPE, stderr=PIPE
+        )
+        out, err = deact.communicate()
+        if deact.returncode != 0:
+            output += 'FAILED TO DEACTIVATE: {0}::{1}'.format(out, err)
+            print(output)
+            exit(-1)
+        output += 'OK |'
 
 print(output)
