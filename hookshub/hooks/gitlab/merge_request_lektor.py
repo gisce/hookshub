@@ -48,10 +48,10 @@ merge_id = payload['object_id']         # action PR id
 mypath = payload['mypath']              # action path
 
 conf_file = join(mypath, 'conf.json')
-with open(conf_file, 'r') as conf:
-    json_conf = loads(conf.read())
-    lektor_path = json_conf['vhost_path']
-    token = json_conf['private_token']
+
+# Get from env_vars
+lektor_path = '{0}/{1}'.format(payload['vhost_path'], repo_name)
+token = payload['token']
 
 branch_path = '{0}/branch/{1}'.format(lektor_path, source_branch)
 mr_path = '{}/PR/'.format(lektor_path)
