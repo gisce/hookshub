@@ -46,8 +46,8 @@
   },
   "merge_request": {
     "id": 7,
-    "target_branch": "markdown",
-    "source_branch": "master",
+    "target_branch": "master",
+    "source_branch": "markdown",
     "source_project_id": 5,
     "author_id": 8,
     "assignee_id": 28,

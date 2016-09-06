@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from webhook import webhook
+from json import dumps
 
 EVENT_COMMENT = 'note'
 EVENT_ISSUE = 'issue'
@@ -16,10 +17,20 @@ class GitLabWebhook(webhook):
 
     @property
     def ssh_url(self):
+        if self.event == EVENT_MERGE_REQ:
+            return self.json['object_attributes']['source']['git_ssh_url']
+        elif self.event == EVENT_COMMENT \
+                and 'merge_request' in self.json.keys():
+                    return self.json['merge_request']['source']['git_ssh_url']
         return self.json['repository']['git_ssh_url']
 
     @property
     def http_url(self):
+        if self.event == EVENT_MERGE_REQ:
+            return self.json['object_attributes']['source']['git_http_url']
+        elif self.event == EVENT_COMMENT \
+                and 'merge_request' in self.json.keys():
+                    return self.json['merge_request']['source']['git_http_url']
         return self.json['repository']['git_http_url']
 
     @property
@@ -28,6 +39,11 @@ class GitLabWebhook(webhook):
 
     @property
     def repo_name(self):
+        if self.event == EVENT_MERGE_REQ:
+            return self.json['object_attributes']['source']['name']
+        elif self.event == EVENT_COMMENT \
+                and 'merge_request' in self.json.keys():
+                    return self.json['merge_request']['source']['name']
         return self.json['repository']['name']
 
     @property
@@ -37,17 +53,62 @@ class GitLabWebhook(webhook):
             if self.event == EVENT_PUSH:
                 branch = self.json['ref'].split('/', 2)[-1]
             elif self.event == EVENT_MERGE_REQ:
-                branch = self.json['object_attributes']['target_branch']
+                branch = self.json['object_attributes']['source_branch']
             elif self.event == EVENT_ISSUE:
                 branch = self.json['object_attributes']['branch_name'] or 'None'
             elif self.event == EVENT_COMMENT:
                 if 'issue' in self.json.keys():
                     branch = self.json['issue']['branch_name'] or 'None'
                 elif 'merge_request' in self.json.keys():
-                    branch = self.json['merge_request']['target_branch'] or 'None'
+                    branch = self.json['merge_request']['source_branch']
         except KeyError:
             pass
         return branch
+
+    @property
+    def target_branch_name(self):
+        if self.event == EVENT_MERGE_REQ:
+            return self.json['object_attributes']['target_branch']
+        elif self.event == EVENT_COMMENT \
+                and 'merge_request' in self.json.keys():
+            return self.json['merge_request']['target_branch']
+        return 'None'
+
+    @property
+    def index_id(self):
+        if self.event == EVENT_PUSH or self.event == EVENT_PUSH_TAG:
+            return None
+        if self.event == EVENT_COMMENT and 'merge_request' in self.json.keys():
+            return self.json['merge_request']['iid']
+        return self.json['object_attributes']['iid']
+
+    @property
+    def object_id(self):
+        if self.event == EVENT_PUSH or self.event == EVENT_PUSH_TAG:
+            return None
+        if self.event == EVENT_COMMENT and 'merge_request' in self.json.keys():
+            return self.json['merge_request']['id']
+        return self.json['object_attributes']['id']
+
+    @property
+    def project_id(self):
+        if self.event == EVENT_ISSUE:
+            return None
+        elif self.event == EVENT_MERGE_REQ:
+            return self.json['object_attributes']['source_project_id']
+        elif self.event == EVENT_COMMENT \
+                and 'merge_request' in self.json.keys():
+            return self.json['merge_request']['source_project_id']
+        return self.json['project_id']
+
+    @property
+    def target_project_id(self):
+        if self.event == EVENT_MERGE_REQ:
+            return self.json['object_attributes']['target_project_id']
+        elif self.event == EVENT_COMMENT \
+                and 'merge_request' in self.json.keys():
+            return self.json['merge_request']['target_project_id']
+        return None
 
     @property
     def event_actions(self):
@@ -74,3 +135,18 @@ class GitLabWebhook(webhook):
             event == '{0}.py'.format(self.event)
             ]
         return events
+
+    def get_exe_action(self, action):
+        args = super(GitLabWebhook, self).get_exe_action(action)
+        if action.startswith(EVENT_MERGE_REQ):
+            json = {}
+            json.update({'ssh_url': self.ssh_url})
+            json.update({'http_url': self.http_url})
+            json.update({'repo_name': self.repo_name})
+            json.update({'branch_name': self.branch_name})
+            json.update({'index_id': self.index_id})
+            json.update({'object_id': self.object_id})
+            json.update({'project_id': self.project_id})
+            json.update({'mypath': self.actions_path})
+            args = [args[0], dumps(json)]
+        return args

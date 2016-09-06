@@ -1,6 +1,6 @@
 from os.path import abspath, normpath, dirname, join, isfile
 from os import listdir
-from json import loads
+from json import loads, dumps
 from hookshub.hooks.gitlab import GitLabWebhook as gitlab
 from expects import *
 
@@ -106,6 +106,57 @@ with description('Gitlab Hook'):
             hook = gitlab(json_data)
             expect(hook.branch_name).to(equal('None'))
 
+        with it('may return [action path, dumps(payload), event] as default'
+                ' action args getter'):
+            file = 'tag_push.json'
+            action = 'tag_push_non_existing_action'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            action_path = join(hook.actions_path, action)
+            args = [action_path, dumps(json_data), 'tag_push']
+            expect(hook.get_exe_action(action)).to(equal(args))
+
+        with it('must return "None" when getting target branch on a non-target'
+                '-branch event'):
+            file = 'tag_push.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.target_branch_name).to(equal('None'))
+
+        with it('must return None when getting target project id on a non-'
+                'target event'):
+            file = 'tag_push.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.target_project_id).to(equal(None))
+
+        with it('must return None when getting item id on a non-item event'):
+            file = 'tag_push.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.index_id).to(equal(None))
+
+        with it('must return None when getting object_id on a'
+                ' non-merge_request event'):
+            file = 'tag_push.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.object_id).to(equal(None))
+
+        with it('must return the right project id when getting project_id'
+                '(1 on tag_push.json)'):
+            file = 'tag_push.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.project_id).to(equal(1))
+
+
     with context('Comment Event'):
         with it('must have "note" as event'):
             file = 'comment_code.json'
@@ -114,22 +165,6 @@ with description('Gitlab Hook'):
             hook = gitlab(json_data)
             expect(hook.event).to(equal('note'))
 
-        with it('may return branch name if commenting issue related to a branch'
-                ' or None if not related (None on comment_issue.json)'):
-            file = 'comment_issue.json'
-            data = open(join(data_path, file)).read()
-            json_data = loads(data)
-            hook = gitlab(json_data)
-            expect(hook.branch_name).to(equal('None'))
-
-        with it('may return branch name if commenting request '
-                '(markdown on comment_request.json)'):
-            file = 'comment_request.json'
-            data = open(join(data_path, file)).read()
-            json_data = loads(data)
-            hook = gitlab(json_data)
-            expect(hook.branch_name).to(equal('markdown'))
-
         with it('may return none when getting branch name if commenting'
                 ' something else (not request or issue)'):
             file = 'comment_commit.json'
@@ -137,6 +172,90 @@ with description('Gitlab Hook'):
             json_data = loads(data)
             hook = gitlab(json_data)
             expect(hook.branch_name).to(equal('None'))
+
+        with context('Commenting an Issue'):
+            with it('may return branch name if commenting issue related to a branch'
+                    ' or None if not related (None on comment_issue.json)'):
+                file = 'comment_issue.json'
+                data = open(join(data_path, file)).read()
+                json_data = loads(data)
+                hook = gitlab(json_data)
+                expect(hook.branch_name).to(equal('None'))
+
+        with context('Commenting a Merge Request'):
+            with it('may return source branch name if commenting request '
+                    '(markdown on comment_request.json)'):
+                file = 'comment_request.json'
+                data = open(join(data_path, file)).read()
+                json_data = loads(data)
+                hook = gitlab(json_data)
+                expect(hook.branch_name).to(equal('markdown'))
+
+            with it('may return target branch name if commenting request '
+                    '(master on comment_request.json)'):
+                file = 'comment_request.json'
+                data = open(join(data_path, file)).read()
+                json_data = loads(data)
+                hook = gitlab(json_data)
+                expect(hook.target_branch_name).to(equal('master'))
+
+            with it('must return source project id if commenting request '
+                    '(markdown on comment_request.json)'):
+                file = 'comment_request.json'
+                data = open(join(data_path, file)).read()
+                json_data = loads(data)
+                hook = gitlab(json_data)
+                expect(hook.project_id).to(equal(5))
+
+            with it('must return target project id if commenting request '
+                    '(master on comment_request.json)'):
+                file = 'comment_request.json'
+                data = open(join(data_path, file)).read()
+                json_data = loads(data)
+                hook = gitlab(json_data)
+                expect(hook.target_project_id).to(equal(5))
+
+            with it('must return ssh url from merge_request source'):
+                file = 'comment_request.json'
+                data = open(join(data_path, file)).read()
+                json_data = loads(data)
+                hook = gitlab(json_data)
+                url = json_data['merge_request']['source']['git_ssh_url']
+                expect(hook.ssh_url).to(equal(url))
+
+            with it('must return http url from merge_request source'):
+                file = 'comment_request.json'
+                data = open(join(data_path, file)).read()
+                json_data = loads(data)
+                hook = gitlab(json_data)
+                url = json_data['merge_request']['source']['git_http_url']
+                expect(hook.http_url).to(equal(url))
+
+            with it('must return repository name from merge_request source'):
+                file = 'comment_request.json'
+                data = open(join(data_path, file)).read()
+                json_data = loads(data)
+                hook = gitlab(json_data)
+                name = json_data['merge_request']['source']['name']
+                expect(hook.repo_name).to(equal(name))
+
+            with it('must return index id of the merge request that references'
+                    '(/merge_request/iid on comment_request.json)'):
+                file = 'comment_request.json'
+                data = open(join(data_path, file)).read()
+                json_data = loads(data)
+                hook = gitlab(json_data)
+                merge_id = json_data['merge_request']['iid']
+                expect(hook.index_id).to(equal(merge_id))
+
+            with it('must return object id of the merge request that references'
+                    '(/merge_request/id on comment_request.json)'):
+                file = 'comment_request.json'
+                data = open(join(data_path, file)).read()
+                json_data = loads(data)
+                hook = gitlab(json_data)
+                merge_id = json_data['merge_request']['id']
+                expect(hook.object_id).to(equal(merge_id))
 
     with context('Issue Event'):
         with it('must have "issue" as event'):
@@ -154,6 +273,13 @@ with description('Gitlab Hook'):
             hook = gitlab(json_data)
             expect(hook.branch_name).to(equal('None'))
 
+        with it('must return None when getting project_id'):
+            file = 'issue.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.project_id).to(equal(None))
+
     with context('Merge Request Event'):
         with it('must have "merge_request" as event'):
             file = 'merge_request.json'
@@ -162,12 +288,30 @@ with description('Gitlab Hook'):
             hook = gitlab(json_data)
             expect(hook.event).to(equal('merge_request'))
 
-        with it('may return branch name (master on merge_request.json)'):
+        with it('must return source branch name (ms-viewport on '
+                'merge_request.json)'):
             file = 'merge_request.json'
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             hook = gitlab(json_data)
-            expect(hook.branch_name).to(equal('master'))
+            expect(hook.branch_name).to(equal('ms-viewport'))
+
+        with it('must return target branch name (master on'
+                'merge_request.json)'):
+            file = 'merge_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.target_branch_name).to(equal('master'))
+
+        with it('must return target project id of the merge request '
+                '(object_attributes>target_project_id on merge_request.json)'):
+            file = 'merge_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            project_id = json_data['object_attributes']['target_project_id']
+            expect(hook.target_project_id).to(equal(project_id))
 
     with context('Push Event'):
         with it('must have "push" as event'):
@@ -206,3 +350,25 @@ with description('Gitlab Hook'):
             json_data = loads(data)
             hook = gitlab(json_data)
             expect(hook.branch_name).to(equal('None'))
+
+    with context('Lektor repository events'):
+        with it('must return specific json on Merge_Request Event (must'
+                ' contain: ssh and http url, repository name and source'
+                ' branch name, object and index id of the merge request'
+                'and the actions_path of the hook)'):
+            file = 'merge_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            json = {}
+            json.update({'ssh_url': hook.ssh_url})
+            json.update({'http_url': hook.http_url})
+            json.update({'repo_name': hook.repo_name})
+            json.update({'branch_name': hook.branch_name})
+            json.update({'index_id': hook.index_id})
+            json.update({'object_id': hook.object_id})
+            json.update({'project_id': hook.project_id})
+            json.update({'mypath': hook.actions_path})
+            expect(hook.get_exe_action('merge_request_lektor.py')[1]).to(
+                equal(dumps(json))
+            )

@@ -32,7 +32,12 @@ def arguments():
 payload, event = arguments()
 
 output = ''
-url = payload['ssh_url']
+url = payload['ssh_url'] or payload['http_url']
+if not url:
+    output = 'Failed to get URL (was it in payload?)'
+    print (output)
+    exit(-1)
+
 repo_name = payload['repo-name']
 branch_name = payload['branch-name']
 output += ('Rebut event de <{}> |'.format(event))
