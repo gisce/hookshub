@@ -99,7 +99,7 @@ class GitHubWebhook(webhook):
             json.update({'state': self.status})
             return [exe_path, dumps(json), self.event]
         elif action.startswith('{}-powerp-docs'.format(EVENT_PUSH)):
-            json.update({'docs_path': conf['docs_path']})
+            json.update({'vhost_path': conf['vhost_path']})
             json.update({'ssh_url': self.ssh_url})
             json.update({'http_url': self.http_url})
             json.update({'repo_name': self.repo_name})
