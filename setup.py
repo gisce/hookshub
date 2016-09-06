@@ -3,7 +3,7 @@ from setuptools import setup
 setup(name='hookshub',
       version='0.1',
       description='A module for parsing and acting against JSON hooks',
-      url='https://github.com/gisce/github-hooks',
+      url='git@github.com:gisce/hookshub.git',
       author='Jaume Florez',
       author_email='jflorez@gisce.net',
       license='MIT',

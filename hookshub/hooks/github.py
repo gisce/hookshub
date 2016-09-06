@@ -78,6 +78,14 @@ class GitHubWebhook(webhook):
             return self.json['state']
         return 'None'
 
+    @property
+    def repo_id(self):
+        return self.json['repository']['id']
+
+    @property
+    def repo_full_name(self):
+        return self.json['repository']['full_name']
+
     def get_exe_action(self, action):
         exe_path = join(self.actions_path, action)
         # Action for 'status' event on repository 'powerp-docs'
@@ -93,8 +101,10 @@ class GitHubWebhook(webhook):
             json = {}
             json.update({'ssh_url': self.ssh_url})
             json.update({'http_url': self.http_url})
-            json.update({'repo-name': self.repo_name})
-            json.update({'branch-name': self.branch_name})
+            json.update({'repo_name': self.repo_name})
+            json.update({'repo_full_name': self.repo_full_name})
+            json.update({'branch_name': self.branch_name})
+            json.update({'actions_path': self.actions_path})
             return [exe_path, dumps(json), self.event]
         else:
             return super(GitHubWebhook, self).get_exe_action(action)

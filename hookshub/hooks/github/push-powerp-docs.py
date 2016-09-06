@@ -1,14 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-from __future__ import unicode_literals
 
-import sys
-import json
-import tempfile
-import shutil
+from json import loads, dumps
 from subprocess import Popen, PIPE
 from os.path import join
+
+import sys
+import tempfile
+import shutil
 
 
 class TempDir(object):
@@ -25,25 +25,33 @@ class TempDir(object):
 # Carrega dels arguments. Conte els detalls del event
 def arguments():
     with open(sys.argv[1], 'r') as jsf:
-        payload = json.loads(jsf.read())
+        payload = loads(jsf.read())
     event = sys.argv[2]
     return payload, event
 
 payload, event = arguments()
 
 output = ''
+http_url = "https://api.github.com"
 url = payload['ssh_url'] or payload['http_url']
 if not url:
     output = 'Failed to get URL (was it in payload?)'
     print (output)
     exit(-1)
 
-repo_name = payload['repo-name']
-branch_name = payload['branch-name']
+repo_name = payload['repo_name']
+repo_full_name = payload['repo_full_name']
+branch_name = payload['branch_name']
 output += ('Rebut event de <{}> |'.format(event))
 
+conf_file = join(payload['actions_path'], 'conf.json')
 # Directori on tenim la documentació en format html
-docs_dir = '/tmp/builtin/powerp'
+with open(conf_file, 'r') as conf:
+    json_conf = loads(conf.read())
+    docs_path = json_conf['docs_path']
+    token = json_conf['private_token']
+
+docs_dir = 'powerp'
 
 # Mirem de quina branca es tracta i actualitzem el directori del build:
 #   Si es master el directori sera  /powerp/
@@ -51,6 +59,8 @@ docs_dir = '/tmp/builtin/powerp'
 #       on XXX es el nom de la branca
 if branch_name != 'master' and branch_name != 'None':
     docs_dir += "_{}".format(branch_name)
+
+docs_path = join(docs_path, docs_dir)
 
 # Creem un directori temporal que guardarà les dades del clone
 #   Per actualitzar la pagina de la documentacio
@@ -98,8 +108,8 @@ with TempDir() as temp:
 
     # Fem build al directori on tenim la pagina des del directori del clone
 
-    command = 'mkdocs build -d {} --clean'.format(docs_dir)
-    output += 'Building mkdocs on {}...'.format(docs_dir)
+    command = 'mkdocs build -d {} --clean'.format(docs_path)
+    output += 'Building mkdocs on {}...'.format(docs_path)
     new_build = Popen(
         command.split(), cwd=clone_dir, stdout=PIPE, stderr=PIPE
     )
@@ -109,5 +119,55 @@ with TempDir() as temp:
         print(output)
         exit(-1)
     output += 'OK |'
+
+    try:
+        import requests
+        output += ' Writting comment on PR ...'
+        # Necessitem agafar totes les pull request per trobar la nostra
+        # GET / repos / {:owner / :repo} / pulls
+        req_url = '{0}/repos/{1}/pulls'.format(
+            http_url, repo_full_name
+        )
+        head = dumps({'Authorization': 'token {}'.format(token)})
+        pulls = requests.get(req_url, headers=head)
+        if pulls.status_code != 200:
+            output += 'Could Not Get PULLS, omitting comment |'
+            pass
+        prs = loads(pulls.text)
+        # There are only opened PR, so the one that has the same branch name
+        #   is the one we are looking for
+        my_pr = [pr for pr in prs if pr['head']['ref'] == branch_name][0]
+        # Amb la pr, ja podem enviar el comentari
+        # POST /repos/{:owner /:repo}/pulls/{:pr_id}/comments
+        req_url = '{0}/repos/{1}/issues/{2}/comments'.format(
+            http_url, repo_full_name, my_pr['number']
+        )
+        docs_url = docs_path.split('/', 3)[3]   # Kick out /var/www/
+        docs_url = 'www.{}'.format(docs_url)    # Add www.URL
+        comment = 'Documentation build URL: {}'.format(
+            docs_url
+        )
+        payload = dumps({'body': comment})
+        post = requests.post(req_url, headers=head, data=payload)
+        output += 'URL: {}\n'.format(req_url)
+        output += 'HEAD: {}\n'.format(head)
+        output += 'DATA: {}\n'.format(payload)
+
+        if post.status_code == 201:
+            output += ' OK|'
+        else:
+            output += 'Failed to write comment. ' \
+                      'Server responded with {} |'.format(post.status_code)
+            # output += dumps(loads(post.text))
+
+    except requests.ConnectionError as err:
+        sys.stderr.write('Failed to send comment to merge request -'
+                         ' Connection [{}]'.format(err))
+    except requests.HTTPError as err:
+        sys.stderr.write('Failed to send comment to merge request -'
+                         ' HTTP [{}]'.format(err))
+    except requests.RequestException as err:
+        sys.stderr.write('Failed to send comment to merge request -'
+                         ' REQUEST [{}]'.format(err))
 
 print(output)

@@ -113,7 +113,15 @@ with description('Github Hook'):
             json_data = loads(data)
             hook = github(json_data)
             expect(hook.status).to(equal('None'))
-            
+
+        with it('must return the repository ID from the repository of the hook'
+                '(35129377 on push.json)'):
+            file = 'push.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = github(json_data)
+            expect(hook.repo_id).to(equal(35129377))
+
     with context('Commit Comment event'):
         with it('must have commit_comment as event'):
             event = 'commit_comment'
@@ -652,7 +660,7 @@ with description('Github Hook'):
 
         with it('must return specific json data on get exe action with '
                 '"push-powerp-docs.py" action (must have: ssh_url, http_url, '
-                'repo-name, branch-name and state)'):
+                'repo_name, repo_full_name, branch_name and actions_path)'):
             action = 'push-powerp-docs.py'
             file = 'push.json'
             data = open(join(data_path, file)).read()
@@ -663,6 +671,8 @@ with description('Github Hook'):
             json = {}
             json.update({'ssh_url': hook.ssh_url})
             json.update({'http_url': hook.http_url})
-            json.update({'repo-name': hook.repo_name})
-            json.update({'branch-name': hook.branch_name})
+            json.update({'repo_name': hook.repo_name})
+            json.update({'repo_full_name': hook.repo_full_name})
+            json.update({'branch_name': hook.branch_name})
+            json.update({'actions_path': hook.actions_path})
             expect(hook.get_exe_action(action)[1]).to(equal(dumps(json)))
