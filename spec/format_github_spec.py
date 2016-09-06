@@ -137,12 +137,11 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             exe_path = join(hook.actions_path, event)
-            from json import dumps
-
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
             dict_json = loads(data)
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
-            expect(hook.get_exe_action(event)).to(equal(exe_data))
+            expect(hook.get_exe_action(event, config)).to(equal(exe_data))
             
     with context('Create event'):
         with it('must have create as event'):
@@ -159,12 +158,12 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             exe_path = join(hook.actions_path, event)
-            from json import dumps
-
+            
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
             dict_json = loads(data)
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
-            expect(hook.get_exe_action(event)).to(equal(exe_data))
+            expect(hook.get_exe_action(event, config)).to(equal(exe_data))
 
         with it('must return None from payload if ref != branch '
                 '(ref == tag on create.json)'):
@@ -189,12 +188,12 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             exe_path = join(hook.actions_path, event)
-            from json import dumps
-
+            
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
             dict_json = loads(data)
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
-            expect(hook.get_exe_action(event)).to(equal(exe_data))
+            expect(hook.get_exe_action(event, config)).to(equal(exe_data))
 
         with it('must return branch name from payload if ref == branch '
                 '(branch_to_delete from delete.json)'):
@@ -219,12 +218,12 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             exe_path = join(hook.actions_path, event)
-            from json import dumps
-
+            
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
             dict_json = loads(data)
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
-            expect(hook.get_exe_action(event)).to(equal(exe_data))
+            expect(hook.get_exe_action(event, config)).to(equal(exe_data))
             
     with context('Deployment Status event'):
         with it('must have deployment_status as event'):
@@ -241,12 +240,12 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             exe_path = join(hook.actions_path, event)
-            from json import dumps
-
+            
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
             dict_json = loads(data)
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
-            expect(hook.get_exe_action(event)).to(equal(exe_data))
+            expect(hook.get_exe_action(event, config)).to(equal(exe_data))
             
     with context('Fork event'):
         with it('must have fork as event'):
@@ -263,12 +262,12 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             exe_path = join(hook.actions_path, event)
-            from json import dumps
-
+            
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
             dict_json = loads(data)
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
-            expect(hook.get_exe_action(event)).to(equal(exe_data))
+            expect(hook.get_exe_action(event, config)).to(equal(exe_data))
             
     with context('Documentation (Gollum) event'):
         with it('must have gollum as event'):
@@ -285,12 +284,12 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             exe_path = join(hook.actions_path, event)
-            from json import dumps
-
+            
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
             dict_json = loads(data)
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
-            expect(hook.get_exe_action(event)).to(equal(exe_data))
+            expect(hook.get_exe_action(event, config)).to(equal(exe_data))
             
     with context('Issue Comment event'):
         with it('must have issue_comment as event'):
@@ -307,12 +306,12 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             exe_path = join(hook.actions_path, event)
-            from json import dumps
-
+            
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
             dict_json = loads(data)
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
-            expect(hook.get_exe_action(event)).to(equal(exe_data))
+            expect(hook.get_exe_action(event, config)).to(equal(exe_data))
             
     with context('Issues event'):
         with it('must have issues as event'):
@@ -329,12 +328,12 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             exe_path = join(hook.actions_path, event)
-            from json import dumps
-
+            
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
             dict_json = loads(data)
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
-            expect(hook.get_exe_action(event)).to(equal(exe_data))
+            expect(hook.get_exe_action(event, config)).to(equal(exe_data))
             
     with context('Member event'):
         with it('must have member as event'):
@@ -351,12 +350,12 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             exe_path = join(hook.actions_path, event)
-            from json import dumps
-
+            
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
             dict_json = loads(data)
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
-            expect(hook.get_exe_action(event)).to(equal(exe_data))
+            expect(hook.get_exe_action(event, config)).to(equal(exe_data))
             
     with context('Membership event'):
         with it('must have membership as event'):
@@ -373,12 +372,12 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             exe_path = join(hook.actions_path, event)
-            from json import dumps
-
+            
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
             dict_json = loads(data)
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
-            expect(hook.get_exe_action(event)).to(equal(exe_data))
+            expect(hook.get_exe_action(event, config)).to(equal(exe_data))
             
     with context('Page Build event'):
         with it('must have page_build as event'):
@@ -395,12 +394,12 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             exe_path = join(hook.actions_path, event)
-            from json import dumps
-
+            
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
             dict_json = loads(data)
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
-            expect(hook.get_exe_action(event)).to(equal(exe_data))
+            expect(hook.get_exe_action(event, config)).to(equal(exe_data))
             
     with context('Public event'):
         with it('must have public as event'):
@@ -417,12 +416,12 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             exe_path = join(hook.actions_path, event)
-            from json import dumps
-
+            
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
             dict_json = loads(data)
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
-            expect(hook.get_exe_action(event)).to(equal(exe_data))
+            expect(hook.get_exe_action(event, config)).to(equal(exe_data))
 
     with context('Pull Request event'):
         with it('must have pull_request as event'):
@@ -440,11 +439,12 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             exe_path = join(hook.actions_path, event)
-            from json import dumps
+            
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
             dict_json = loads(data)
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
-            expect(hook.get_exe_action(event)).to(equal(exe_data))
+            expect(hook.get_exe_action(event, config)).to(equal(exe_data))
 
         with it('must return branch name from payload parse '
                 '("master" on pull_request.json)'):
@@ -470,11 +470,12 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             exe_path = join(hook.actions_path, event)
-            from json import dumps
+            
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
             dict_json = loads(data)
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
-            expect(hook.get_exe_action(event)).to(equal(exe_data))
+            expect(hook.get_exe_action(event, config)).to(equal(exe_data))
 
         with it('must return branch name from payload parse '
                 '("master" on pull_request_review_comment.json)'):
@@ -499,11 +500,12 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             exe_path = join(hook.actions_path, event)
-            from json import dumps
+            
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
             dict_json = loads(data)
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
-            expect(hook.get_exe_action(event)).to(equal(exe_data))
+            expect(hook.get_exe_action(event, config)).to(equal(exe_data))
 
         with it('must return branch name from payload parse '
                 '("changes" on push.json)'):
@@ -528,11 +530,12 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             exe_path = join(hook.actions_path, event)
-            from json import dumps
+            
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
             dict_json = loads(data)
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
-            expect(hook.get_exe_action(event)).to(equal(exe_data))
+            expect(hook.get_exe_action(event, config)).to(equal(exe_data))
 
     with context('Repository event'):
         with it('must have repository as event'):
@@ -549,11 +552,12 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             exe_path = join(hook.actions_path, event)
-            from json import dumps
+            
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
             dict_json = loads(data)
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
-            expect(hook.get_exe_action(event)).to(equal(exe_data))
+            expect(hook.get_exe_action(event, config)).to(equal(exe_data))
     with context('Status event'):
         with it('must have status as event'):
             event = 'status'
@@ -569,11 +573,12 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             exe_path = join(hook.actions_path, event)
-            from json import dumps
+            
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
             dict_json = loads(data)
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
-            expect(hook.get_exe_action(event)).to(equal(exe_data))
+            expect(hook.get_exe_action(event, config)).to(equal(exe_data))
 
         with it('must return status from payload (success on status.json)'):
             event = 'status'
@@ -597,11 +602,12 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             exe_path = join(hook.actions_path, event)
-            from json import dumps
+            
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
             dict_json = loads(data)
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
-            expect(hook.get_exe_action(event)).to(equal(exe_data))
+            expect(hook.get_exe_action(event, config)).to(equal(exe_data))
 
     with context('Watch event'):
         with it('must have watch as event'):
@@ -618,11 +624,12 @@ with description('Github Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             exe_path = join(hook.actions_path, event)
-            from json import dumps
+            
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
             dict_json = loads(data)
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
-            expect(hook.get_exe_action(event)).to(equal(exe_data))
+            expect(hook.get_exe_action(event, config)).to(equal(exe_data))
 
     with context('Bad JSON for push event'):
         with it('must return push as event'):
@@ -647,16 +654,18 @@ with description('Github Hook'):
             file = 'status.json'
             data = open(join(data_path, file)).read()
             json_data = loads(data)
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
             # Set required data from default data:
             json_data['repository']['name'] = 'powerp-docs'
             hook = github(json_data)
             json = {}
+            json.update({'token': config['github_token']})
             json.update({'ssh_url': hook.ssh_url})
             json.update({'http_url': hook.http_url})
             json.update({'repo-name': hook.repo_name})
             json.update({'branch-name': hook.branch_name})
             json.update({'state': hook.status})
-            expect(hook.get_exe_action(action)[1]).to(equal(dumps(json)))
+            expect(hook.get_exe_action(action, config)[1]).to(equal(dumps(json)))
 
         with it('must return specific json data on get exe action with '
                 '"push-powerp-docs.py" action (must have: ssh_url, http_url, '
@@ -665,14 +674,17 @@ with description('Github Hook'):
             file = 'push.json'
             data = open(join(data_path, file)).read()
             json_data = loads(data)
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
             # Set required data from default data:
             json_data['repository']['name'] = 'powerp-docs'
             hook = github(json_data)
             json = {}
+            json.update({'token': config['github_token']})
+            json.update({'vhost_path': config['vhost_path']})
             json.update({'ssh_url': hook.ssh_url})
             json.update({'http_url': hook.http_url})
             json.update({'repo_name': hook.repo_name})
             json.update({'repo_full_name': hook.repo_full_name})
             json.update({'branch_name': hook.branch_name})
             json.update({'actions_path': hook.actions_path})
-            expect(hook.get_exe_action(action)[1]).to(equal(dumps(json)))
+            expect(hook.get_exe_action(action, config)[1]).to(equal(dumps(json)))
