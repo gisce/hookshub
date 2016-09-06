@@ -44,7 +44,8 @@ with description('Generic hook (webhook) - Default Event'):
         exe_path = join(hook.actions_path, event)
         from json import dumps
         json_data = dumps(loads(data))
-        expect(len(hook.get_exe_action(event))).to(equal(3))
-        expect(hook.get_exe_action(event)[0]).to(equal(exe_path))
-        expect(hook.get_exe_action(event)[1]).to(equal(json_data))
-        expect(hook.get_exe_action(event)[2]).to(equal(event))
+        config = loads(open(join(data_path, 'conf.json'), 'r').read())
+        expect(len(hook.get_exe_action(event, config))).to(equal(3))
+        expect(hook.get_exe_action(event, config)[0]).to(equal(exe_path))
+        expect(hook.get_exe_action(event, config)[1]).to(equal(json_data))
+        expect(hook.get_exe_action(event, config)[2]).to(equal(event))
