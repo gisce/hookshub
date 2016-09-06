@@ -91,12 +91,11 @@ with TempDir() as temp:
 
     output += 'OK |'
 
-
-    output += 'Entrant al virtualenv: lektor ... '
-    command = 'workon lektor'
+    output += 'Entrant al virtualenv: "docs" ... '
+    command = 'workon docs'
     try:
         new_virtenv = Popen(
-            command.split(), cwd=clone_dir, stdout=PIPE, stderr=PIPE
+            command.split(), stdout=PIPE, stderr=PIPE
         )
         out, err = new_virtenv.communicate()
         virtenv = new_virtenv.returncode == 0
@@ -104,7 +103,8 @@ with TempDir() as temp:
             output += 'FAILED to enter virtualenv, installing on default env |'
         output += 'OK |'
     except OSError as err:
-        output += 'FAILED to enter virtualenv, installing on default env |'
+        output += 'FAILED to enter virtualenv, installing on default env' \
+                  '\n {}|'.format(err)
         virtenv = False
 
     # Accedim al directori del clone utilitzant el nom del repositori
