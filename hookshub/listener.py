@@ -43,7 +43,7 @@ class HookListener(object):
             def_conf = json.loads(config.read())
 
         conf = config_from_environment('HOOKSHUB', [
-            'github_token', 'gitlab_token', 'docs_path', 'vhost_path'
+            'github_token', 'gitlab_token', 'vhost_path'
         ], **def_conf)
 
         hook = self.instancer(self.payload)
