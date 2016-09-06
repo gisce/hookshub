@@ -48,10 +48,10 @@ merge_id = payload['object_id']         # action PR id
 mypath = payload['mypath']              # action path
 
 conf_file = join(mypath, 'conf.json')
-with open(conf_file, 'r') as conf:
-    json_conf = loads(conf.read())
-    lektor_path = json_conf['vhost_path']
-    token = json_conf['private_token']
+
+# Get from env_vars
+lektor_path = '{0}/{1}'.format(payload['vhost_path'], repo_name)
+token = payload['token']
 
 branch_path = '{0}/branch/{1}'.format(lektor_path, source_branch)
 mr_path = '{}/PR/'.format(lektor_path)
@@ -87,8 +87,8 @@ with TempDir() as tmp:
 
     clone_dir = join(tmp_dir, repo_name)
 
-    output += 'Creant virtualenv: {} ... '.format(tmp_dir)
-    command = 'mkvirtualenv {}'.format(tmp_dir)
+    output += 'Entrant al virtualenv: lektor ... '
+    command = 'workon lektor'
     try:
         new_virtenv = Popen(
             command.split(), cwd=clone_dir, stdout=PIPE, stderr=PIPE
@@ -96,10 +96,10 @@ with TempDir() as tmp:
         out, err = new_virtenv.communicate()
         virtenv = new_virtenv.returncode == 0
         if not virtenv:
-            output += 'FAILED to create virtualenv, installing on default env |'
+            output += 'FAILED to enter virtualenv, installing on default env |'
         output += 'OK |'
     except OSError as err:
-        output += 'FAILED to create virtualenv, installing on default env |'
+        output += 'FAILED to enter virtualenv, installing on default env |'
         virtenv = False
     output += 'Instal.lant dependencies...'
     command = 'pip install -r requirements.txt'
@@ -198,18 +198,6 @@ with TempDir() as tmp:
         out, err = deact.communicate()
         if deact.returncode != 0:
             output += 'FAILED TO DEACTIVATE: {0}::{1}'.format(out, err)
-            print(output)
-            exit(-1)
-        output += 'OK |'
-
-        command = 'rmvirtualenv {}'.format(tmp_dir)
-        output += 'Removing virtual environment: {} ...'.format(tmp_dir)
-        rm_virt = Popen(
-            command.split(), cwd=clone_dir, stdout=PIPE, stderr=PIPE
-        )
-        out, err = rm_virt.communicate()
-        if rm_virt.returncode != 0:
-            output += 'FAILED TO REMOVE VIRTUALENV: {0}::{1}'.format(out, err)
             print(output)
             exit(-1)
         output += 'OK |'

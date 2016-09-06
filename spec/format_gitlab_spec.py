@@ -112,10 +112,12 @@ with description('Gitlab Hook'):
             action = 'tag_push_non_existing_action'
             data = open(join(data_path, file)).read()
             json_data = loads(data)
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
             hook = gitlab(json_data)
+            json_data.update({'token': config['gitlab_token']})
             action_path = join(hook.actions_path, action)
             args = [action_path, dumps(json_data), 'tag_push']
-            expect(hook.get_exe_action(action)).to(equal(args))
+            expect(hook.get_exe_action(action, config)).to(equal(args))
 
         with it('must return "None" when getting target branch on a non-target'
                 '-branch event'):
@@ -359,8 +361,11 @@ with description('Gitlab Hook'):
             file = 'merge_request.json'
             data = open(join(data_path, file)).read()
             json_data = loads(data)
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
             hook = gitlab(json_data)
             json = {}
+            json.update({'token': config['gitlab_token']})
+            json.update({'vhost_path': config['vhost_path']})
             json.update({'ssh_url': hook.ssh_url})
             json.update({'http_url': hook.http_url})
             json.update({'repo_name': hook.repo_name})
@@ -369,6 +374,6 @@ with description('Gitlab Hook'):
             json.update({'object_id': hook.object_id})
             json.update({'project_id': hook.project_id})
             json.update({'mypath': hook.actions_path})
-            expect(hook.get_exe_action('merge_request_lektor.py')[1]).to(
-                equal(dumps(json))
-            )
+            expect(
+                hook.get_exe_action('merge_request_lektor.py', config)[1]
+            ).to(equal(dumps(json)))

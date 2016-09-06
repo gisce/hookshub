@@ -1,0 +1,5 @@
+{
+  "gitlab_token": "nope",
+  "vhost_path": "/tmp/random",
+  "github_token": "nope"
+}

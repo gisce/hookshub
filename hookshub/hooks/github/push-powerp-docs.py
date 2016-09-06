@@ -45,11 +45,10 @@ branch_name = payload['branch_name']
 output += ('Rebut event de <{}> |'.format(event))
 
 conf_file = join(payload['actions_path'], 'conf.json')
-# Directori on tenim la documentació en format html
-with open(conf_file, 'r') as conf:
-    json_conf = loads(conf.read())
-    docs_path = json_conf['docs_path']
-    token = json_conf['private_token']
+
+# Get from env_vars
+docs_path = '{0}/{1}'.format(payload['vhost_path'], repo_name)
+token = payload['token']
 
 docs_dir = 'powerp'
 
@@ -91,7 +90,23 @@ with TempDir() as temp:
         exit(-1)
 
     output += 'OK |'
-    
+
+    output += 'Entrant al virtualenv: "docs" ... '
+    command = 'workon docs'
+    try:
+        new_virtenv = Popen(
+            command.split(), stdout=PIPE, stderr=PIPE
+        )
+        out, err = new_virtenv.communicate()
+        virtenv = new_virtenv.returncode == 0
+        if not virtenv:
+            output += 'FAILED to enter virtualenv, installing on default env |'
+        output += 'OK |'
+    except OSError as err:
+        output += 'FAILED to enter virtualenv, installing on default env' \
+                  '\n {}|'.format(err)
+        virtenv = False
+
     # Accedim al directori del clone utilitzant el nom del repositori
 
     clone_dir = join(temp.dir, repo_name)
@@ -128,7 +143,7 @@ with TempDir() as temp:
         req_url = '{0}/repos/{1}/pulls'.format(
             http_url, repo_full_name
         )
-        head = dumps({'Authorization': 'token {}'.format(token)})
+        head = loads(dumps({'Authorization': 'token {}'.format(token)}))
         pulls = requests.get(req_url, headers=head)
         if pulls.status_code != 200:
             output += 'Could Not Get PULLS, omitting comment |'
@@ -147,7 +162,7 @@ with TempDir() as temp:
         comment = 'Documentation build URL: {}'.format(
             docs_url
         )
-        payload = dumps({'body': comment})
+        payload = loads(dumps({'body': comment}))
         post = requests.post(req_url, headers=head, data=payload)
         output += 'URL: {}\n'.format(req_url)
         output += 'HEAD: {}\n'.format(head)
@@ -169,5 +184,21 @@ with TempDir() as temp:
     except requests.RequestException as err:
         sys.stderr.write('Failed to send comment to merge request -'
                          ' REQUEST [{}]'.format(err))
+    except Exception:
+        sys.stderr.write('Failed to send comment to merge request, '
+                         'INTERNAL ERROR |')
+
+    if virtenv:
+        output += 'Deactivate virtualenv ...'
+        command = 'deactivate'
+        deact = Popen(
+            command, cwd=clone_dir, stdout=PIPE, stderr=PIPE
+        )
+        out, err = deact.communicate()
+        if deact.returncode != 0:
+            output += 'FAILED TO DEACTIVATE: {0}::{1}'.format(out, err)
+            print(output)
+            exit(-1)
+        output += 'OK |'
 
 print(output)
