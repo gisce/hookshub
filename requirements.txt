@@ -1,2 +1,2 @@
 requests
-https://github.com/gisce/osconf.git
+osconf
