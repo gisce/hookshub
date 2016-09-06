@@ -8,7 +8,6 @@ my_path = normpath(abspath(dirname(__file__)))
 project_path = dirname(my_path)              # Project Directory
 data_path = join(project_path, 'test_data')  # Test Directory
 
-
 with description('Hook Listener'):
     with context('Webhook test data'):
         with it('must return a hook with "webhook" origin on instancer method'):
@@ -25,13 +24,16 @@ with description('Hook Listener'):
                     data_path, join('webhook', 'default_event')
                 )
                 listener = HookListener(webhook_data_path, 'default_event')
+                config = join(
+                    data_path, join('webhook', 'conf.json')
+                )
                 with patch("hookshub.listener.Popen") as popen:
                     popen.start()
                     popen_mock = Mock()
                     popen_mock.communicate.return_value = ['All Ok\n', '']
                     popen_mock.returncode = 0
                     popen.return_value = popen_mock
-                    result, log = listener.run_event_actions()
+                    result, log = listener.run_event_actions(config)
                     expect(result).to(equal(0))
                     popen.stop()
 
@@ -41,13 +43,16 @@ with description('Hook Listener'):
                     data_path, join('webhook', 'default_event')
                 )
                 listener = HookListener(webhook_data_path, 'default_event')
+                config = join(
+                    data_path, join('webhook', 'conf.json')
+                )
                 with patch("hookshub.listener.Popen") as popen:
                     popen.start()
                     popen_mock = Mock()
                     popen_mock.communicate.return_value = ['', 'All bad\n']
                     popen_mock.returncode = -1
                     popen.return_value = popen_mock
-                    result, log = listener.run_event_actions()
+                    result, log = listener.run_event_actions(config)
                     expect(result).to(equal(-1))
                     popen.stop()
 
