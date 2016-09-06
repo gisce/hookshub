@@ -1,2 +1,2 @@
 requests
-git@github.com:gisce/osconf.git
+https://github.com/gisce/osconf.git
