@@ -44,7 +44,7 @@ class HookListener(object):
             def_conf = json.loads(config.read())
 
         if not 'nginx_port' in def_conf.keys():
-            def_conf.update({'nginx_port': 80})
+            def_conf.update({'nginx_port': '80'})
             
         conf = config_from_environment('HOOKSHUB', [
             'github_token', 'gitlab_token', 'vhost_path', 'nginx_port'
