@@ -661,7 +661,6 @@ with description('Github Hook'):
             json = {}
             token = 'token'
             json.update({token: config['github_token']})
-            json.update({'port': config['nginx_port']})
             json.update({'ssh_url': hook.ssh_url})
             json.update({'http_url': hook.http_url})
             json.update({'repo-name': hook.repo_name})
