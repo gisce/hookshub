@@ -76,12 +76,28 @@ with TempDir() as tmp:
 
     if new_clone.returncode != 0:
         # Could not clone >< => ABORT
-        output += 'FAILED TO CLONE: {}:'.format(out)
-        print(output)
+        output += 'FAILED TO CLONE: {}: | Trying to clone from https ' \
+                  '...'.format(out)
         sys.stderr.write(
             '[merge_request_lektor]:clone_repository_fail::{}'.format(err)
         )
-        exit(-1)
+        url = payload['http_url']
+        if source_branch != 'None':
+            output += "Clonant el repositori '{0}', amb la branca '{1}'" \
+                      " ...".format(repo_name, source_branch)
+            command = 'git clone {0} --branch {1}'.format(url, source_branch)
+        else:
+            output += "Clonant el repositori '{0}' ...".format(repo_name)
+            command = 'git clone {}'.format(url)
+
+        new_clone = Popen(
+            command.split(), cwd=tmp_dir, stdout=PIPE, stderr=PIPE
+        )
+        out, err = new_clone.communicate()
+
+        if new_clone.returncode != 0:
+            print(output)
+            exit(-1)
 
     output += 'OK |'
 
