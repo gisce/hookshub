@@ -177,7 +177,6 @@ with TempDir() as temp:
             http_url, repo_full_name, my_pr['number']
         )
         docs_url = docs_path.split('/', 3)[3]   # Kick out /var/www/
-        docs_url = 'www.{}'.format(docs_url)    # Add www.URL
         comment = 'Documentation build URL: {}'.format(
             docs_url
         )
