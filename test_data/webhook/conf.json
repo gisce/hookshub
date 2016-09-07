@@ -1,6 +1,5 @@
 {
   "gitlab_token": "nope",
   "vhost_path": "/tmp/random",
-  "port": "80",
   "github_token": "nope"
 }
