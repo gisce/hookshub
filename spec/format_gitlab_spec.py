@@ -115,6 +115,7 @@ with description('Gitlab Hook'):
             config = loads(open(join(data_path, 'conf.json'), 'r').read())
             hook = gitlab(json_data)
             json_data.update({'token': config['gitlab_token']})
+            json_data.update({'port': config['nginx_port']})
             action_path = join(hook.actions_path, action)
             args = [action_path, dumps(json_data), 'tag_push']
             expect(hook.get_exe_action(action, config)).to(equal(args))
@@ -354,17 +355,19 @@ with description('Gitlab Hook'):
             expect(hook.branch_name).to(equal('None'))
 
     with context('Lektor repository events'):
-        with it('must return specific json on Merge_Request Event (must'
-                ' contain: ssh and http url, repository name and source'
-                ' branch name, object and index id of the merge request'
-                'and the actions_path of the hook)'):
+        with it('must return token, port, vhost path, ssh and http url,'
+                ' repository name and source branch name, object and index id'
+                ' of the merge request when getting action arguments with '
+                '"merge request" action'):
             file = 'merge_request.json'
+            action = 'merge_request_lektor.py'
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             config = loads(open(join(data_path, 'conf.json'), 'r').read())
             hook = gitlab(json_data)
             json = {}
             json.update({'token': config['gitlab_token']})
+            json.update({'port': config['nginx_port']})
             json.update({'vhost_path': config['vhost_path']})
             json.update({'ssh_url': hook.ssh_url})
             json.update({'http_url': hook.http_url})
@@ -373,7 +376,6 @@ with description('Gitlab Hook'):
             json.update({'index_id': hook.index_id})
             json.update({'object_id': hook.object_id})
             json.update({'project_id': hook.project_id})
-            json.update({'mypath': hook.actions_path})
-            expect(
-                hook.get_exe_action('merge_request_lektor.py', config)[1]
-            ).to(equal(dumps(json)))
+            args_json = loads(hook.get_exe_action(action, config)[1])
+            for key in json.keys():
+                expect(args_json.get(key, '')).to(equal(json[key]))
