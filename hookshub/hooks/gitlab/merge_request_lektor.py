@@ -181,10 +181,8 @@ with TempDir() as tmp:
             http_url, project_id, merge_id
         )
         url_branch = branch_path.split('/', 3)[3]       # Kick out /var/www/
-        url_branch = 'www.{}'.format(url_branch)
         url_request = '{0}{1}'.format(mr_path, index_id)
         url_request = url_request.split('/', 3)[3]      # Kick out /var/www/
-        url_request = 'www.{}'.format(url_request)
         comment = 'Branch URL: {0}\nPR URL: {1}'.format(url_branch, url_request)
         output += 'Build comment as {} | '.format(comment)
         output += 'POST comment to {} ... '.format(req_url)
