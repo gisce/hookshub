@@ -181,17 +181,14 @@ with TempDir() as tmp:
         req_url = '{0}/api/v3/projects/{1}/merge_requests/{2}/notes'.format(
             http_url, project_id, merge_id
         )
-        url_branch = branch_path.split('/', 3)[3]       # Kick out /var/www/
-        base_url = url_branch.split('/', 4)[3]   # Get domain
-        base_uri = url_branch.split('/', 4)[4]   # Get build uri
+        # Lektor path has /var/www/domain
+        base_url = lektor_path.split('/', 3)[3]       # Kick out /var/www/
+        base_uri = 'branch/{0}'.format(source_branch)
         if port in ['80', '443']:
             res_url_branch = '{0}/{1}'.format(base_url, base_uri)
         else:
             res_url_branch = '{0}:{1}/{2}'.format(base_url, port, base_uri)
-        url_request = '{0}{1}'.format(mr_path, index_id)
-        url_request = url_request.split('/', 3)[3]      # Kick out /var/www/
-        base_url = url_request.split('/', 4)[3]   # Get domain
-        base_uri = url_request.split('/', 4)[4]   # Get build uri
+        base_uri = 'PR/{0}'.format(index_id)   # Get build uri
         if port in ['80', '443']:
             res_url_request = '{0}/{1}'.format(base_url, base_uri)
         else:
