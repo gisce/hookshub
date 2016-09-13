@@ -193,7 +193,7 @@ with TempDir() as tmp:
             res_url_request = '{0}/{1}'.format(base_url, base_uri)
         else:
             res_url_request = '{0}:{1}/{2}'.format(base_url, port, base_uri)
-        comment = 'Branch URL: http://{0}\nPR URL: http://{1}'.format(
+        comment = 'Branch URL: http://{0}/\nPR URL: http://{1}/'.format(
             res_url_branch, res_url_request
         )
         output += 'Build comment as \n{} | '.format(comment)
