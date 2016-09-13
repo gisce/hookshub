@@ -54,6 +54,9 @@ lektor_path = '{0}/{1}'.format(payload['vhost_path'], repo_name)
 token = payload['token']
 port = payload['port']
 
+branch_path = '{0}/branch/{1}'.format(lektor_path, source_branch)
+mr_path = '{}/PR/'.format(lektor_path)
+
 with TempDir() as tmp:
     tmp_dir = tmp.dir
     output += ('Creat Directori temporal: {} |'.format(tmp_dir))
