@@ -185,7 +185,7 @@ with TempDir() as temp:
             res_url = '{0}/{1}'.format(base_url, base_uri)
         else:
             res_url = '{0}:{1}/{2}'.format(base_url, port, base_uri)
-        comment = 'Documentation build URL: http://{}'.format(
+        comment = 'Documentation build URL: http://{}/'.format(
             docs_url
         )
         payload = loads(dumps({'body': comment}))
