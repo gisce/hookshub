@@ -177,6 +177,7 @@ with TempDir() as temp:
         req_url = '{0}/repos/{1}/issues/{2}/comments'.format(
             http_url, repo_full_name, my_pr['number']
         )
+        # Docs path te /var/www/domain/URI
         docs_url = docs_path.split('/', 3)[3]   # Kick out /var/www/
         base_url = docs_path.split('/', 4)[3]   # Get domain
         base_uri = docs_path.split('/', 4)[4]   # Get docs uri
@@ -184,7 +185,7 @@ with TempDir() as temp:
             res_url = '{0}/{1}'.format(base_url, base_uri)
         else:
             res_url = '{0}:{1}/{2}'.format(base_url, port, base_uri)
-        comment = 'Documentation build URL: {}'.format(
+        comment = 'Documentation build URL: http://{}'.format(
             docs_url
         )
         payload = loads(dumps({'body': comment}))
