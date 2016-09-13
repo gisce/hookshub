@@ -52,6 +52,7 @@ conf_file = join(mypath, 'conf.json')
 # Get from env_vars
 lektor_path = '{0}/{1}'.format(payload['vhost_path'], repo_name)
 token = payload['token']
+port = payload['port']
 
 branch_path = '{0}/branch/{1}'.format(lektor_path, source_branch)
 mr_path = '{}/PR/'.format(lektor_path)
@@ -181,12 +182,24 @@ with TempDir() as tmp:
             http_url, project_id, merge_id
         )
         url_branch = branch_path.split('/', 3)[3]       # Kick out /var/www/
-        url_branch = 'www.{}'.format(url_branch)
+        base_url = url_branch.split('/', 4)[3]   # Get domain
+        base_uri = url_branch.split('/', 4)[4]   # Get build uri
+        if port in ['80', '443']:
+            res_url_branch = '{0}/{1}'.format(base_url, base_uri)
+        else:
+            res_url_branch = '{0}:{1}/{2}'.format(base_url, port, base_uri)
         url_request = '{0}{1}'.format(mr_path, index_id)
         url_request = url_request.split('/', 3)[3]      # Kick out /var/www/
-        url_request = 'www.{}'.format(url_request)
-        comment = 'Branch URL: {0}\nPR URL: {1}'.format(url_branch, url_request)
-        output += 'Build comment as {} | '.format(comment)
+        base_url = url_request.split('/', 4)[3]   # Get domain
+        base_uri = url_request.split('/', 4)[4]   # Get build uri
+        if port in ['80', '443']:
+            res_url_request = '{0}/{1}'.format(base_url, base_uri)
+        else:
+            res_url_request = '{0}:{1}/{2}'.format(base_url, port, base_uri)
+        comment = 'Branch URL: {0}\nPR URL: {1}'.format(
+            res_url_branch, res_url_request
+        )
+        output += 'Build comment as \n{} | '.format(comment)
         output += 'POST comment to {} ... '.format(req_url)
         head = {'PRIVATE-TOKEN': token}
         payload = {'body': comment}

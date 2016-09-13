@@ -647,9 +647,9 @@ with description('Github Hook'):
             expect(hook.branch_name).to(equal('None'))
 
     with context('With powerp-docs repository events'):
-        with it('must return specific json data on get exe action with '
-                '"status-powerp-docs.py" action (must have: ssh_url, http_url, '
-                'repo-name, branch-name and state)'):
+        with it('must return token, port, ssh and http url, repository and'
+                ' branch names and state; with "status-powerp-docs.py" action'
+                ' arguments from hook'):
             action = 'status-powerp-docs.py'
             file = 'status.json'
             data = open(join(data_path, file)).read()
@@ -659,17 +659,20 @@ with description('Github Hook'):
             json_data['repository']['name'] = 'powerp-docs'
             hook = github(json_data)
             json = {}
-            json.update({'token': config['github_token']})
+            token = 'token'
+            json.update({token: config['github_token']})
             json.update({'ssh_url': hook.ssh_url})
             json.update({'http_url': hook.http_url})
             json.update({'repo-name': hook.repo_name})
             json.update({'branch-name': hook.branch_name})
             json.update({'state': hook.status})
-            expect(hook.get_exe_action(action, config)[1]).to(equal(dumps(json)))
+            args_json = loads(hook.get_exe_action(action, config)[1])
+            for key in json.keys():
+                expect(args_json.get(key, '')).to(equal(json[key]))
 
-        with it('must return specific json data on get exe action with '
-                '"push-powerp-docs.py" action (must have: ssh_url, http_url, '
-                'repo_name, repo_full_name, branch_name and actions_path)'):
+        with it('must return token, port, vhost path, ssh and http urls, '
+                'repository and branch names, full repository name;'
+                ' with "push-powerp-docs.py" action arguments from hook'):
             action = 'push-powerp-docs.py'
             file = 'push.json'
             data = open(join(data_path, file)).read()
@@ -680,11 +683,13 @@ with description('Github Hook'):
             hook = github(json_data)
             json = {}
             json.update({'token': config['github_token']})
+            json.update({'port': config['nginx_port']})
             json.update({'vhost_path': config['vhost_path']})
             json.update({'ssh_url': hook.ssh_url})
             json.update({'http_url': hook.http_url})
             json.update({'repo_name': hook.repo_name})
             json.update({'repo_full_name': hook.repo_full_name})
             json.update({'branch_name': hook.branch_name})
-            json.update({'actions_path': hook.actions_path})
-            expect(hook.get_exe_action(action, config)[1]).to(equal(dumps(json)))
+            args_json = loads(hook.get_exe_action(action, config)[1])
+            for key in json.keys():
+                expect(args_json.get(key, '')).to(equal(json[key]))

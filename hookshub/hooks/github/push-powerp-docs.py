@@ -49,6 +49,7 @@ conf_file = join(payload['actions_path'], 'conf.json')
 # Get from env_vars
 docs_path = '{0}/{1}'.format(payload['vhost_path'], repo_name)
 token = payload['token']
+port = payload['port']
 
 docs_dir = 'powerp'
 
@@ -177,7 +178,12 @@ with TempDir() as temp:
             http_url, repo_full_name, my_pr['number']
         )
         docs_url = docs_path.split('/', 3)[3]   # Kick out /var/www/
-        docs_url = 'www.{}'.format(docs_url)    # Add www.URL
+        base_url = docs_path.split('/', 4)[3]   # Get domain
+        base_uri = docs_path.split('/', 4)[4]   # Get docs uri
+        if port in ['80', '443']:
+            res_url = '{0}/{1}'.format(base_url, base_uri)
+        else:
+            res_url = '{0}:{1}/{2}'.format(base_url, port, base_uri)
         comment = 'Documentation build URL: {}'.format(
             docs_url
         )
