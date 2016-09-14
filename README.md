@@ -58,6 +58,12 @@ As probably you'll be using our [Python HTTP Listener](https://github.com/gisce/
 
 ## Tokens
 
+As instanced in its documentation, Tokens are used by requests to skip the authentication process.
+
+It's important that the tokens used are created properly by an account with permissions over the repositories that the actions work on.
+
+Check the documentation about Tokens referenced on [GitHub and OAuth](https://developer.github.com/v3/oauth/) and the [GitLab API](https://docs.gitlab.com/ce/api/). This may also work with other pages that have implemented the OAuth System.
+
 ## Elements: Listener, Hooks and Actions
 
 ## Testing
