@@ -17,9 +17,9 @@ Our Hub of Hooks
 
 ## Installation
 
-There's no official release (yet?), but there's a setup.py, so you can install this project with pip or easy-install.
-Use the `pip install .` command within the project folder.
-On requirements.txt you may need the whole git url.
+There's no official release (yet?), but there's a setup.py, so you can install this project with pip or easy-install.   
+Use the `pip install .` command within the project folder.   
+On requirements.txt you may need the whole git url.   
 
 There are a few configurations in order to work properly. Check the [configuration section](#configuration) to get more information.
 
