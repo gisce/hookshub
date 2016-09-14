@@ -693,3 +693,25 @@ with description('Github Hook'):
             args_json = loads(hook.get_exe_action(action, config)[1])
             for key in json.keys():
                 expect(args_json.get(key, '')).to(equal(json[key]))
+
+        with it('must return [exe_path, payload, event] when getting'
+                ' the execution params for the pull_request event.'
+                ' Payload must include: vhost_path, ssh and http url,'
+                ' repo_name and if it\'s merged'):
+            action = 'pull_request-powerp-docs'
+            file = 'pull_request.json'
+            data = open(join(data_path, file)).read()
+            hook = github(loads(data))
+            exe_path = join(hook.actions_path, action)
+
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
+            json = {}
+            json.update({'vhost_path': config['vhost_path']})
+            json.update({'ssh_url': hook.ssh_url})
+            json.update({'http_url': hook.http_url})
+            json.update({'repo_name': hook.repo_name})
+            json.update({'merged': hook.merged})
+            args = hook.get_exe_action(action, config)
+            args_json = loads(args[1])
+            for key in json.keys():
+                expect(args_json.get(key, '')).to(equal(json[key]))
