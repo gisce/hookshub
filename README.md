@@ -2,143 +2,123 @@
 Our Hub of Hooks
 
 [![Build Status](https://travis-ci.org/gisce/hookshub.svg?branch=master)](https://travis-ci.org/gisce/hookshub)
-[![Coverage Status](https://coveralls.io/repos/github/gisce/hookshub/badge.svg?branch=master)](https://coveralls.io/github/gisce/hookshub?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/gisce/github-hooks/badge.svg?branch=master)](https://coveralls.io/github/gisce/github-hooks?branch=master)
+
+### Contents
+
+ * [Installation](#installation)
+ * [References](#references)
+ * [Configuration](#configuration)
+ * [Tokens](#tokens)
+ * [Elements](#elements-listener-hooks-and-actions)
+ * [Tests](#testing)
+ * [File Structure](#file-structure)
+
 
 ## Installation
 
-There's no official release (yet?), but there's a setup.py, so you can install this project with pip or easy-install.
+There's no official release (yet?), but there's a setup.py, so you can install this project with pip or easy-install.   
+Use the `pip install .` command within the project folder.   
+On requirements.txt you may need the whole git url.   
 
-Use the `pip install .` command within the project folder
-
-On requirements.txt you may need the whole git url.
+There are a few configurations in order to work properly. Check the [configuration section](#configuration) to get more information.
 
 ## References
 
 * [Github hooks](https://developer.github.com/v3/activity/events/types/)
 * [Gitlab hooks](https://gitlab.com/gitlab-org/gitlab-ce/blob/master/doc/web_hooks/web_hooks.md)
+* GitHub Tokens
+  * [How to create a github token](https://help.github.com/articles/creating-an-access-token-for-command-line-use/)
+  * [GitHub and OAuth](https://developer.github.com/v3/oauth/)
+* [GitLab API](https://docs.gitlab.com/ce/api/)
+* Our [Python HTTP Listener](https://github.com/gisce/python-github-webhooks)
+  * [Original HTTP Listener](https://github.com/carlos-jenkins/python-github-webhooks)(only for github, does not work with this repository but may work with our GitHub actions)
+* [Mamba Testing](https://github.com/nestorsalceda/mamba)
+* [JSON Example](http://json.org/example.html)
 
-## Permissions
-* Listener must be readable
-* Webhooks must be readable
-* Actions must be executables
-* Test data must be readable
+## Configuration
+
+In order to work properly some environment variables may be declared. That way the tokens won't be pushed by mistake and that kind of sensible data may only be visible by the developer.
+
+The required variables are:
 ```
-$ chmod 711 action-name
-$ chmod 622 webhooks // test-data // listener
+$vhost_path   - Contains the path to the virtualhost (target path to build)
+$github_token - Your github_token required to OAuth with GitHub
+$gitlab_token - Your github_token required to OAuth with GitLab
 ```
-## Coding
-The actions may use any coding language as long as the machine can
-execute them individually
 
-The webhooks must be implemented in python as they extend the base webhook
-implemented in python
+A defaults file for the environment variables is required in order to instanciate the `listener` class.
+This file may be readed as a JSON Document with the variables names as key names.
 
-Test data is written under JSON string and it simulates the data of a request
+Doing so, if there's no environment variable, the data in the defaults file will be used.
+
+If those variables are not found in any of the two resources, the listener may raise an exception.
+
+As probably you'll be using our [Python HTTP Listener](https://github.com/gisce/python-github-webhooks) you may want to create this file in its folder as it may be looking for it (check its readme)
+
+## Tokens
+
+As instanced in its documentation, Tokens are used by requests to skip the authentication process.
+
+It's important that the tokens used are created properly by an account with permissions over the repositories that the actions work on.
+
+Check the documentation about Tokens referenced on [GitHub and OAuth](https://developer.github.com/v3/oauth/) and the [GitLab API](https://docs.gitlab.com/ce/api/). This may also work with other pages that have implemented the OAuth System.
+
+## Elements: Listener, Hooks and Actions
+
+This repo is based on 3 types as you may expect, they are the Listener, the Hooks and the Actions.
+
+The Listener is created by our [Python HTTP Listener](https://github.com/gisce/python-github-webhooks) and it does instanciate a Hook depending on the payload that it gets. With its `run_event_actions` method and a path for a default configuration file, the listener may instanciate a Hook and run all the actions required acording to the event and the payload recieved. When it ends, it may return a code, saying if it went all ok (`0`) or if something went wrong (`-1`) and a log string, containing the log with output and errors of the actions and/or the hook.
+
+On the other hand, the Hooks are created just with the payload and contain all info about a Hook from it's origin. The listener may instanciate each of them according to its origin, but they have the same methods and properties adapted to each of the hooks.
+
+Finally the actions are the most important elements on this repository. They run actions according to a hook's event and settings. Each Hook may instanciate it's own call to an action, but by default our actions may need a payload argument with JSON style. The actions themselves may be executed individually with the correct input (argument) so, they must be executable.
+
+### Action Naming
+
+*All actions may instance the following structure, and will only work if the event, repository and branch names are found*:
+* **event_** _name_
+* **event.py**
+* **event-repository_** _name_
+* **event-repository.py**
+* **event-repository-branch_** _name_
+* **event-repository-branch.py**
 
 ## Testing
 
-All the actions can and will be tested from the /spec directory with mamba.
-
-The test data are simulated inputs for the events handled by the hook. There
-must be a test data for each event of the hook that is being used as an action
-in /hooks/{hook}/.
-
-The test data includes JSON of the tested events. Every time you add an event or
-that you want to add a new test you may need to add new test_data with even
-more data. Or use the default one but using the not parsed data.
-
-**This script will be used to test any new pull requests on the hooks repository**
-
-## Adding Files
-
-All the files you may add MUST:
-
-- Have been located properly (check the [directory structure](#directory-structure))
-- Have a test
-- Have been documented **TODO**
-
-### Add a new action for a hook
-
-* Test data must simulate the hook's request data
-* The hook action MUST NOT instanciate a case for test which skips the code
-  * But it CAN work on a temporal directory if there are changes on the disk
-
-### Add a new hook
-
-* There MUST be a basic JSON origin patron implemented at test_hooks.origin
-* There MUST be a test for each action performed by the hook
-
-## Calling structure
-
+We use [MAMBA](https://github.com/nestorsalceda/mamba) for testing. If you may want to run or update the tests, remember that they may be located in the `/spec/` directory and you may be able to execute them with the following commands:
 ```
-listener (webhook dispatcher; executable)
-|------> webhook (base webhook)
-|--------------------> default_event (event from webhook; executable)
-|------> github_hook (webhook instance; extends webhook)
-|--------------------> event (event from github_hook)
-|------> gitlab_hook
-|------> ...
+$mamba
+$mamba --format=documentation
 ```
 
-## Directory structure
+The tests may use fake but correct data. Located in the `test_data` directory.
 
-Base listener location
-...project/listener.py
+## File Structure
 
-Test location
-...project/spec/*_spec.py
+All the Elements are located inside the `/hookshub/` directory ready to be installed.
+* The Actions are located inside a folder with its parent hook's name.
+* The Hooks are inside the Hooks directory.
+* The Listener is inside the HooksHub main directory.
 
-Test Data location
-...project/test_data/{webhook}/{action}
+The tests are located in the `/spec/` directory.
 
-Webhooks location
-..project/hooks/{webhook}
+The test data is located in the `/test_data/` directory
 
-Actions location
-..project/hooks/{webhook}/{action}
+The File structure may instanciate the following example:
 
-## Requirements for the hooks actions
-
-### Naming
-**The names of the hooks are important!**
-The names MUST NOT HAVE ANY EXTENSION
-The names MUST be named after:
-* {event}-{repository_name}-{branch_name}
-  * For the event and the repository and the branch selected
-* {event}-{repository_name}
-  * For the event and the repository selected on any branch
-* {event}
-  * For the event selected, on any repository and any branch
-* all
-  * On any event and any repository and any branch
-
-## Calling requirements
-
-There are 2 relevant scripts that must be documented here:
-
-1. listener.py
-2. test_hooks.py
-
-```
-$ listener.py [-t|--test] (payload) ([-t|--test] | event)
-```
-* [-t|--test]
-  - As a first argument, this will instanciate a 'webhook' with a default
-    payload and execute a test for it. ONLY IN THIS CASE YOU CAN SKIP THE
-    OTHER ARGUMENTS.
-  - As a second argument, this will trigger the test for each action in
-    /test_data/{hook} for the hook instanciated with the payload
-* (payload)
-  - It's the name of the file that contains a JSON Document. This may be either
-    permanent or temporal as long as it can be readed once.
-  - It's used to do both find the origin of the request and process it
-* (event)
-  - It's not a required element, as it can be (and is) obtained from the payload
-  - It's use is for testing the payload parse as long as they are in the call
-
-```
-$ test_hooks.py
-```
-
-Just use it as a script, this will trigger the listener for each hook origin it
-has initialized.
+/HooksHub
+|->/hookshub
+|  |->listener.py
+|  |->/hooks
+|     |->github.py
+|     |->/github
+|     |  |-> github_actions
+|     |->otherHooks.py
+|     |->/otherHooks
+|        |->otherhooks-actions
+|->/spec
+|  |->format_element.py
+|->/test_data
+   |->/hook
+      |->action_test_data
