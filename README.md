@@ -38,6 +38,24 @@ There are a few configurations in order to work properly. Check the [configurati
 
 ## Configuration
 
+In order to work properly some environment variables may be declared. That way the tokens won't be pushed by mistake and that kind of sensible data may only be visible by the developer.
+
+The required variables are:
+```
+$vhost_path   - Contains the path to the virtualhost (target path to build)
+$github_token - Your github_token required to OAuth with GitHub
+$gitlab_token - Your github_token required to OAuth with GitLab
+```
+
+A defaults file for the environment variables is required in order to instanciate the `listener` class.
+This file may be readed as a JSON Document with the variables names as key names.
+
+Doing so, if there's no environment variable, the data in the defaults file will be used.
+
+If those variables are not found in any of the two resources, the listener may raise an exception.
+
+As probably you'll be using our [Python HTTP Listener](https://github.com/gisce/python-github-webhooks) you may want to create this file in its folder as it may be looking for it (check its readme)
+
 ## Tokens
 
 ## Elements: Listener, Hooks and Actions
