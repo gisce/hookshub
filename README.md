@@ -97,28 +97,10 @@ The tests may use fake but correct data. Located in the `test_data` directory.
 ## File Structure
 
 All the Elements are located inside the `/hookshub/` directory ready to be installed.
-* The Actions are located inside a folder with its parent hook's name.
-* The Hooks are inside the Hooks directory.
+* The Actions are located inside a folder with its parent hook's name (a github action may be in `/github/`).
+* The Hooks are inside the `/hooks/` directory.
 * The Listener is inside the HooksHub main directory.
 
 The tests are located in the `/spec/` directory.
 
 The test data is located in the `/test_data/` directory
-
-The File structure may instanciate the following example:
-
-/HooksHub
-|->/hookshub
-|  |->listener.py
-|  |->/hooks
-|     |->github.py
-|     |->/github
-|     |  |-> github_actions
-|     |->otherHooks.py
-|     |->/otherHooks
-|        |->otherhooks-actions
-|->/spec
-|  |->format_element.py
-|->/test_data
-   |->/hook
-      |->action_test_data
