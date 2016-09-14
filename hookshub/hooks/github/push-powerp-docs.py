@@ -163,7 +163,7 @@ with TempDir() as temp:
         req_url = '{0}/repos/{1}/pulls'.format(
             http_url, repo_full_name
         )
-        head = loads(dumps({'Authorization': 'token {}'.format(token)}))
+        head = {'Authorization': 'token {}'.format(token)}
         pulls = requests.get(req_url, headers=head)
         if pulls.status_code != 200:
             output += 'Could Not Get PULLS, omitting comment |'
@@ -188,8 +188,8 @@ with TempDir() as temp:
         comment = 'Documentation build URL: http://{}/'.format(
             docs_url
         )
-        payload = loads(dumps({'body': comment}))
-        post = requests.post(req_url, headers=head, data=payload)
+        payload = {'body': comment}
+        post = requests.post(req_url, headers=head, json=payload)
         output += 'URL: {}\n'.format(req_url)
         output += 'HEAD: {}\n'.format(head)
         output += 'DATA: {}\n'.format(payload)
@@ -199,7 +199,7 @@ with TempDir() as temp:
         else:
             output += 'Failed to write comment. ' \
                       'Server responded with {} |'.format(post.status_code)
-            # output += dumps(loads(post.text))
+            output += dumps(loads(post.text))
 
     except requests.ConnectionError as err:
         sys.stderr.write('Failed to send comment to merge request -'
@@ -210,9 +210,9 @@ with TempDir() as temp:
     except requests.RequestException as err:
         sys.stderr.write('Failed to send comment to merge request -'
                          ' REQUEST [{}]'.format(err))
-    except Exception:
+    except Exception as err:
         sys.stderr.write('Failed to send comment to merge request, '
-                         'INTERNAL ERROR |')
+                         'INTERNAL ERROR {}|'.format(err))
 
     if virtenv:
         output += 'Deactivate virtualenv ...'
