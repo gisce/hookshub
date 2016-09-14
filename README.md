@@ -66,6 +66,14 @@ Check the documentation about Tokens referenced on [GitHub and OAuth](https://de
 
 ## Elements: Listener, Hooks and Actions
 
+This repo is based on 3 types as you may expect, they are the Listener, the Hooks and the Actions.
+
+The Listener is created by our [Python HTTP Listener](https://github.com/gisce/python-github-webhooks) and it does instanciate a Hook depending on the payload that it gets. With its `run_event_actions` method and a path for a default configuration file, the listener may instanciate a Hook and run all the actions required acording to the event and the payload recieved. When it ends, it may return a code, saying if it went all ok (`0`) or if something went wrong (`-1`) and a log string, containing the log with output and errors of the actions and/or the hook.
+
+On the other hand, the Hooks are created just with the payload and contain all info about a Hook from it's origin. The listener may instanciate each of them according to its origin, but they have the same methods and properties adapted to each of the hooks.
+
+Finally the actions are the most important elements on this repository. They run actions according to a hook's event and settings. Each Hook may instanciate it's own call to an action, but by default our actions may need a payload argument with JSON style. The actions themselves may be executed individually with the correct input (argument) so, they must be executable.
+
 ## Testing
 
 ## File Structure
