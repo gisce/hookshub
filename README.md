@@ -76,4 +76,10 @@ Finally the actions are the most important elements on this repository. They run
 
 ## Testing
 
+We use [MAMBA](https://github.com/nestorsalceda/mamba) for testing. If you may want to run or update the tests, remember that they may be located in the `/spec/` directory and you may be able to execute them with the following commands:
+```
+$mamba
+$mamba --format=documentation
+```
+
 ## File Structure
