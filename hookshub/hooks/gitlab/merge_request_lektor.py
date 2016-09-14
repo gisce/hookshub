@@ -200,7 +200,7 @@ with TempDir() as tmp:
         output += 'POST comment to {} ... '.format(req_url)
         head = {'PRIVATE-TOKEN': token}
         payload = {'body': comment}
-        note = requests.post(req_url, headers=head, data=payload)
+        note = requests.post(req_url, headers=head, json=payload)
         if note.status_code == 201:
             output += 'OK |'.format(note.status_code)
         else:
