@@ -44,8 +44,6 @@ repo_full_name = payload['repo_full_name']
 branch_name = payload['branch_name']
 output += ('Rebut event de <{}> |'.format(event))
 
-conf_file = join(payload['actions_path'], 'conf.json')
-
 # Get from env_vars
 docs_path = '{0}/{1}'.format(payload['vhost_path'], repo_name)
 token = payload['token']
