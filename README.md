@@ -2,7 +2,7 @@
 Our Hub of Hooks
 
 [![Build Status](https://travis-ci.org/gisce/hookshub.svg?branch=master)](https://travis-ci.org/gisce/hookshub)
-[![Coverage Status](https://coveralls.io/repos/github/gisce/hookshub/badge.svg?branch=master)](https://coveralls.io/github/gisce/hookshub?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/gisce/github-hooks/badge.svg?branch=master)](https://coveralls.io/github/gisce/github-hooks?branch=master)
 
 ## Installation
 
