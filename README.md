@@ -74,6 +74,16 @@ On the other hand, the Hooks are created just with the payload and contain all i
 
 Finally the actions are the most important elements on this repository. They run actions according to a hook's event and settings. Each Hook may instanciate it's own call to an action, but by default our actions may need a payload argument with JSON style. The actions themselves may be executed individually with the correct input (argument) so, they must be executable.
 
+### Action Naming
+
+*All actions may instance the following structure, and will only work if the event, repository and branch names are found*:
+* **event_** _name_
+* **event.py**
+* **event-repository_** _name_
+* **event-repository.py**
+* **event-repository-branch_** _name_
+* **event-repository-branch.py**
+
 ## Testing
 
 We use [MAMBA](https://github.com/nestorsalceda/mamba) for testing. If you may want to run or update the tests, remember that they may be located in the `/spec/` directory and you may be able to execute them with the following commands:
@@ -82,4 +92,33 @@ $mamba
 $mamba --format=documentation
 ```
 
+The tests may use fake but correct data. Located in the `test_data` directory.
+
 ## File Structure
+
+All the Elements are located inside the `/hookshub/` directory ready to be installed.
+* The Actions are located inside a folder with its parent hook's name.
+* The Hooks are inside the Hooks directory.
+* The Listener is inside the HooksHub main directory.
+
+The tests are located in the `/spec/` directory.
+
+The test data is located in the `/test_data/` directory
+
+The File structure may instanciate the following example:
+
+/HooksHub
+|->/hookshub
+|  |->listener.py
+|  |->/hooks
+|     |->github.py
+|     |->/github
+|     |  |-> github_actions
+|     |->otherHooks.py
+|     |->/otherHooks
+|        |->otherhooks-actions
+|->/spec
+|  |->format_element.py
+|->/test_data
+   |->/hook
+      |->action_test_data
