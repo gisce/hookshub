@@ -86,6 +86,10 @@ class GitHubWebhook(webhook):
     def repo_full_name(self):
         return self.json['repository']['full_name']
 
+    @property
+    def merged(self):
+        return self.json['pull_request']['merged'] or False
+
     def get_exe_action(self, action, conf):
         exe_path = join(self.actions_path, action)
         json = {}
