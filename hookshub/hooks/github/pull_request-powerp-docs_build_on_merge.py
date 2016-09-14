@@ -40,8 +40,6 @@ if not url:
     exit(-1)
 
 repo_name = payload['repo_name']
-repo_full_name = payload['repo_full_name']
-branch_name = payload['branch_name']
 merged = payload['merged']
 output += ('Rebut event de <{}> |'.format(event))
 
@@ -53,7 +51,6 @@ if not merged:
 # Get from env_vars
 docs_path = '{0}/{1}'.format(payload['vhost_path'], repo_name)
 token = payload['token']
-port = payload['port']
 
 docs_dir = 'powerp'
 
