@@ -175,9 +175,10 @@ with TempDir() as temp:
             http_url, repo_full_name, my_pr['number']
         )
         # Docs path te /var/www/domain/URI
-        docs_url = docs_path.split('/', 3)[3]   # Kick out /var/www/
-        base_url = docs_path.split('/', 4)[3]   # Get domain
-        base_uri = docs_path.split('/', 4)[4]   # Get docs uri
+        base_url = docs_path.split('/', 3)[3]   # Kick out /var/www/
+        base_uri = '{0}/powerp_{1}'.format(     # Get docs uri
+            repo_name, branch_name
+        )
         if port in ['80', '443']:
             res_url = '{0}/{1}'.format(base_url, base_uri)
         else:
@@ -199,16 +200,16 @@ with TempDir() as temp:
             output += dumps(loads(post.text))
 
     except requests.ConnectionError as err:
-        sys.stderr.write('Failed to send comment to merge request -'
+        sys.stderr.write('Failed to send comment to pull request -'
                          ' Connection [{}]'.format(err))
     except requests.HTTPError as err:
-        sys.stderr.write('Failed to send comment to merge request -'
+        sys.stderr.write('Failed to send comment to pull request -'
                          ' HTTP [{}]'.format(err))
     except requests.RequestException as err:
-        sys.stderr.write('Failed to send comment to merge request -'
+        sys.stderr.write('Failed to send comment to pull request -'
                          ' REQUEST [{}]'.format(err))
     except Exception as err:
-        sys.stderr.write('Failed to send comment to merge request, '
+        sys.stderr.write('Failed to send comment to pull request, '
                          'INTERNAL ERROR {}|'.format(err))
 
     if virtenv:
