@@ -82,6 +82,34 @@ def docs_build(dir, target, clean=True):
         exit(-1)
     return output, build_path
 
+
+def github_post_comment_pr(token, repository, pr, message):
+    import requests
+    github_api_url = "https://api.github.com"
+    # POST /repos/{:owner /:repo}/issues/{:pr_id}/comments
+    req_url = '{0}/repos/{1}/issues/{2}/comments'.format(
+        github_api_url, repository, pr['number']
+    )
+    head = {'Authorization': 'token {}'.format(token)}
+    payload = {'body': message}
+    code = 0
+    try:
+        post = requests.post(req_url, headers=head, json=payload)
+        code = post.status_code
+    except requests.ConnectionError as err:
+        sys.stderr.write('Failed to send comment to pull request -'
+                         ' Connection [{}]'.format(err))
+    except requests.HTTPError as err:
+        sys.stderr.write('Failed to send comment to pull request -'
+                         ' HTTP [{}]'.format(err))
+    except requests.RequestException as err:
+        sys.stderr.write('Failed to send comment to pull request -'
+                         ' REQUEST [{}]'.format(err))
+    except Exception as err:
+        sys.stderr.write('Failed to send comment to pull request, '
+                         'INTERNAL ERROR [{}]'.format(err))
+    return code
+
 payload, event = arguments()
 
 output = ''
