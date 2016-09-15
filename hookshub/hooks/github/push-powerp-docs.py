@@ -61,6 +61,27 @@ def pip_requirements(dir):
         output += ' Couldn\'t install all dependencies '
     return output
 
+
+def docs_build(dir, target, clean=True):
+    build_path = dir
+    output = 'Building mkdocs '
+    command = 'mkdocs build '
+    if target:
+        build_path = target
+        output += 'on {}...'.format(target)
+        command += '-d {}'.format(target)
+    if clean:
+        command += ' --clean'
+    new_build = Popen(
+        command.split(), cwd=dir, stdout=PIPE, stderr=PIPE
+    )
+    out, err = new_build.communicate()
+    if new_build.returncode != 0:
+        output += 'FAILED TO BUILD: {0}::{1}'.format(out, err)
+        print(output)
+        exit(-1)
+    return output, build_path
+
 payload, event = arguments()
 
 output = ''
