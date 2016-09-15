@@ -86,10 +86,13 @@ class GitHubWebhook(webhook):
     def repo_full_name(self):
         return self.json['repository']['full_name']
 
+    @property
+    def merged(self):
+        return self.json['pull_request']['merged'] or False
+
     def get_exe_action(self, action, conf):
         exe_path = join(self.actions_path, action)
         json = {}
-        json.update({'token': conf['github_token']})
         # Action for 'status' event on repository 'powerp-docs'
         if action.startswith('{}-powerp-docs'.format(EVENT_STATUS)):
             json.update({'ssh_url': self.ssh_url})
@@ -98,7 +101,9 @@ class GitHubWebhook(webhook):
             json.update({'branch-name': self.branch_name})
             json.update({'state': self.status})
             return [exe_path, dumps(json), self.event]
+        # Action for 'push' event on repository 'powerp-docs'
         elif action.startswith('{}-powerp-docs'.format(EVENT_PUSH)):
+            json.update({'token': conf['github_token']})
             json.update({'vhost_path': conf['vhost_path']})
             json.update({'port': conf['nginx_port']})
             json.update({'ssh_url': self.ssh_url})
@@ -106,7 +111,14 @@ class GitHubWebhook(webhook):
             json.update({'repo_name': self.repo_name})
             json.update({'repo_full_name': self.repo_full_name})
             json.update({'branch_name': self.branch_name})
-            json.update({'actions_path': self.actions_path})
+            return [exe_path, dumps(json), self.event]
+        # Action for 'pull_request' event on repository 'powerp-docs'
+        elif action.startswith('{}-powerp-docs'.format(PULL_REQUEST)):
+            json.update({'vhost_path': conf['vhost_path']})
+            json.update({'ssh_url': self.ssh_url})
+            json.update({'http_url': self.http_url})
+            json.update({'repo_name': self.repo_name})
+            json.update({'merged': self.merged})
             return [exe_path, dumps(json), self.event]
         else:
             return super(GitHubWebhook, self).get_exe_action(action, conf)

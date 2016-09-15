@@ -659,16 +659,20 @@ with description('Github Hook'):
             json_data['repository']['name'] = 'powerp-docs'
             hook = github(json_data)
             json = {}
-            token = 'token'
-            json.update({token: config['github_token']})
             json.update({'ssh_url': hook.ssh_url})
             json.update({'http_url': hook.http_url})
             json.update({'repo-name': hook.repo_name})
             json.update({'branch-name': hook.branch_name})
             json.update({'state': hook.status})
             args_json = loads(hook.get_exe_action(action, config)[1])
+            checked = []
+            for key in args_json.keys():
+                checked.append(key)
+                expect(args_json[key]).to(
+                    equal(json.get(key, '{} Not found'.format(key)))
+                )
             for key in json.keys():
-                expect(args_json.get(key, '')).to(equal(json[key]))
+                expect(checked).to(contain(key))
 
         with it('must return token, port, vhost path, ssh and http urls, '
                 'repository and branch names, full repository name;'
@@ -691,5 +695,38 @@ with description('Github Hook'):
             json.update({'repo_full_name': hook.repo_full_name})
             json.update({'branch_name': hook.branch_name})
             args_json = loads(hook.get_exe_action(action, config)[1])
+            checked = []
+            for key in args_json.keys():
+                checked.append(key)
+                expect(args_json[key]).to(
+                    equal(json.get(key, '{} Not found'.format(key)))
+                )
             for key in json.keys():
-                expect(args_json.get(key, '')).to(equal(json[key]))
+                expect(checked).to(contain(key))
+
+        with it('must return [exe_path, payload, event] when getting'
+                ' the execution params for the pull_request event.'
+                ' Payload must include: vhost_path, ssh and http url,'
+                ' repo_name and if it\'s merged'):
+            action = 'pull_request-powerp-docs'
+            file = 'pull_request.json'
+            data = open(join(data_path, file)).read()
+            hook = github(loads(data))
+            exe_path = join(hook.actions_path, action)
+
+            config = loads(open(join(data_path, 'conf.json'), 'r').read())
+            json = {}
+            json.update({'vhost_path': config['vhost_path']})
+            json.update({'ssh_url': hook.ssh_url})
+            json.update({'http_url': hook.http_url})
+            json.update({'repo_name': hook.repo_name})
+            json.update({'merged': hook.merged})
+            args_json = loads(hook.get_exe_action(action, config)[1])
+            checked = []
+            for key in args_json.keys():
+                checked.append(key)
+                expect(args_json[key]).to(
+                    equal(json.get(key, '{} Not found'.format(key)))
+                )
+            for key in json.keys():
+                expect(checked).to(contain(key))

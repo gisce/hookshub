@@ -44,8 +44,6 @@ repo_full_name = payload['repo_full_name']
 branch_name = payload['branch_name']
 output += ('Rebut event de <{}> |'.format(event))
 
-conf_file = join(payload['actions_path'], 'conf.json')
-
 # Get from env_vars
 docs_path = '{0}/{1}'.format(payload['vhost_path'], repo_name)
 token = payload['token']
@@ -166,7 +164,8 @@ with TempDir() as temp:
         head = {'Authorization': 'token {}'.format(token)}
         pulls = requests.get(req_url, headers=head)
         if pulls.status_code != 200:
-            raise Exception('Could Not Get PULLS, omitting comment |')
+            output += 'OMITTING |'
+            raise Exception('Could Not Get PULLS')
         prs = loads(pulls.text)
         # There are only opened PR, so the one that has the same branch name
         #   is the one we are looking for
@@ -177,15 +176,16 @@ with TempDir() as temp:
             http_url, repo_full_name, my_pr['number']
         )
         # Docs path te /var/www/domain/URI
-        docs_url = docs_path.split('/', 3)[3]   # Kick out /var/www/
-        base_url = docs_path.split('/', 4)[3]   # Get domain
-        base_uri = docs_path.split('/', 4)[4]   # Get docs uri
+        base_url = docs_path.split('/', 3)[3]   # Kick out /var/www/
+        base_uri = '{0}/powerp_{1}'.format(     # Get docs uri
+            repo_name, branch_name
+        )
         if port in ['80', '443']:
             res_url = '{0}/{1}'.format(base_url, base_uri)
         else:
             res_url = '{0}:{1}/{2}'.format(base_url, port, base_uri)
         comment = 'Documentation build URL: http://{}/'.format(
-            docs_url
+            res_url
         )
         payload = {'body': comment}
         post = requests.post(req_url, headers=head, json=payload)
@@ -201,17 +201,17 @@ with TempDir() as temp:
             output += dumps(loads(post.text))
 
     except requests.ConnectionError as err:
-        sys.stderr.write('Failed to send comment to merge request -'
+        sys.stderr.write('Failed to send comment to pull request -'
                          ' Connection [{}]'.format(err))
     except requests.HTTPError as err:
-        sys.stderr.write('Failed to send comment to merge request -'
+        sys.stderr.write('Failed to send comment to pull request -'
                          ' HTTP [{}]'.format(err))
     except requests.RequestException as err:
-        sys.stderr.write('Failed to send comment to merge request -'
+        sys.stderr.write('Failed to send comment to pull request -'
                          ' REQUEST [{}]'.format(err))
     except Exception as err:
-        sys.stderr.write('Failed to send comment to merge request, '
-                         'INTERNAL ERROR {}|'.format(err))
+        sys.stderr.write('Failed to send comment to pull request, '
+                         'INTERNAL ERROR [{}]'.format(err))
 
     if virtenv:
         output += 'Deactivate virtualenv ...'
