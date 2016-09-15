@@ -258,8 +258,10 @@ with TempDir() as temp:
     my_pr, out = github_get_pr(token, repo_full_name, branch_name)
     output += out
 
-    try:
-        import requests
+    # If getting pr fails, we ommit comment post
+    if my_pr <= 0:
+        print(output)
+        exit(0)
 
         output += ' Writting comment on PR ...'
         # Necessitem agafar totes les pull request per trobar la nostra
