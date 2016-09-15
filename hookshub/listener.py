@@ -79,7 +79,7 @@ class HookListener(object):
                         action, output
                     ))
                     return -1, log
-                log += ('[{0}]:{1}Success!\n'.format(
+                log += ('[{0}]:{1}\n[{0}]:Success!\n'.format(
                     action, output
                 ))
         return 0, log
