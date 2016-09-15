@@ -114,21 +114,21 @@ with TempDir() as temp:
     # Pendent de solucionar: No es pot entrar al virtualenv si amb el binari
     # especificat a dalt... A més l'interpret no pot canviar amb subprocess
 
-    output += 'Entrant al virtualenv: "docs" ... '
-    command = 'workon docs'
-    try:
-        new_virtenv = Popen(
-            command.split(), stdout=PIPE, stderr=PIPE
-        )
-        out, err = new_virtenv.communicate()
-        virtenv = new_virtenv.returncode == 0
-        if not virtenv:
-            output += 'FAILED to enter virtualenv, installing on default env |'
-        output += 'OK |'
-    except OSError as err:
-        output += 'FAILED to enter virtualenv, installing on default env' \
-                  '\n {}|'.format(err)
-        virtenv = False
+    # output += 'Entrant al virtualenv: "docs" ... '
+    # command = 'workon docs'
+    # try:
+    #     new_virtenv = Popen(
+    #         command.split(), stdout=PIPE, stderr=PIPE
+    #     )
+    #     out, err = new_virtenv.communicate()
+    #     virtenv = new_virtenv.returncode == 0
+    #     if not virtenv:
+    #         output += 'FAILED to enter virtualenv, installing on default env|'
+    #     output += 'OK |'
+    # except OSError as err:
+    #     output += 'FAILED to enter virtualenv, installing on default env' \
+    #               '\n {}|'.format(err)
+    #     virtenv = False
 
     # Accedim al directori del clone utilitzant el nom del repositori
 
