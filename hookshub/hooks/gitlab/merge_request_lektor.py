@@ -45,10 +45,8 @@ source_branch = payload['branch_name']  # Source branch
 project_id = payload['project_id']      # Source Project ID
 index_id = payload['index_id']          # item PR id
 merge_id = payload['object_id']         # action PR id
-mypath = payload['mypath']              # action path
-
-conf_file = join(mypath, 'conf.json')
-
+state = payload['state']                # Merge Request State
+merged = state == 'merged'
 # Get from env_vars
 lektor_path = '{0}/{1}'.format(payload['vhost_path'], repo_name)
 token = payload['token']
