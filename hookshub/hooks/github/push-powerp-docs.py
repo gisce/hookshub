@@ -164,7 +164,8 @@ with TempDir() as temp:
         head = {'Authorization': 'token {}'.format(token)}
         pulls = requests.get(req_url, headers=head)
         if pulls.status_code != 200:
-            raise Exception('Could Not Get PULLS, omitting comment |')
+            output += 'OMITTING'
+            raise Exception('Could Not Get PULLS')
         prs = loads(pulls.text)
         # There are only opened PR, so the one that has the same branch name
         #   is the one we are looking for
