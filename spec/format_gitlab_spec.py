@@ -159,6 +159,14 @@ with description('Gitlab Hook'):
             hook = gitlab(json_data)
             expect(hook.project_id).to(equal(1))
 
+        with it('must return None when getting state property on non-state'
+                'event (like push)'):
+            file = 'push.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.state).to(equal('None'))
+
 
     with context('Comment Event'):
         with it('must have "note" as event'):
@@ -184,6 +192,15 @@ with description('Gitlab Hook'):
                 json_data = loads(data)
                 hook = gitlab(json_data)
                 expect(hook.branch_name).to(equal('None'))
+
+            with it('must return the right state of the issue that has been'
+                    ' commented (/issue/state on comment_request.json)'):
+                file = 'comment_issue.json'
+                data = open(join(data_path, file)).read()
+                json_data = loads(data)
+                hook = gitlab(json_data)
+                issue_state = json_data['issue']['state']
+                expect(hook.state).to(equal(issue_state))
 
         with context('Commenting a Merge Request'):
             with it('may return source branch name if commenting request '
@@ -260,6 +277,16 @@ with description('Gitlab Hook'):
                 merge_id = json_data['merge_request']['id']
                 expect(hook.object_id).to(equal(merge_id))
 
+            with it('must return the right state of the merge_request that'
+                    ' has been commented (/merge_request/state on'
+                    ' comment_request.json)'):
+                file = 'comment_request.json'
+                data = open(join(data_path, file)).read()
+                json_data = loads(data)
+                hook = gitlab(json_data)
+                merge_state = json_data['merge_request']['state']
+                expect(hook.state).to(equal(merge_state))
+
     with context('Issue Event'):
         with it('must have "issue" as event'):
             file = 'issue.json'
@@ -282,6 +309,15 @@ with description('Gitlab Hook'):
             json_data = loads(data)
             hook = gitlab(json_data)
             expect(hook.project_id).to(equal(None))
+
+        with it('must return the right state of the issue '
+                '(/object_attributes/state on issue.json)'):
+            file = 'issue.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            issue_state = json_data['object_attributes']['state']
+            expect(hook.state).to(equal(issue_state))
 
     with context('Merge Request Event'):
         with it('must have "merge_request" as event'):
@@ -376,6 +412,13 @@ with description('Gitlab Hook'):
             json.update({'index_id': hook.index_id})
             json.update({'object_id': hook.object_id})
             json.update({'project_id': hook.project_id})
+            json.update({'state': hook.state})
             args_json = loads(hook.get_exe_action(action, config)[1])
+            checked = []
+            for key in args_json.keys():
+                checked.append(key)
+                expect(args_json[key]).to(
+                    equal(json.get(key, '{} Not found'.format(key)))
+                )
             for key in json.keys():
-                expect(args_json.get(key, '')).to(equal(json[key]))
+                expect(checked).to(contain(key))

@@ -45,10 +45,8 @@ source_branch = payload['branch_name']  # Source branch
 project_id = payload['project_id']      # Source Project ID
 index_id = payload['index_id']          # item PR id
 merge_id = payload['object_id']         # action PR id
-mypath = payload['mypath']              # action path
-
-conf_file = join(mypath, 'conf.json')
-
+state = payload['state']                # Merge Request State
+merged = state == 'merged'
 # Get from env_vars
 lektor_path = '{0}/{1}'.format(payload['vhost_path'], repo_name)
 token = payload['token']
@@ -56,12 +54,17 @@ port = payload['port']
 
 branch_path = '{0}/branch/{1}'.format(lektor_path, source_branch)
 mr_path = '{}/PR/'.format(lektor_path)
+if merged:
+    master_path = '{0}/{1}'.format(lektor_path, 'master')
 
 with TempDir() as tmp:
     tmp_dir = tmp.dir
     output += ('Creat Directori temporal: {} |'.format(tmp_dir))
     command = ''
-    if source_branch != 'None':
+    if merged:
+        output += "Clonant el repositori '{0}' ...".format(repo_name)
+        command = 'git clone {0}'.format(url)
+    elif source_branch != 'None':
         output += "Clonant el repositori '{0}', amb la branca '{1}' ...".format(
             repo_name, source_branch
         )
@@ -83,7 +86,10 @@ with TempDir() as tmp:
             '[merge_request_lektor]:clone_repository_fail::{}'.format(err)
         )
         url = payload['http_url']
-        if source_branch != 'None':
+        if merged:
+            output += "Clonant el repositori '{0}' ...".format(repo_name)
+            command = 'git clone {0}'.format(url)
+        elif source_branch != 'None':
             output += "Clonant el repositori '{0}', amb la branca '{1}'" \
                       " ...".format(repo_name, source_branch)
             command = 'git clone {0} --branch {1}'.format(url, source_branch)
@@ -97,6 +103,7 @@ with TempDir() as tmp:
         out, err = new_clone.communicate()
 
         if new_clone.returncode != 0:
+            sys.stderr.write('| Failed to get repository |')
             print(output)
             exit(-1)
 
@@ -127,9 +134,16 @@ with TempDir() as tmp:
     output += 'OK |'
 
     # Fem build al directori on tenim la pagina des del directori del clone
-
-    command = 'lektor --project gisce.net-lektor build -O {}'.format(branch_path)
-    output += 'Building lektor on {}...'.format(branch_path)
+    if merged:
+        command = 'lektor --project gisce.net-lektor build -O {}'.format(
+            master_path
+        )
+        output += 'Building lektor on {}...'.format(master_path)
+    else:
+        command = 'lektor --project gisce.net-lektor build -O {}'.format(
+            branch_path
+        )
+        output += 'Building lektor on {}...'.format(branch_path)
     new_build = Popen(
         command.split(), cwd=clone_dir, stdout=PIPE, stderr=PIPE
     )
@@ -141,6 +155,10 @@ with TempDir() as tmp:
         )
         exit(-1)
     output += 'OK |'
+
+    if merged:
+        print(output)
+        exit(0)
 
     # Creem el directori per /PR/
     command = 'mkdir -p {}'.format(mr_path)
@@ -214,6 +232,9 @@ with TempDir() as tmp:
     except requests.RequestException as err:
         sys.stderr.write('Failed to send comment to merge request -'
                          ' REQUEST [{}]'.format(err))
+    except Exception as err:
+        sys.stderr.write('Failed to send comment to merge request -'
+                         ' INTERNAL SERVER ERROR [{}]'.format(err))
 
     if virtenv:
         output += 'Deactivate virtualenv ...'
