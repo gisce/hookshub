@@ -412,6 +412,13 @@ with description('Gitlab Hook'):
             json.update({'index_id': hook.index_id})
             json.update({'object_id': hook.object_id})
             json.update({'project_id': hook.project_id})
+            json.update({'state': hook.state})
             args_json = loads(hook.get_exe_action(action, config)[1])
+            checked = []
+            for key in args_json.keys():
+                checked.append(key)
+                expect(args_json[key]).to(
+                    equal(json.get(key, '{} Not found'.format(key)))
+                )
             for key in json.keys():
-                expect(args_json.get(key, '')).to(equal(json[key]))
+                expect(checked).to(contain(key))
