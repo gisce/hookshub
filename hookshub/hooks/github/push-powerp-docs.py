@@ -212,17 +212,17 @@ with TempDir() as temp:
         sys.stderr.write('Failed to send comment to pull request, '
                          'INTERNAL ERROR [{}]'.format(err))
 
-    if virtenv:
-        output += 'Deactivate virtualenv ...'
-        command = 'deactivate'
-        deact = Popen(
-            command, cwd=clone_dir, stdout=PIPE, stderr=PIPE
-        )
-        out, err = deact.communicate()
-        if deact.returncode != 0:
-            output += 'FAILED TO DEACTIVATE: {0}::{1}'.format(out, err)
-            print(output)
-            exit(-1)
-        output += 'OK |'
+    # if virtenv:
+    #     output += 'Deactivate virtualenv ...'
+    #     command = 'deactivate'
+    #     deact = Popen(
+    #         command, cwd=clone_dir, stdout=PIPE, stderr=PIPE
+    #     )
+    #     out, err = deact.communicate()
+    #     if deact.returncode != 0:
+    #         output += 'FAILED TO DEACTIVATE: {0}::{1}'.format(out, err)
+    #         print(output)
+    #         exit(-1)
+    #     output += 'OK |'
 
 print(output)
