@@ -49,6 +49,18 @@ def clone_on_dir(dir, branch, repository, url):
         )
     return output, new_clone.returncode
 
+
+def pip_requirements(dir):
+    output = 'Instal.lant dependencies...'
+    command = 'pip install -r requirements.txt'
+    dependencies = Popen(
+        command.split(), cwd=dir, stdout=PIPE, stderr=PIPE
+    )
+    out, err = dependencies.communicate()
+    if dependencies.returncode != 0:
+        output += ' Couldn\'t install all dependencies '
+    return output
+
 payload, event = arguments()
 
 output = ''
