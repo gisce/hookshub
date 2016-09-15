@@ -185,7 +185,7 @@ with TempDir() as temp:
         else:
             res_url = '{0}:{1}/{2}'.format(base_url, port, base_uri)
         comment = 'Documentation build URL: http://{}/'.format(
-            docs_url
+            res_url
         )
         payload = {'body': comment}
         post = requests.post(req_url, headers=head, json=payload)
@@ -211,7 +211,7 @@ with TempDir() as temp:
                          ' REQUEST [{}]'.format(err))
     except Exception as err:
         sys.stderr.write('Failed to send comment to pull request, '
-                         'INTERNAL ERROR {}|'.format(err))
+                         'INTERNAL ERROR {}'.format(err))
 
     if virtenv:
         output += 'Deactivate virtualenv ...'
