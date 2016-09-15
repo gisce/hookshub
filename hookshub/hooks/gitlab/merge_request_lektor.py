@@ -54,12 +54,17 @@ port = payload['port']
 
 branch_path = '{0}/branch/{1}'.format(lektor_path, source_branch)
 mr_path = '{}/PR/'.format(lektor_path)
+if merged:
+    master_path = '{0}/{1}'.format(lektor_path, 'master')
 
 with TempDir() as tmp:
     tmp_dir = tmp.dir
     output += ('Creat Directori temporal: {} |'.format(tmp_dir))
     command = ''
-    if source_branch != 'None':
+    if merged:
+        output += "Clonant el repositori '{0}' ...".format(repo_name)
+        command = 'git clone {0}'.format(url)
+    elif source_branch != 'None':
         output += "Clonant el repositori '{0}', amb la branca '{1}' ...".format(
             repo_name, source_branch
         )
@@ -81,7 +86,10 @@ with TempDir() as tmp:
             '[merge_request_lektor]:clone_repository_fail::{}'.format(err)
         )
         url = payload['http_url']
-        if source_branch != 'None':
+        if merged:
+            output += "Clonant el repositori '{0}' ...".format(repo_name)
+            command = 'git clone {0}'.format(url)
+        elif source_branch != 'None':
             output += "Clonant el repositori '{0}', amb la branca '{1}'" \
                       " ...".format(repo_name, source_branch)
             command = 'git clone {0} --branch {1}'.format(url, source_branch)
@@ -125,9 +133,16 @@ with TempDir() as tmp:
     output += 'OK |'
 
     # Fem build al directori on tenim la pagina des del directori del clone
-
-    command = 'lektor --project gisce.net-lektor build -O {}'.format(branch_path)
-    output += 'Building lektor on {}...'.format(branch_path)
+    if merged:
+        command = 'lektor --project gisce.net-lektor build -O {}'.format(
+            master_path
+        )
+        output += 'Building lektor on {}...'.format(master_path)
+    else:
+        command = 'lektor --project gisce.net-lektor build -O {}'.format(
+            branch_path
+        )
+        output += 'Building lektor on {}...'.format(branch_path)
     new_build = Popen(
         command.split(), cwd=clone_dir, stdout=PIPE, stderr=PIPE
     )
@@ -139,6 +154,10 @@ with TempDir() as tmp:
         )
         exit(-1)
     output += 'OK |'
+
+    if merged:
+        print(output)
+        exit(0)
 
     # Creem el directori per /PR/
     command = 'mkdir -p {}'.format(mr_path)
