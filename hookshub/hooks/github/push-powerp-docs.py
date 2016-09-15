@@ -263,68 +263,20 @@ with TempDir() as temp:
         print(output)
         exit(0)
 
-        output += ' Writting comment on PR ...'
-        # Necessitem agafar totes les pull request per trobar la nostra
-        # GET / repos / {:owner / :repo} / pulls
-        req_url = '{0}/repos/{1}/pulls'.format(
-            http_url, repo_full_name
-        )
-        auth_token = 'token {}'.format(token)
-        head = {'Authorization': auth_token}
-        pulls = requests.get(req_url, headers=head)
-        if pulls.status_code != 200:
-            output += 'OMITTING |'
-            raise Exception('Could Not Get PULLS')
-        prs = loads(pulls.text)
-        # There are only opened PR, so the one that has the same branch name
-        #   is the one we are looking for
-        my_prs = [pr for pr in prs if pr['head']['ref'] == branch_name]
-        if my_prs:
-            my_pr = my_prs[0]
-            output += 'MyPr: {}'.format(my_pr)
-        else:
-            output += 'OMITTING |'
-            raise Exception('Could Not Get PULLS')
-        # Amb la pr, ja podem enviar el comentari
-        # POST /repos/{:owner /:repo}/issues/{:pr_id}/comments
-        req_url = '{0}/repos/{1}/issues/{2}/comments'.format(
-            http_url, repo_full_name, my_pr['number']
-        )
-        # Docs path te /var/www/domain/URI
-        base_url = docs_path.split('/', 3)[3]   # Kick out /var/www/
-        base_uri = '{0}/powerp_{1}'.format(     # Get docs uri
-            repo_name, branch_name
-        )
-        if port in ['80', '443']:
-            res_url = '{0}/{1}'.format(base_url, base_uri)
-        else:
-            res_url = '{0}:{1}/{2}'.format(base_url, port, base_uri)
-        comment = 'Documentation build URL: http://{}/'.format(res_url)
-        payload = {'body': comment}
-        post = requests.post(req_url, headers=head, json=payload)
-        output += 'URL: {}\n'.format(req_url)
-        output += 'HEAD: {}\n'.format(head)
-        output += 'DATA: {}\n'.format(payload)
+    # Postejem el comentari
 
-        if post.status_code == 201:
-            output += ' OK|'
-        else:
-            output += 'Failed to write comment. ' \
-                      'Server responded with {} |'.format(post.status_code)
-            output += dumps(loads(post.text))
+    post_code, post_text = github_post_comment_pr(
+        token, repo_full_name, my_pr['number'], comment
+    )
 
-    except requests.ConnectionError as err:
-        sys.stderr.write('Failed to send comment to pull request -'
-                         ' Connection [{}]'.format(err))
-    except requests.HTTPError as err:
-        sys.stderr.write('Failed to send comment to pull request -'
-                         ' HTTP [{}]'.format(err))
-    except requests.RequestException as err:
-        sys.stderr.write('Failed to send comment to pull request -'
-                         ' REQUEST [{}]'.format(err))
-    except Exception as err:
-        sys.stderr.write('Failed to send comment to pull request, '
-                         'INTERNAL ERROR [{}]'.format(err))
+    if post_code == 201:
+        output += ' OK|'
+    elif post_code == 0:
+        output += ' Something went wrong |'
+    else:
+        output += 'Failed to write comment. ' \
+                  'Server responded with {} |'.format(post.status_code)
+        output += dumps(loads(post_text))
 
     # if virtenv:
     #     output += 'Deactivate virtualenv ...'
