@@ -236,7 +236,26 @@ with TempDir() as temp:
 
     # Fem build al directori on tenim la pagina des del directori del clone
 
-    out, target_build_path = '{} OK |'.format(docs_build(clone_dir, docs_path))
+    out, target_build_path = (docs_build(clone_dir, docs_path))
+    output += '{} OK |'.format(out)
+
+    output += ' Writting comment on PR ...'
+
+    # Construim el comentari:
+    #   Docs path te /var/www/domain/URI
+    base_url = docs_path.split('/', 3)[3]   # Kick out /var/www/
+    base_uri = '{0}/powerp_{1}'.format(     # Get docs uri
+        repo_name, branch_name
+    )
+    if port in ['80', '443']:
+        res_url = '{0}/{1}'.format(base_url, base_uri)
+    else:
+        res_url = '{0}:{1}/{2}'.format(base_url, port, base_uri)
+    comment = 'Documentation build URL: http://{}/'.format(res_url)
+
+    # Necessitem agafar totes les pull request per trobar la nostra
+
+    my_pr, out = github_get_pr(token, repo_full_name, branch_name)
     output += out
 
     try:
