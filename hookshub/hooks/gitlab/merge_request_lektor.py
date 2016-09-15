@@ -103,6 +103,7 @@ with TempDir() as tmp:
         out, err = new_clone.communicate()
 
         if new_clone.returncode != 0:
+            sys.stderr.write('| Failed to get repository |')
             print(output)
             exit(-1)
 
@@ -231,6 +232,9 @@ with TempDir() as tmp:
     except requests.RequestException as err:
         sys.stderr.write('Failed to send comment to merge request -'
                          ' REQUEST [{}]'.format(err))
+    except Exception as err:
+        sys.stderr.write('Failed to send comment to merge request -'
+                         ' INTERNAL SERVER ERROR [{}]'.format(err))
 
     if virtenv:
         output += 'Deactivate virtualenv ...'
