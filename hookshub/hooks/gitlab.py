@@ -111,6 +111,17 @@ class GitLabWebhook(webhook):
         return None
 
     @property
+    def state(self):
+        if self.event == EVENT_MERGE_REQ or self.event == EVENT_ISSUE:
+            return self.json['object_attributes']['state']
+        elif self.event == EVENT_COMMENT \
+                and 'merge_request' in self.json.keys():
+            return self.json['merge_request']['state']
+        elif self.event == EVENT_COMMENT and 'issue' in self.json.keys():
+            return self.json['issue']['state']
+        return 'None'
+
+    @property
     def event_actions(self):
         # We start with all actions that start with {event}
         # Then we filter them to not execute the actions for the same event
