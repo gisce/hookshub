@@ -98,8 +98,6 @@ with TempDir() as temp:
     output += ('Creat Directori temporal: {} |'.format(temp.dir))
 
     # Primer clonem el repositori
-
-    # Canviarà la forma de clonar segons tinguem o no branca:
     out, code = clone_on_dir(temp.dir, branch_name, repo_name, url)
     output += out
     if code != 0:
@@ -111,8 +109,10 @@ with TempDir() as temp:
             sys.stderr.write('| Failed to get repository |')
             print(output)
             exit(-1)
-
     output += 'OK |'
+
+    # Pendent de solucionar: No es pot entrar al virtualenv si amb el binari
+    # especificat a dalt... A més l'interpret no pot canviar amb subprocess
 
     output += 'Entrant al virtualenv: "docs" ... '
     command = 'workon docs'
