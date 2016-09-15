@@ -194,13 +194,15 @@ with TempDir() as temp:
 
     try:
         import requests
+
         output += ' Writting comment on PR ...'
         # Necessitem agafar totes les pull request per trobar la nostra
         # GET / repos / {:owner / :repo} / pulls
         req_url = '{0}/repos/{1}/pulls'.format(
             http_url, repo_full_name
         )
-        head = {'Authorization': 'token {}'.format(token)}
+        auth_token = 'token {}'.format(token)
+        head = {'Authorization': auth_token}
         pulls = requests.get(req_url, headers=head)
         if pulls.status_code != 200:
             output += 'OMITTING |'
@@ -208,7 +210,13 @@ with TempDir() as temp:
         prs = loads(pulls.text)
         # There are only opened PR, so the one that has the same branch name
         #   is the one we are looking for
-        my_pr = [pr for pr in prs if pr['head']['ref'] == branch_name][0]
+        my_prs = [pr for pr in prs if pr['head']['ref'] == branch_name]
+        if my_prs:
+            my_pr = my_prs[0]
+            output += 'MyPr: {}'.format(my_pr)
+        else:
+            output += 'OMITTING |'
+            raise Exception('Could Not Get PULLS')
         # Amb la pr, ja podem enviar el comentari
         # POST /repos/{:owner /:repo}/issues/{:pr_id}/comments
         req_url = '{0}/repos/{1}/issues/{2}/comments'.format(
@@ -223,9 +231,7 @@ with TempDir() as temp:
             res_url = '{0}/{1}'.format(base_url, base_uri)
         else:
             res_url = '{0}:{1}/{2}'.format(base_url, port, base_uri)
-        comment = 'Documentation build URL: http://{}/'.format(
-            res_url
-        )
+        comment = 'Documentation build URL: http://{}/'.format(res_url)
         payload = {'body': comment}
         post = requests.post(req_url, headers=head, json=payload)
         output += 'URL: {}\n'.format(req_url)
