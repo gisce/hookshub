@@ -136,13 +136,7 @@ with TempDir() as temp:
 
     # Instalem dependencies
 
-    output += 'Instal.lant dependencies...'
-    command = 'pip install -r requirements.txt'
-    dependencies = Popen(
-        command.split(), cwd=clone_dir, stdout=PIPE, stderr=PIPE
-    )
-    out, err = dependencies.communicate()
-    output += 'OK |'
+    output += '{} OK |'.format(pip_requirements(clone_dir))
 
     # Fem build al directori on tenim la pagina des del directori del clone
 
