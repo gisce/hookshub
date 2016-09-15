@@ -161,17 +161,8 @@ with TempDir() as temp:
 
     # Fem build al directori on tenim la pagina des del directori del clone
 
-    command = 'mkdocs build -d {} --clean'.format(docs_path)
-    output += 'Building mkdocs on {}...'.format(docs_path)
-    new_build = Popen(
-        command.split(), cwd=clone_dir, stdout=PIPE, stderr=PIPE
-    )
-    out, err = new_build.communicate()
-    if new_build.returncode != 0:
-        output += 'FAILED TO BUILD: {0}::{1}'.format(out, err)
-        print(output)
-        exit(-1)
-    output += 'OK |'
+    out, target_build_path = '{} OK |'.format(docs_build(clone_dir, docs_path))
+    output += out
 
     try:
         import requests
