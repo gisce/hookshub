@@ -138,9 +138,11 @@ def github_post_comment_pr(token, repository, pr, message):
     head = {'Authorization': auth_token}
     payload = {'body': message}
     code = 0
+    text = ''
     try:
         post = requests.post(req_url, headers=head, json=payload)
         code = post.status_code
+        text = post.text
     except requests.ConnectionError as err:
         sys.stderr.write('Failed to send comment to pull request -'
                          ' Connection [{}]'.format(err))
@@ -153,7 +155,7 @@ def github_post_comment_pr(token, repository, pr, message):
     except Exception as err:
         sys.stderr.write('Failed to send comment to pull request, '
                          'INTERNAL ERROR [{}]'.format(err))
-    return code
+    return code, text
 
 payload, event = arguments()
 
