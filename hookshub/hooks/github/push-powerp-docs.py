@@ -182,7 +182,7 @@ with TempDir() as temp:
         #   is the one we are looking for
         my_pr = [pr for pr in prs if pr['head']['ref'] == branch_name][0]
         # Amb la pr, ja podem enviar el comentari
-        # POST /repos/{:owner /:repo}/pulls/{:pr_id}/comments
+        # POST /repos/{:owner /:repo}/issues/{:pr_id}/comments
         req_url = '{0}/repos/{1}/issues/{2}/comments'.format(
             http_url, repo_full_name, my_pr['number']
         )
