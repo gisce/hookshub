@@ -88,42 +88,15 @@ with TempDir() as temp:
     # Primer clonem el repositori
 
     # Canviarà la forma de clonar segons tinguem o no branca:
-    if branch_name != 'None':
-        output += "Clonant el repositori '{0}', amb la branca '{1}' ...".format(
-            repo_name, branch_name
-        )
-        command = 'git clone {0} --branch {1}'.format(url, branch_name)
-    else:
-        output += "Clonant el repositori '{0}' ...".format(repo_name)
-        command = 'git clone {}'.format(url)
-
-    new_clone = Popen(
-        command.split(), cwd=temp.dir, stdout=PIPE, stderr=PIPE
-    )
-    out, err = new_clone.communicate()
-
-    if new_clone.returncode != 0:
-        # Could not clone >< => ABORT
-        output += 'FAILED TO CLONE: {}: | Trying to clone from https ' \
-                  '...'.format(out)
-        sys.stderr.write(
-            '[merge_request_lektor]:clone_repository_fail::{}'.format(err)
-        )
+    out, code = clone_on_dir(temp.dir, branch_name, repo_name, url)
+    output += out
+    if code != 0:
+        output += 'Clonant el repository desde http'
         url = payload['http_url']
-        if branch_name != 'None':
-            output += "Clonant el repositori '{0}', amb la branca '{1}' " \
-                      "...".format(repo_name, branch_name)
-            command = 'git clone {0} --branch {1}'.format(url, branch_name)
-        else:
-            output += "Clonant el repositori '{0}' ...".format(repo_name)
-            command = 'git clone {}'.format(url)
-
-        new_clone = Popen(
-            command.split(), cwd=temp.dir, stdout=PIPE, stderr=PIPE
-        )
-        out, err = new_clone.communicate()
-
-        if new_clone.returncode != 0:
+        out, code = clone_on_dir(temp.dir, branch_name, repo_name, url)
+        if code != 0:
+            # Could not clone >< => ABORT
+            sys.stderr.write('| Failed to get repository |')
             print(output)
             exit(-1)
 
