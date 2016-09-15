@@ -90,7 +90,8 @@ def github_post_comment_pr(token, repository, pr, message):
     req_url = '{0}/repos/{1}/issues/{2}/comments'.format(
         github_api_url, repository, pr['number']
     )
-    head = {'Authorization': 'token {}'.format(token)}
+    auth_token = 'token {}'.format(token)
+    head = {'Authorization': auth_token}
     payload = {'body': message}
     code = 0
     try:
