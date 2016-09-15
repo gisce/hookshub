@@ -29,6 +29,26 @@ def arguments():
     event = sys.argv[2]
     return payload, event
 
+
+def clone_on_dir(dir, branch, repository, url):
+    output = "Clonant el repositori '{}'".format(repository)
+    command = 'git clone {}'.format(url)
+    if branch != 'None':
+        output += ", amb la branca '{}'".format(branch)
+        command += ' --branch {}'.format(branch)
+        output += ' ... '
+    new_clone = Popen(
+        command.split(), cwd=dir, stdout=PIPE, stderr=PIPE
+    )
+    out, err = new_clone.communicate()
+    if new_clone.returncode != 0:
+        output += 'FAILED TO CLONE: {}: | Trying to clone from https ' \
+                  '...'.format(out)
+        sys.stderr.write(
+            '[merge_request_lektor]:clone_repository_fail::{}'.format(err)
+        )
+    return output, new_clone.returncode
+
 payload, event = arguments()
 
 output = ''
