@@ -45,7 +45,7 @@ branch_name = payload['branch_name']
 output += ('Rebut event de <{}> |'.format(event))
 
 # Get from env_vars
-docs_path = '{0}/{1}'.format(payload['vhost_path'], repo_name)
+util_docs_path = '{0}/{1}'.format(payload['vhost_path'], repo_name)
 token = payload['token']
 port = payload['port']
 
@@ -58,7 +58,7 @@ docs_dir = 'powerp'
 if branch_name != 'master' and branch_name != 'None':
     docs_dir += "_{}".format(branch_name)
 
-docs_path = join(docs_path, docs_dir)
+docs_path = join(util_docs_path, docs_dir)
 
 # Creem un directori temporal que guardarà les dades del clone
 #   Per actualitzar la pagina de la documentacio
@@ -184,7 +184,7 @@ with TempDir() as temp:
             http_url, repo_full_name, my_pr['number']
         )
         # Docs path te /var/www/domain/URI
-        base_url = docs_path.split('/', 3)[3]   # Kick out /var/www/
+        base_url = util_docs_path.split('/', 3)[3]   # Kick out /var/www/
         base_uri = '{0}/powerp_{1}'.format(     # Get docs uri
             repo_name, branch_name
         )
