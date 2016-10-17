@@ -746,10 +746,11 @@ with description('GitHub Utils'):
                 popen_mock.communicate.return_value = ['All Ok\n', '']
                 popen_mock.returncode = 0
                 popen.return_value = popen_mock
-                log, result = util.clone_on_dir(
+                log, result, err = util.clone_on_dir(
                     'directory', 'branch', 'repository', 'github url'
                 )
                 expect(len(log) > 0).to(equal(True))
+                expect(len(err)).to(equal(0))
                 expect(result).to(equal(0))
                 popen.stop()
 
@@ -761,10 +762,11 @@ with description('GitHub Utils'):
                 popen_mock.communicate.return_value = ['Not Ok\n', 'Mocked!']
                 popen_mock.returncode = 1
                 popen.return_value = popen_mock
-                log, result = util.clone_on_dir(
+                log, result, err = util.clone_on_dir(
                     'directory', 'branch', 'repository', 'github url'
                 )
                 expect(len(log) > 0).to(equal(True))
+                expect(len(err) > 0).to(equal(True))
                 expect(result).to(equal(1))
                 popen.stop()
 
