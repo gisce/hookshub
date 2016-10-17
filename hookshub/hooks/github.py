@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-from json import dumps
+from json import dumps, loads
 from os.path import join
-
+from subprocess import Popen, PIPE
 from webhook import webhook
+
+import sys
 
 COMMIT_COMMENT = 'commit_comment'
 EVENT_CREATE = 'create'
