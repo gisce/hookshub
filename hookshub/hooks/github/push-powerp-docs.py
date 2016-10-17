@@ -3,8 +3,8 @@
 from __future__ import print_function
 
 from json import loads, dumps
-from subprocess import Popen, PIPE
 from os.path import join
+from hookshub.hooks.github import Util
 
 import sys
 import tempfile
@@ -29,6 +29,7 @@ def arguments():
     event = sys.argv[2]
     return payload, event
 
+
 payload, event = arguments()
 
 output = ''
@@ -45,7 +46,7 @@ branch_name = payload['branch_name']
 output += ('Rebut event de <{}> |'.format(event))
 
 # Get from env_vars
-util_docs_path = '{0}/{1}'.format(payload['vhost_path'], repo_name)
+docs_path = '{0}/{1}'.format(payload['vhost_path'], repo_name)
 token = payload['token']
 port = payload['port']
 
@@ -58,7 +59,7 @@ docs_dir = 'powerp'
 if branch_name != 'master' and branch_name != 'None':
     docs_dir += "_{}".format(branch_name)
 
-docs_path = join(util_docs_path, docs_dir)
+docs_path = join(docs_path, docs_dir)
 
 # Creem un directori temporal que guardarà les dades del clone
 #   Per actualitzar la pagina de la documentacio
@@ -66,64 +67,37 @@ with TempDir() as temp:
     output += ('Creat Directori temporal: {} |'.format(temp.dir))
 
     # Primer clonem el repositori
-
-    # Canviarà la forma de clonar segons tinguem o no branca:
-    if branch_name != 'None':
-        output += "Clonant el repositori '{0}', amb la branca '{1}' ...".format(
-            repo_name, branch_name
-        )
-        command = 'git clone {0} --branch {1}'.format(url, branch_name)
-    else:
-        output += "Clonant el repositori '{0}' ...".format(repo_name)
-        command = 'git clone {}'.format(url)
-
-    new_clone = Popen(
-        command.split(), cwd=temp.dir, stdout=PIPE, stderr=PIPE
-    )
-    out, err = new_clone.communicate()
-
-    if new_clone.returncode != 0:
-        # Could not clone >< => ABORT
-        output += 'FAILED TO CLONE: {}: | Trying to clone from https ' \
-                  '...'.format(out)
-        sys.stderr.write(
-            '[merge_request_lektor]:clone_repository_fail::{}'.format(err)
-        )
+    out, code = Util.clone_on_dir(temp.dir, branch_name, repo_name, url)
+    output += out
+    if code != 0:
+        output += 'Clonant el repository desde http'
         url = payload['http_url']
-        if branch_name != 'None':
-            output += "Clonant el repositori '{0}', amb la branca '{1}' " \
-                      "...".format(repo_name, branch_name)
-            command = 'git clone {0} --branch {1}'.format(url, branch_name)
-        else:
-            output += "Clonant el repositori '{0}' ...".format(repo_name)
-            command = 'git clone {}'.format(url)
-
-        new_clone = Popen(
-            command.split(), cwd=temp.dir, stdout=PIPE, stderr=PIPE
-        )
-        out, err = new_clone.communicate()
-
-        if new_clone.returncode != 0:
+        out, code = Util.clone_on_dir(temp.dir, branch_name, repo_name, url)
+        if code != 0:
+            # Could not clone >< => ABORT
+            sys.stderr.write('| Failed to get repository |')
             print(output)
             exit(-1)
-
     output += 'OK |'
 
-    output += 'Entrant al virtualenv: "docs" ... '
-    command = 'workon docs'
-    try:
-        new_virtenv = Popen(
-            command.split(), stdout=PIPE, stderr=PIPE
-        )
-        out, err = new_virtenv.communicate()
-        virtenv = new_virtenv.returncode == 0
-        if not virtenv:
-            output += 'FAILED to enter virtualenv, installing on default env |'
-        output += 'OK |'
-    except OSError as err:
-        output += 'FAILED to enter virtualenv, installing on default env' \
-                  '\n {}|'.format(err)
-        virtenv = False
+    # Pendent de solucionar: No es pot entrar al virtualenv si amb el binari
+    # especificat a dalt... A més l'interpret no pot canviar amb subprocess
+
+    # output += 'Entrant al virtualenv: "docs" ... '
+    # command = 'workon docs'
+    # try:
+    #     new_virtenv = Popen(
+    #         command.split(), stdout=PIPE, stderr=PIPE
+    #     )
+    #     out, err = new_virtenv.communicate()
+    #     virtenv = new_virtenv.returncode == 0
+    #     if not virtenv:
+    #         output += 'FAILED to enter virtualenv, installing on default env|'
+    #     output += 'OK |'
+    # except OSError as err:
+    #     output += 'FAILED to enter virtualenv, installing on default env' \
+    #               '\n {}|'.format(err)
+    #     virtenv = False
 
     # Accedim al directori del clone utilitzant el nom del repositori
 
@@ -131,105 +105,63 @@ with TempDir() as temp:
 
     # Instalem dependencies
 
-    output += 'Instal.lant dependencies...'
-    command = 'pip install -r requirements.txt'
-    dependencies = Popen(
-        command.split(), cwd=clone_dir, stdout=PIPE, stderr=PIPE
-    )
-    out, err = dependencies.communicate()
-    output += 'OK |'
+    output += '{} OK |'.format(Util.pip_requirements(clone_dir))
 
     # Fem build al directori on tenim la pagina des del directori del clone
 
-    command = 'mkdocs build -d {} --clean'.format(docs_path)
-    output += 'Building mkdocs on {}...'.format(docs_path)
-    new_build = Popen(
-        command.split(), cwd=clone_dir, stdout=PIPE, stderr=PIPE
+    out, target_build_path = (Util.docs_build(clone_dir, docs_path))
+    output += '{} OK |'.format(out)
+
+    output += ' Writting comment on PR ...'
+
+    # Construim el comentari:
+    #   Docs path te /var/www/domain/URI
+    base_url = docs_path.split('/', 3)[3]   # Kick out /var/www/
+    base_uri = '{0}/powerp_{1}'.format(     # Get docs uri
+        repo_name, branch_name
     )
-    out, err = new_build.communicate()
-    if new_build.returncode != 0:
-        output += 'FAILED TO BUILD: {0}::{1}'.format(out, err)
+    if port in ['80', '443']:
+        res_url = '{0}/{1}'.format(base_url, base_uri)
+    else:
+        res_url = '{0}:{1}/{2}'.format(base_url, port, base_uri)
+    comment = 'Documentation build URL: http://{}/'.format(res_url)
+
+    # Necessitem agafar totes les pull request per trobar la nostra
+
+    my_pr, out = Util.get_pr(token, repo_full_name, branch_name)
+    output += out
+
+    # If getting pr fails, we ommit comment post
+    if my_pr <= 0:
         print(output)
-        exit(-1)
-    output += 'OK |'
+        exit(0)
 
-    try:
-        import requests
+    # Postejem el comentari
 
-        output += ' Writting comment on PR ...'
-        # Necessitem agafar totes les pull request per trobar la nostra
-        # GET / repos / {:owner / :repo} / pulls
-        req_url = '{0}/repos/{1}/pulls'.format(
-            http_url, repo_full_name
-        )
-        auth_token = 'token {}'.format(token)
-        head = {'Authorization': auth_token}
-        pulls = requests.get(req_url, headers=head)
-        if pulls.status_code != 200:
-            output += 'OMITTING |'
-            raise Exception('Could Not Get PULLS')
-        prs = loads(pulls.text)
-        # There are only opened PR, so the one that has the same branch name
-        #   is the one we are looking for
-        my_prs = [pr for pr in prs if pr['head']['ref'] == branch_name]
-        if my_prs:
-            my_pr = my_prs[0]
-            output += 'MyPr: {}'.format(my_pr)
-        else:
-            output += 'OMITTING |'
-            raise Exception('Could Not Get PULLS')
-        # Amb la pr, ja podem enviar el comentari
-        # POST /repos/{:owner /:repo}/pulls/{:pr_id}/comments
-        req_url = '{0}/repos/{1}/issues/{2}/comments'.format(
-            http_url, repo_full_name, my_pr['number']
-        )
-        # Docs path te /var/www/domain/URI
-        base_url = util_docs_path.split('/', 3)[3]   # Kick out /var/www/
-        base_uri = '{0}/powerp_{1}'.format(     # Get docs uri
-            repo_name, branch_name
-        )
-        if port in ['80', '443']:
-            res_url = '{0}/{1}'.format(base_url, base_uri)
-        else:
-            res_url = '{0}:{1}/{2}'.format(base_url, port, base_uri)
-        comment = 'Documentation build URL: http://{}/'.format(res_url)
-        payload = {'body': comment}
-        post = requests.post(req_url, headers=head, json=payload)
-        output += 'URL: {}\n'.format(req_url)
-        output += 'HEAD: {}\n'.format(head)
-        output += 'DATA: {}\n'.format(payload)
+    post_code, post_text = Util.post_comment_pr(
+        token, repo_full_name, my_pr['number'], comment
+    )
 
-        if post.status_code == 201:
-            output += ' OK|'
-        else:
-            output += 'Failed to write comment. ' \
-                      'Server responded with {} |'.format(post.status_code)
-            output += dumps(loads(post.text))
+    if post_code == 201:
+        output += ' OK|'
+    elif post_code == 0:
+        output += ' Something went wrong |'
+    else:
+        output += 'Failed to write comment. ' \
+                  'Server responded with {} |'.format(post_code)
+        output += dumps(loads(post_text))
 
-    except requests.ConnectionError as err:
-        sys.stderr.write('Failed to send comment to pull request -'
-                         ' Connection [{}]'.format(err))
-    except requests.HTTPError as err:
-        sys.stderr.write('Failed to send comment to pull request -'
-                         ' HTTP [{}]'.format(err))
-    except requests.RequestException as err:
-        sys.stderr.write('Failed to send comment to pull request -'
-                         ' REQUEST [{}]'.format(err))
-    except Exception as err:
-        sys.stderr.write('Failed to send comment to pull request, '
-                         'INTERNAL ERROR [{}]'.format(err))
-
-    if virtenv:
-        output += 'Deactivate virtualenv ...'
-        command = 'deactivate'
-        deact = Popen(
-            command, cwd=clone_dir, stdout=PIPE, stderr=PIPE
-        )
-        out, err = deact.communicate()
-        if deact.returncode != 0:
-            output += 'FAILED TO DEACTIVATE: {0}::{1}'.format(out, err)
-            print(output)
-            exit(-1)
-        output += 'OK |'
+    # if virtenv:
+    #     output += 'Deactivate virtualenv ...'
+    #     command = 'deactivate'
+    #     deact = Popen(
+    #         command, cwd=clone_dir, stdout=PIPE, stderr=PIPE
+    #     )
+    #     out, err = deact.communicate()
+    #     if deact.returncode != 0:
+    #         output += 'FAILED TO DEACTIVATE: {0}::{1}'.format(out, err)
+    #         print(output)
+    #         exit(-1)
+    #     output += 'OK |'
 
 print(output)
