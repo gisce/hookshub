@@ -3,8 +3,8 @@
 from __future__ import print_function
 
 from json import loads, dumps
-from subprocess import Popen, PIPE
 from os.path import join
+from hookshub.hooks.github import Util
 
 import sys
 import tempfile
@@ -29,133 +29,6 @@ def arguments():
     event = sys.argv[2]
     return payload, event
 
-
-def clone_on_dir(dir, branch, repository, url):
-    output = "Clonant el repositori '{}'".format(repository)
-    command = 'git clone {}'.format(url)
-    if branch != 'None':
-        output += ", amb la branca '{}'".format(branch)
-        command += ' --branch {}'.format(branch)
-        output += ' ... '
-    new_clone = Popen(
-        command.split(), cwd=dir, stdout=PIPE, stderr=PIPE
-    )
-    out, err = new_clone.communicate()
-    if new_clone.returncode != 0:
-        output += 'FAILED TO CLONE: {}: | Trying to clone from https ' \
-                  '...'.format(out)
-        sys.stderr.write(
-            '[merge_request_lektor]:clone_repository_fail::{}'.format(err)
-        )
-    return output, new_clone.returncode
-
-
-def pip_requirements(dir):
-    output = 'Instal.lant dependencies...'
-    command = 'pip install -r requirements.txt'
-    dependencies = Popen(
-        command.split(), cwd=dir, stdout=PIPE, stderr=PIPE
-    )
-    out, err = dependencies.communicate()
-    if dependencies.returncode != 0:
-        output += ' Couldn\'t install all dependencies '
-    return output
-
-
-def docs_build(dir, target, clean=True):
-    build_path = dir
-    output = 'Building mkdocs '
-    command = 'mkdocs build '
-    if target:
-        build_path = target
-        output += 'on {}...'.format(target)
-        command += '-d {}'.format(target)
-    if clean:
-        command += ' --clean'
-    new_build = Popen(
-        command.split(), cwd=dir, stdout=PIPE, stderr=PIPE
-    )
-    out, err = new_build.communicate()
-    if new_build.returncode != 0:
-        output += 'FAILED TO BUILD: {0}::{1}'.format(out, err)
-        print(output)
-        exit(-1)
-    return output, build_path
-
-
-def github_get_pr(token, repository, branch):
-    import requests
-    output = 'Getting pull request... '
-    if not repository or not branch:
-        output += 'Repository and branch needed to get pull request!'
-        return -1, output
-    github_api_url = "https://api.github.com"
-    auth_token = 'token {}'.format(token)
-    head = {'Authorization': auth_token}
-    # GET / repos / {:owner / :repo} / pulls
-    req_url = '{0}/repos/{1}/pulls'.format(
-        github_api_url, repository
-    )
-    code = -1
-    try:
-        pulls = requests.get(req_url, headers=head)
-        if pulls.status_code != 200:
-            output += 'OMITTING |'
-            raise Exception('Could Not Get PULLS')
-        prs = loads(pulls.text)
-        # There are only opened PR, so the one that has the same branch name
-        #   is the one we are looking for
-        my_prs = [pr for pr in prs if pr['head']['ref'] == branch_name]
-        if my_prs:
-            code = my_prs[0]
-            output += 'MyPr: {}'.format(code)
-        else:
-            output += 'OMITTING |'
-            raise Exception('Could Not Get PULLS')
-    except requests.ConnectionError as err:
-        sys.stderr.write('Failed to send comment to pull request -'
-                         ' Connection [{}]'.format(err))
-    except requests.HTTPError as err:
-        sys.stderr.write('Failed to send comment to pull request -'
-                         ' HTTP [{}]'.format(err))
-    except requests.RequestException as err:
-        sys.stderr.write('Failed to send comment to pull request -'
-                         ' REQUEST [{}]'.format(err))
-    except Exception as err:
-        sys.stderr.write('Failed to send comment to pull request, '
-                         'INTERNAL ERROR [{}]'.format(err))
-    return code, output
-
-
-def github_post_comment_pr(token, repository, pr, message):
-    import requests
-    github_api_url = "https://api.github.com"
-    # POST /repos/{:owner /:repo}/issues/{:pr_id}/comments
-    req_url = '{0}/repos/{1}/issues/{2}/comments'.format(
-        github_api_url, repository, pr['number']
-    )
-    auth_token = 'token {}'.format(token)
-    head = {'Authorization': auth_token}
-    payload = {'body': message}
-    code = 0
-    text = ''
-    try:
-        post = requests.post(req_url, headers=head, json=payload)
-        code = post.status_code
-        text = post.text
-    except requests.ConnectionError as err:
-        sys.stderr.write('Failed to send comment to pull request -'
-                         ' Connection [{}]'.format(err))
-    except requests.HTTPError as err:
-        sys.stderr.write('Failed to send comment to pull request -'
-                         ' HTTP [{}]'.format(err))
-    except requests.RequestException as err:
-        sys.stderr.write('Failed to send comment to pull request -'
-                         ' REQUEST [{}]'.format(err))
-    except Exception as err:
-        sys.stderr.write('Failed to send comment to pull request, '
-                         'INTERNAL ERROR [{}]'.format(err))
-    return code, text
 
 payload, event = arguments()
 
@@ -194,12 +67,12 @@ with TempDir() as temp:
     output += ('Creat Directori temporal: {} |'.format(temp.dir))
 
     # Primer clonem el repositori
-    out, code = clone_on_dir(temp.dir, branch_name, repo_name, url)
+    out, code = Util.clone_on_dir(temp.dir, branch_name, repo_name, url)
     output += out
     if code != 0:
         output += 'Clonant el repository desde http'
         url = payload['http_url']
-        out, code = clone_on_dir(temp.dir, branch_name, repo_name, url)
+        out, code = Util.clone_on_dir(temp.dir, branch_name, repo_name, url)
         if code != 0:
             # Could not clone >< => ABORT
             sys.stderr.write('| Failed to get repository |')
@@ -232,11 +105,11 @@ with TempDir() as temp:
 
     # Instalem dependencies
 
-    output += '{} OK |'.format(pip_requirements(clone_dir))
+    output += '{} OK |'.format(Util.pip_requirements(clone_dir))
 
     # Fem build al directori on tenim la pagina des del directori del clone
 
-    out, target_build_path = (docs_build(clone_dir, docs_path))
+    out, target_build_path = (Util.docs_build(clone_dir, docs_path))
     output += '{} OK |'.format(out)
 
     output += ' Writting comment on PR ...'
@@ -255,7 +128,7 @@ with TempDir() as temp:
 
     # Necessitem agafar totes les pull request per trobar la nostra
 
-    my_pr, out = github_get_pr(token, repo_full_name, branch_name)
+    my_pr, out = Util.get_pr(token, repo_full_name, branch_name)
     output += out
 
     # If getting pr fails, we ommit comment post
@@ -265,7 +138,7 @@ with TempDir() as temp:
 
     # Postejem el comentari
 
-    post_code, post_text = github_post_comment_pr(
+    post_code, post_text = Util.post_comment_pr(
         token, repo_full_name, my_pr['number'], comment
     )
 
@@ -275,7 +148,7 @@ with TempDir() as temp:
         output += ' Something went wrong |'
     else:
         output += 'Failed to write comment. ' \
-                  'Server responded with {} |'.format(post.status_code)
+                  'Server responded with {} |'.format(post_code)
         output += dumps(loads(post_text))
 
     # if virtenv:
