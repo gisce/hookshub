@@ -241,10 +241,8 @@ class GitHubUtil:
         if new_clone.returncode != 0:
             output += 'FAILED TO CLONE: {}: | ' \
                       'Try to clone from https ...'.format(out)
-            sys.stderr.write(
-                ':clone_repository_fail::{}'.format(err)
-            )
-        return output, new_clone.returncode
+            err = ':clone_repository_fail::{}'.format(err)
+        return output, new_clone.returncode, err
 
     @staticmethod
     def pip_requirements(dir):
