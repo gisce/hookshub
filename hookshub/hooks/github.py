@@ -273,8 +273,7 @@ class GitHubUtil:
         out, err = new_build.communicate()
         if new_build.returncode != 0:
             output += 'FAILED TO BUILD: {0}::{1}'.format(out, err)
-            print(output)
-            exit(-1)
+            return output, False
         return output, build_path
 
     @staticmethod
