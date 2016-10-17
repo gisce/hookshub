@@ -1,8 +1,12 @@
 from os.path import abspath, normpath, dirname, join, isfile
 from os import listdir
 from json import loads, dumps
+
 from hookshub.hooks.github import GitHubWebhook as github
+from hookshub.hooks.github import GitHubUtil as util
+
 from expects import *
+from mock import patch, Mock
 
 my_path = normpath(abspath(dirname(__file__)))
 project_path = dirname(my_path)  # project dir
@@ -10,7 +14,7 @@ project_path = dirname(my_path)  # project dir
 hook_testing = 'github'
 data_path = join(project_path, join('test_data', hook_testing))
 
-with description('Github Hook'):
+with description('GitHub Hook'):
     with context('Basic info'):
         with it('must have github as origin'):
             file = 'status.json'
@@ -730,3 +734,36 @@ with description('Github Hook'):
                 )
             for key in json.keys():
                 expect(checked).to(contain(key))
+
+with description('GitHub Utils'):
+    # clone_on_dir
+    with context('Clone on Dir'):
+        with it('Must return a String and a returncode == 0 with the '
+                'right params(mocked)'):
+            with patch("hookshub.hooks.github.Popen") as popen:
+                popen.start()
+                popen_mock = Mock()
+                popen_mock.communicate.return_value = ['All Ok\n', '']
+                popen_mock.returncode = 0
+                popen.return_value = popen_mock
+                log, result = util.clone_on_dir(
+                    'directory', 'branch', 'repository', 'github url'
+                )
+                expect(len(log) > 0).to(equal(True))
+                expect(result).to(equal(0))
+                popen.stop()
+
+        with it('Must return a String and a returncode != 0 with the '
+                'wrong params(mocked)'):
+            with patch("hookshub.hooks.github.Popen") as popen:
+                popen.start()
+                popen_mock = Mock()
+                popen_mock.communicate.return_value = ['Not Ok\n', 'Mocked!']
+                popen_mock.returncode = 1
+                popen.return_value = popen_mock
+                log, result = util.clone_on_dir(
+                    'directory', 'branch', 'repository', 'github url'
+                )
+                expect(len(log) > 0).to(equal(True))
+                expect(result).to(equal(1))
+                popen.stop()
