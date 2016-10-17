@@ -767,3 +767,10 @@ with description('GitHub Utils'):
                 expect(len(log) > 0).to(equal(True))
                 expect(result).to(equal(1))
                 popen.stop()
+
+    # pip_requirements
+    with context('Install pip requirements'):
+        with it('Must try to pip install on a dir. If can\'t it\'ll print'
+                ' another line with the error'):
+            log = util.pip_requirements(data_path)
+            expect(len(log) > 0).to(equal(True))
