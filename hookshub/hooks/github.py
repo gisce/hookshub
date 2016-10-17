@@ -225,7 +225,7 @@ class GitHubWebhook(webhook):
         return events
 
 
-class Util:
+class GitHubUtil:
     @staticmethod
     def clone_on_dir(dir, branch, repository, url):
         output = "Clonant el repositori '{}'".format(repository)

@@ -4,7 +4,7 @@ from __future__ import print_function
 
 from json import loads, dumps
 from os.path import join
-from hookshub.hooks.github import Util
+from hookshub.hooks.github import GitHubUtil as Util
 
 import sys
 import tempfile
