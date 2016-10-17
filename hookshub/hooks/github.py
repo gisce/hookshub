@@ -280,7 +280,7 @@ class Util:
         return output, build_path
 
     @staticmethod
-    def github_get_pr(token, repository, branch):
+    def get_pr(token, repository, branch):
         import requests
         output = 'Getting pull request... '
         if not repository or not branch:
@@ -302,7 +302,7 @@ class Util:
             prs = loads(pulls.text)
             # There are only opened PR, so the one that has the same branch name
             #   is the one we are looking for
-            my_prs = [pr for pr in prs if pr['head']['ref'] == branch_name]
+            my_prs = [pr for pr in prs if pr['head']['ref'] == branch]
             if my_prs:
                 code = my_prs[0]
                 output += 'MyPr: {}'.format(code)
@@ -324,7 +324,7 @@ class Util:
         return code, output
 
     @staticmethod
-    def github_post_comment_pr(token, repository, pr, message):
+    def post_comment_pr(token, repository, pr, message):
         import requests
         github_api_url = "https://api.github.com"
         # POST /repos/{:owner /:repo}/issues/{:pr_id}/comments
