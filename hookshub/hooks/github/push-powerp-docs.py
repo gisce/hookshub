@@ -67,15 +67,17 @@ with TempDir() as temp:
     output += ('Creat Directori temporal: {} |'.format(temp.dir))
 
     # Primer clonem el repositori
-    out, code = Util.clone_on_dir(temp.dir, branch_name, repo_name, url)
+    out, code, err = Util.clone_on_dir(temp.dir, branch_name, repo_name, url)
     output += out
     if code != 0:
         output += 'Clonant el repository desde http'
         url = payload['http_url']
-        out, code = Util.clone_on_dir(temp.dir, branch_name, repo_name, url)
+        out, code, err2 = Util.clone_on_dir(temp.dir, branch_name, repo_name, url)
         if code != 0:
             # Could not clone >< => ABORT
-            sys.stderr.write('| Failed to get repository |')
+            sys.stderr.write(
+                '| Failed to get repository {0};;{1}|'.format(err, err2)
+            )
             print(output)
             exit(-1)
     output += 'OK |'
@@ -110,6 +112,10 @@ with TempDir() as temp:
     # Fem build al directori on tenim la pagina des del directori del clone
 
     out, target_build_path = (Util.docs_build(clone_dir, docs_path))
+    # If build fails we can't continue
+    if not target_build_path:
+        output += '{} FAILED |'.format(out)
+        exit(1)
     output += '{} OK |'.format(out)
 
     output += ' Writting comment on PR ...'
