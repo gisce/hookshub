@@ -239,10 +239,10 @@ class GitHubUtil:
         )
         out, err = new_clone.communicate()
         if new_clone.returncode != 0:
-            output += 'FAILED TO CLONE: {}: | Trying to clone from https ' \
-                      '...'.format(out)
+            output += 'FAILED TO CLONE: {}: | ' \
+                      'Try to clone from https ...'.format(out)
             sys.stderr.write(
-                '[merge_request_lektor]:clone_repository_fail::{}'.format(err)
+                ':clone_repository_fail::{}'.format(err)
             )
         return output, new_clone.returncode
 
