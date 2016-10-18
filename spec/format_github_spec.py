@@ -887,4 +887,65 @@ with description('GitHub Utils'):
                 )
                 expect(code).to(equal(-1))
                 req_get.stop()
-# post_comment_pr
+
+    # post_comment_pr
+    with context('Post Comment On PR'):
+        with it('Must return a 201 status code if all OK (Mocked)'):
+            with patch("hookshub.hooks.github.requests.post") as req_get:
+                req_get.start()
+
+                class MockedReturn:
+                    def __init__(self, status_code, text):
+                        self.status_code = status_code
+                        self.text = dumps(text)
+
+                req_get.return_value = MockedReturn(201, [])
+                code, log = util.post_comment_pr(
+                    'Token', 'Repository', 1234, 'Comment'
+                )
+                expect(code).to(equal(201))
+                req_get.stop()
+
+        with it('Must raise an internal error if a connection exception'
+                ' is thrown (Mocked)'):
+            with patch("hookshub.hooks.github.requests.post") as req_get:
+                req_get.start()
+                req_get.side_effect = requests.ConnectionError('Mocked Error')
+                code, log = util.post_comment_pr(
+                    'Token', 'Repository', 1234, 'Comment'
+                )
+                expect(code).to(equal(0))
+                req_get.stop()
+
+        with it('Must raise an internal error if a http exception'
+                ' is thrown (Mocked)'):
+            with patch("hookshub.hooks.github.requests.post") as req_get:
+                req_get.start()
+                req_get.side_effect = requests.HTTPError('Mocked Error')
+                code, log = util.post_comment_pr(
+                    'Token', 'Repository', 1234, 'Comment'
+                )
+                expect(code).to(equal(0))
+                req_get.stop()
+
+        with it('Must raise an internal error if a request exception'
+                ' is thrown (Mocked)'):
+            with patch("hookshub.hooks.github.requests.post") as req_get:
+                req_get.start()
+                req_get.side_effect = requests.RequestException('Mocked Error')
+                code, log = util.post_comment_pr(
+                    'Token', 'Repository', 1234, 'Comment'
+                )
+                expect(code).to(equal(0))
+                req_get.stop()
+
+        with it('Must raise an internal error if an internal exception'
+                ' is thrown (Mocked)'):
+            with patch("hookshub.hooks.github.requests.post") as req_get:
+                req_get.start()
+                req_get.side_effect = Exception('Mocked Error')
+                code, log = util.post_comment_pr(
+                    'Token', 'Repository', 1234, 'Comment'
+                )
+                expect(code).to(equal(0))
+                req_get.stop()
