@@ -332,21 +332,20 @@ class GitHubUtil:
         head = {'Authorization': auth_token}
         payload = {'body': message}
         code = 0
-        text = ''
         try:
             post = requests.post(req_url, headers=head, json=payload)
             code = post.status_code
             text = post.text
         except requests.ConnectionError as err:
-            sys.stderr.write('Failed to send comment to pull request -'
-                             ' Connection [{}]'.format(err))
+            text = 'Failed to send comment to pull request -' \
+                             ' Connection [{}]'.format(err)
         except requests.HTTPError as err:
-            sys.stderr.write('Failed to send comment to pull request -'
-                             ' HTTP [{}]'.format(err))
+            text = 'Failed to send comment to pull request -' \
+                             ' HTTP [{}]'.format(err)
         except requests.RequestException as err:
-            sys.stderr.write('Failed to send comment to pull request -'
-                             ' REQUEST [{}]'.format(err))
+            text = 'Failed to send comment to pull request -' \
+                             ' REQUEST [{}]'.format(err)
         except Exception as err:
-            sys.stderr.write('Failed to send comment to pull request, '
-                             'INTERNAL ERROR [{}]'.format(err))
+            text = 'Failed to send comment to pull request, ' \
+                             'INTERNAL ERROR [{}]'.format(err)
         return code, text
