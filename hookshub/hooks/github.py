@@ -301,7 +301,7 @@ class GitHubUtil:
             #   is the one we are looking for
             my_prs = [pr for pr in prs if pr['head']['ref'] == branch]
             if my_prs:
-                code = my_prs[0]['id']
+                code = my_prs[0]
                 output += 'MyPr: {}'.format(code)
             else:
                 output += 'OMITTING |'
@@ -321,12 +321,12 @@ class GitHubUtil:
         return code, output
 
     @staticmethod
-    def post_comment_pr(token, repository, pr, message):
+    def post_comment_pr(token, repository, pr_num, message):
         import requests
         github_api_url = "https://api.github.com"
         # POST /repos/{:owner /:repo}/issues/{:pr_id}/comments
         req_url = '{0}/repos/{1}/issues/{2}/comments'.format(
-            github_api_url, repository, pr['number']
+            github_api_url, repository, pr_num
         )
         auth_token = 'token {}'.format(token)
         head = {'Authorization': auth_token}
