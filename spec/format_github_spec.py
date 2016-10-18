@@ -888,6 +888,12 @@ with description('GitHub Utils'):
                 expect(code).to(equal(-1))
                 req_get.stop()
 
+        with it('Must return -1 when bad params on call'):
+            code, log = util.get_pr(
+                'Token', False, False
+            )
+            expect(code).to(equal(-1))
+
     # post_comment_pr
     with context('Post Comment On PR'):
         with it('Must return a 201 status code if all OK (Mocked)'):
