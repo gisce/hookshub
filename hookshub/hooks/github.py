@@ -4,6 +4,7 @@ from os.path import join
 from subprocess import Popen, PIPE
 from webhook import webhook
 
+import requests
 import sys
 
 COMMIT_COMMENT = 'commit_comment'
@@ -278,7 +279,6 @@ class GitHubUtil:
 
     @staticmethod
     def get_pr(token, repository, branch):
-        import requests
         output = 'Getting pull request... '
         if not repository or not branch:
             output += 'Repository and branch needed to get pull request!'
