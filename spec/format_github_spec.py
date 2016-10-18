@@ -855,6 +855,27 @@ with description('GitHub Utils'):
                 expect(code).to(equal(-1))
                 req_get.stop()
 
+        with it('Must rise an internal error if did not get any matching prs'
+                ' response (Mocked)'):
+            with patch("hookshub.hooks.github.requests") as req_get:
+                req_get.start()
+
+
+                class MockedReturn:
+                    def __init__(self, status_code, text):
+                        self.status_code = status_code
+                        self.text = dumps(text)
+
+
+                req_get.get.return_value = MockedReturn(
+                    200, []
+                )
+                code, log = util.get_pr(
+                    'Token', 'Repository', 'Branch'
+                )
+                expect(code).to(equal(-1))
+                req_get.stop()
+
         with it('Must rise an internal error if an http exception is thrown'
                 ' (Mocked)'):
             with patch("hookshub.hooks.github.requests.get") as req_get:
