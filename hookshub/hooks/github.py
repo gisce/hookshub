@@ -301,7 +301,7 @@ class GitHubUtil:
             #   is the one we are looking for
             my_prs = [pr for pr in prs if pr['head']['ref'] == branch]
             if my_prs:
-                code = my_prs[0]
+                code = my_prs[0]['id']
                 output += 'MyPr: {}'.format(code)
             else:
                 output += 'OMITTING |'
