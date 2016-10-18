@@ -8,6 +8,8 @@ from hookshub.hooks.github import GitHubUtil as util
 from expects import *
 from mock import patch, Mock
 
+import requests
+
 my_path = normpath(abspath(dirname(__file__)))
 project_path = dirname(my_path)  # project dir
 
@@ -806,3 +808,83 @@ with description('GitHub Utils'):
                 expect(len(log) > 0).to(equal(True))
                 expect(dir).to(equal(False))
                 popen.stop()
+
+    # get_pr
+    with context('Get Pull Request'):
+        with it('Must return code with get request (Mocked)'):
+            with patch("hookshub.hooks.github.requests") as req_get:
+                req_get.start()
+
+                class MockedReturn:
+                    def __init__(self, status_code, text):
+                        self.status_code = status_code
+                        self.text = dumps(text)
+
+                req_get.get.return_value = MockedReturn(
+                    200, [
+                            {
+                                'id': 1,
+                                'head': {
+                                    'ref': 'Branch'
+                                }
+                            }
+                        ]
+                )
+                code, log = util.get_pr(
+                    'Token', 'Repository', 'Branch'
+                )
+                expect(code).to(equal(1))
+                req_get.stop()
+
+        with it('Must rise an internal error if did not get a 200 status'
+                ' response (Mocked)'):
+            with patch("hookshub.hooks.github.requests") as req_get:
+                req_get.start()
+
+                class MockedReturn:
+                    def __init__(self, status_code, text):
+                        self.status_code = status_code
+                        self.text = dumps(text)
+
+                req_get.get.return_value = MockedReturn(
+                    300, []
+                )
+                code, log = util.get_pr(
+                    'Token', 'Repository', 'Branch'
+                )
+                expect(code).to(equal(-1))
+                req_get.stop()
+
+        with it('Must rise an internal error if an http exception is thrown'
+                ' (Mocked)'):
+            with patch("hookshub.hooks.github.requests") as req_get:
+                req_get.start()
+                req_get.side_effect = requests.HTTPError('Mocked Error')
+                code, log = util.get_pr(
+                    'Token', 'Repository', 'Branch'
+                )
+                expect(code).to(equal(-1))
+                req_get.stop()
+
+        with it('Must rise an internal error if a connection exception is'
+                ' thrown (Mocked)'):
+            with patch("hookshub.hooks.github.requests") as req_get:
+                req_get.start()
+                req_get.side_effect = requests.ConnectionError('Mocked Error')
+                code, log = util.get_pr(
+                    'Token', 'Repository', 'Branch'
+                )
+                expect(code).to(equal(-1))
+                req_get.stop()
+
+        with it('Must rise an internal error if a request exception is'
+                ' thrown (Mocked)'):
+            with patch("hookshub.hooks.github.requests") as req_get:
+                req_get.start()
+                req_get.side_effect = requests.RequestException('Mocked Error')
+                code, log = util.get_pr(
+                    'Token', 'Repository', 'Branch'
+                )
+                expect(code).to(equal(-1))
+                req_get.stop()
+# post_comment_pr
