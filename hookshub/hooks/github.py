@@ -4,6 +4,7 @@ from os.path import join
 from subprocess import Popen, PIPE
 from webhook import webhook
 
+import requests
 import sys
 
 COMMIT_COMMENT = 'commit_comment'
@@ -225,7 +226,7 @@ class GitHubWebhook(webhook):
         return events
 
 
-class Util:
+class GitHubUtil:
     @staticmethod
     def clone_on_dir(dir, branch, repository, url):
         output = "Clonant el repositori '{}'".format(repository)
@@ -239,12 +240,10 @@ class Util:
         )
         out, err = new_clone.communicate()
         if new_clone.returncode != 0:
-            output += 'FAILED TO CLONE: {}: | Trying to clone from https ' \
-                      '...'.format(out)
-            sys.stderr.write(
-                '[merge_request_lektor]:clone_repository_fail::{}'.format(err)
-            )
-        return output, new_clone.returncode
+            output += 'FAILED TO CLONE: {}: | ' \
+                      'Try to clone from https ...'.format(out)
+            err = ':clone_repository_fail::{}'.format(err)
+        return output, new_clone.returncode, err
 
     @staticmethod
     def pip_requirements(dir):
@@ -275,13 +274,11 @@ class Util:
         out, err = new_build.communicate()
         if new_build.returncode != 0:
             output += 'FAILED TO BUILD: {0}::{1}'.format(out, err)
-            print(output)
-            exit(-1)
+            return output, False
         return output, build_path
 
     @staticmethod
     def get_pr(token, repository, branch):
-        import requests
         output = 'Getting pull request... '
         if not repository or not branch:
             output += 'Repository and branch needed to get pull request!'
@@ -310,46 +307,45 @@ class Util:
                 output += 'OMITTING |'
                 raise Exception('Could Not Get PULLS')
         except requests.ConnectionError as err:
-            sys.stderr.write('Failed to send comment to pull request -'
-                             ' Connection [{}]'.format(err))
+            output = 'Failed to send comment to pull request -' \
+                     ' Connection [{}]'.format(err)
         except requests.HTTPError as err:
-            sys.stderr.write('Failed to send comment to pull request -'
-                             ' HTTP [{}]'.format(err))
+            output = 'Failed to send comment to pull request -' \
+                             ' HTTP [{}]'.format(err)
         except requests.RequestException as err:
-            sys.stderr.write('Failed to send comment to pull request -'
-                             ' REQUEST [{}]'.format(err))
+            output = 'Failed to send comment to pull request -' \
+                             ' REQUEST [{}]'.format(err)
         except Exception as err:
-            sys.stderr.write('Failed to send comment to pull request, '
-                             'INTERNAL ERROR [{}]'.format(err))
+            output = 'Failed to send comment to pull request, ' \
+                             'INTERNAL ERROR [{}]'.format(err)
         return code, output
 
     @staticmethod
-    def post_comment_pr(token, repository, pr, message):
+    def post_comment_pr(token, repository, pr_num, message):
         import requests
         github_api_url = "https://api.github.com"
         # POST /repos/{:owner /:repo}/issues/{:pr_id}/comments
         req_url = '{0}/repos/{1}/issues/{2}/comments'.format(
-            github_api_url, repository, pr['number']
+            github_api_url, repository, pr_num
         )
         auth_token = 'token {}'.format(token)
         head = {'Authorization': auth_token}
         payload = {'body': message}
         code = 0
-        text = ''
         try:
             post = requests.post(req_url, headers=head, json=payload)
             code = post.status_code
             text = post.text
         except requests.ConnectionError as err:
-            sys.stderr.write('Failed to send comment to pull request -'
-                             ' Connection [{}]'.format(err))
+            text = 'Failed to send comment to pull request -' \
+                             ' Connection [{}]'.format(err)
         except requests.HTTPError as err:
-            sys.stderr.write('Failed to send comment to pull request -'
-                             ' HTTP [{}]'.format(err))
+            text = 'Failed to send comment to pull request -' \
+                             ' HTTP [{}]'.format(err)
         except requests.RequestException as err:
-            sys.stderr.write('Failed to send comment to pull request -'
-                             ' REQUEST [{}]'.format(err))
+            text = 'Failed to send comment to pull request -' \
+                             ' REQUEST [{}]'.format(err)
         except Exception as err:
-            sys.stderr.write('Failed to send comment to pull request, '
-                             'INTERNAL ERROR [{}]'.format(err))
+            text = 'Failed to send comment to pull request, ' \
+                             'INTERNAL ERROR [{}]'.format(err)
         return code, text
