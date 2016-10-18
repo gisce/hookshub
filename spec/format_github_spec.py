@@ -833,7 +833,7 @@ with description('GitHub Utils'):
                 code, log = util.get_pr(
                     'Token', 'Repository', 'Branch'
                 )
-                expect(code).to(equal(1))
+                expect(code['id']).to(equal(1))
                 req_get.stop()
 
         with it('Must rise an internal error if did not get a 200 status'
@@ -857,7 +857,7 @@ with description('GitHub Utils'):
 
         with it('Must rise an internal error if an http exception is thrown'
                 ' (Mocked)'):
-            with patch("hookshub.hooks.github.requests") as req_get:
+            with patch("hookshub.hooks.github.requests.get") as req_get:
                 req_get.start()
                 req_get.side_effect = requests.HTTPError('Mocked Error')
                 code, log = util.get_pr(
@@ -868,7 +868,7 @@ with description('GitHub Utils'):
 
         with it('Must rise an internal error if a connection exception is'
                 ' thrown (Mocked)'):
-            with patch("hookshub.hooks.github.requests") as req_get:
+            with patch("hookshub.hooks.github.requests.get") as req_get:
                 req_get.start()
                 req_get.side_effect = requests.ConnectionError('Mocked Error')
                 code, log = util.get_pr(
@@ -879,7 +879,7 @@ with description('GitHub Utils'):
 
         with it('Must rise an internal error if a request exception is'
                 ' thrown (Mocked)'):
-            with patch("hookshub.hooks.github.requests") as req_get:
+            with patch("hookshub.hooks.github.requests.get") as req_get:
                 req_get.start()
                 req_get.side_effect = requests.RequestException('Mocked Error')
                 code, log = util.get_pr(
