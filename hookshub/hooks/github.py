@@ -307,17 +307,17 @@ class GitHubUtil:
                 output += 'OMITTING |'
                 raise Exception('Could Not Get PULLS')
         except requests.ConnectionError as err:
-            sys.stderr.write('Failed to send comment to pull request -'
-                             ' Connection [{}]'.format(err))
+            output = 'Failed to send comment to pull request -' \
+                     ' Connection [{}]'.format(err)
         except requests.HTTPError as err:
-            sys.stderr.write('Failed to send comment to pull request -'
-                             ' HTTP [{}]'.format(err))
+            output = 'Failed to send comment to pull request -' \
+                             ' HTTP [{}]'.format(err)
         except requests.RequestException as err:
-            sys.stderr.write('Failed to send comment to pull request -'
-                             ' REQUEST [{}]'.format(err))
+            output = 'Failed to send comment to pull request -' \
+                             ' REQUEST [{}]'.format(err)
         except Exception as err:
-            sys.stderr.write('Failed to send comment to pull request, '
-                             'INTERNAL ERROR [{}]'.format(err))
+            output = 'Failed to send comment to pull request, ' \
+                             'INTERNAL ERROR [{}]'.format(err)
         return code, output
 
     @staticmethod
