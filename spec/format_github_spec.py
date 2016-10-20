@@ -340,7 +340,7 @@ with description('GitHub Hook'):
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             hook = github(json_data)
-            expect(hook.number).to(equal(1))
+            expect(hook.number).to(equal(2))
             
     with context('Issues event'):
         with it('must have issues as event'):
@@ -369,7 +369,7 @@ with description('GitHub Hook'):
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             hook = github(json_data)
-            expect(hook.number).to(equal(1))
+            expect(hook.number).to(equal(2))
             
     with context('Member event'):
         with it('must have member as event'):
