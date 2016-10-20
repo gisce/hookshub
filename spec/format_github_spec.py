@@ -112,6 +112,14 @@ with description('GitHub Hook'):
             hook = github(json_data)
             expect(hook.branch_name).to(equal('None'))
 
+        with it('may return "None" when trying to get target branch name for a '
+                'non-target-branch event'):
+            file = 'status.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = github(json_data)
+            expect(hook.target_branch_name).to(equal('None'))
+
         with it('may return "None" when trying to get status for an event '
                 'that isn\'t state'):
             file = 'push.json'
@@ -491,12 +499,20 @@ with description('GitHub Hook'):
             expect(hook.get_exe_action(event, config)).to(equal(exe_data))
 
         with it('must return branch name from payload parse '
+                '("changes" on pull_request.json)'):
+            event = 'pull_request'
+            file = 'pull_request.json'
+            data = open(join(data_path, file)).read()
+            hook = github(loads(data))
+            expect(hook.branch_name).to(equal('changes'))
+
+        with it('must return target branch name from payload parse'
                 '("master" on pull_request.json)'):
             event = 'pull_request'
             file = 'pull_request.json'
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
-            expect(hook.branch_name).to(equal('master'))
+            expect(hook.target_branch_name).to(equal('master'))
 
         with it('must return if the pull_request is merged'):
             event = 'pull_request'
@@ -543,12 +559,20 @@ with description('GitHub Hook'):
             expect(hook.get_exe_action(event, config)).to(equal(exe_data))
 
         with it('must return branch name from payload parse '
+                '("changes" on pull_request_review_comment.json)'):
+            event = 'pull_request_review_comment'
+            file = 'pull_request_review_comment.json'
+            data = open(join(data_path, file)).read()
+            hook = github(loads(data))
+            expect(hook.branch_name).to(equal('changes'))
+
+        with it('must return target branch name from payload parse '
                 '("master" on pull_request_review_comment.json)'):
             event = 'pull_request_review_comment'
             file = 'pull_request_review_comment.json'
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
-            expect(hook.branch_name).to(equal('master'))
+            expect(hook.target_branch_name).to(equal('master'))
 
         with it('Must return the #number when getting "number" ("1")'):
             file = 'pull_request_review_comment.json'
