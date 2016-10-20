@@ -108,7 +108,9 @@ class GitHubWebhook(webhook):
 
     @property
     def merged(self):
-        return self.json['pull_request']['merged'] or False
+        if self.event == PULL_REQUEST:
+            return self.json['pull_request']['merged']
+        return False
 
     def get_exe_action(self, action, conf):
         exe_path = join(self.actions_path, action)
