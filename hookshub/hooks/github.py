@@ -82,6 +82,23 @@ class GitHubWebhook(webhook):
         return 'None'
 
     @property
+    def action(self):
+        if self.event == PULL_REQUEST:
+            return self.json['action']
+        return 'None'
+
+    @property
+    def number(self):
+        if self.event == PULL_REQUEST:
+            return self.json['number']
+        elif self.event == REVIEW_PR_COMMENT:
+            return self.json['pull_request']['number']
+        elif self.event in [EVENT_ISSUE, ISSUE_COMMENT]:
+            return self.json['issue']['number']
+        else:
+            return 'None'
+
+    @property
     def repo_id(self):
         return self.json['repository']['id']
 
