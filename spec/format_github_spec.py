@@ -878,6 +878,18 @@ with description('GitHub Utils'):
                 expect(dir).to(equal(False))
                 popen.stop()
 
+        with it('Must return the error log String and a False directory (mocked)'
+                'when Popen throws an exception'):
+            with patch("hookshub.hooks.github.Popen") as popen:
+                popen.start()
+                popen.side_effect = Exception('Mocked exception')
+                from_path = 'From docs'
+                to_path = 'To build'
+                log, dir = util.docs_build(from_path, to_path)
+                expect(len(log) > 0).to(equal(True))
+                expect(dir).to(equal(False))
+                popen.stop()
+
     # get_pr
     with context('Get Pull Request'):
         with it('Must return code with get request (Mocked)'):
