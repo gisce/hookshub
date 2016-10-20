@@ -326,7 +326,7 @@ class GitHubUtil:
             my_prs = [pr for pr in prs if pr['head']['ref'] == branch]
             if my_prs:
                 code = my_prs[0]
-                output += 'MyPr: {}'.format(code)
+                output += 'MyPr: {}'.format(code['number'])
             else:
                 output += 'OMITTING |'
                 raise Exception('Could Not Get PULLS')
