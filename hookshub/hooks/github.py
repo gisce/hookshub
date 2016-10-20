@@ -113,16 +113,10 @@ class GitHubWebhook(webhook):
     def get_exe_action(self, action, conf):
         exe_path = join(self.actions_path, action)
         json = {}
-        # Action for 'status' event on repository 'powerp-docs'
-        if action.startswith('{}-powerp-docs'.format(EVENT_STATUS)):
-            json.update({'ssh_url': self.ssh_url})
-            json.update({'http_url': self.http_url})
-            json.update({'repo-name': self.repo_name})
-            json.update({'branch-name': self.branch_name})
-            json.update({'state': self.status})
-            return [exe_path, dumps(json), self.event]
-        # Action for 'push' event on repository 'powerp-docs'
-        elif action.startswith('{}-powerp-docs'.format(EVENT_PUSH)):
+        # Action for 'push', 'pull_request' event
+        #       on repository 'powerp-docs'
+        if action.startswith('{}-powerp-docs'.format(EVENT_PUSH)) or\
+                action.startswith('{}-powerp-docs'.format(PULL_REQUEST)):
             json.update({'token': conf['github_token']})
             json.update({'vhost_path': conf['vhost_path']})
             json.update({'port': conf['nginx_port']})
@@ -131,14 +125,13 @@ class GitHubWebhook(webhook):
             json.update({'repo_name': self.repo_name})
             json.update({'repo_full_name': self.repo_full_name})
             json.update({'branch_name': self.branch_name})
-            return [exe_path, dumps(json), self.event]
-        # Action for 'pull_request' event on repository 'powerp-docs'
-        elif action.startswith('{}-powerp-docs'.format(PULL_REQUEST)):
-            json.update({'vhost_path': conf['vhost_path']})
-            json.update({'ssh_url': self.ssh_url})
-            json.update({'http_url': self.http_url})
-            json.update({'repo_name': self.repo_name})
-            json.update({'merged': self.merged})
+
+            # If 'pull_request' event, we may add more params
+            if action.startswith('{}-powerp-docs'.format(PULL_REQUEST)):
+                json.update({'action': self.action})
+                json.update({'number': self.number})
+
+            # Return the params
             return [exe_path, dumps(json), self.event]
         else:
             return super(GitHubWebhook, self).get_exe_action(action, conf)
