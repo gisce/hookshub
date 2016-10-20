@@ -467,18 +467,28 @@ with description('GitHub Hook'):
             hook = github(loads(data))
             expect(hook.event).to(equal('pull_request'))
 
-        with it('must return [exe_path, dump(json), event] when getting'
+        with it('must return [exe_path, args, event] when getting'
                 ' the execution params for the pull_request'
-                ' event'):
+                ' event (args may contain: "#number" and ".action")'):
             event = 'pull_request'
             file = 'pull_request.json'
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             exe_path = join(hook.actions_path, event)
-            
-            config = loads(open(join(data_path, 'conf.json'), 'r').read())
-            dict_json = loads(data)
-            json_data = dumps(dict_json)
+
+            conf = loads(open(join(data_path, 'conf.json'), 'r').read())
+            json = {}
+            json.update({'token': conf['github_token']})
+            json.update({'vhost_path': conf['vhost_path']})
+            json.update({'port': conf['nginx_port']})
+            json.update({'ssh_url': hook.ssh_url})
+            json.update({'http_url': hook.http_url})
+            json.update({'repo_name': hook.repo_name})
+            json.update({'repo_full_name': hook.repo_full_name})
+            json.update({'branch_name': hook.branch_name})
+            json.update({'action': hook.action})
+            json.update({'number': hook.number})
+            json_data = dumps(json)
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event, config)).to(equal(exe_data))
 
