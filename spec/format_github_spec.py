@@ -128,6 +128,22 @@ with description('GitHub Hook'):
             hook = github(json_data)
             expect(hook.repo_id).to(equal(35129377))
 
+        with it('Must return "None" when getting "action" and event!='
+                ' "pull_request"'):
+            file = 'push.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = github(json_data)
+            expect(hook.action).to(equal("None"))
+
+        with it('Must return "None" when getting "number" and event'
+                ' does not have #number (pr, pr_comm, issue, issue_comm)'):
+            file = 'push.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = github(json_data)
+            expect(hook.number).to(equal("None"))
+
     with context('Commit Comment event'):
         with it('must have commit_comment as event'):
             event = 'commit_comment'
@@ -148,7 +164,7 @@ with description('GitHub Hook'):
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event, config)).to(equal(exe_data))
-            
+
     with context('Create event'):
         with it('must have create as event'):
             event = 'create'
@@ -318,6 +334,13 @@ with description('GitHub Hook'):
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event, config)).to(equal(exe_data))
+
+        with it('Must return the #number when getting "number" ("1")'):
+            file = 'issue_comment.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = github(json_data)
+            expect(hook.number).to(equal(1))
             
     with context('Issues event'):
         with it('must have issues as event'):
@@ -340,6 +363,13 @@ with description('GitHub Hook'):
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event, config)).to(equal(exe_data))
+
+        with it('Must return the #number when getting "number" ("1")'):
+            file = 'issues.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = github(json_data)
+            expect(hook.number).to(equal(1))
             
     with context('Member event'):
         with it('must have member as event'):
@@ -460,6 +490,20 @@ with description('GitHub Hook'):
             hook = github(loads(data))
             expect(hook.branch_name).to(equal('master'))
 
+        with it('Must return action status when getting "action" ("opened")'):
+            file = 'pull_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = github(json_data)
+            expect(hook.action).to(equal("opened"))
+
+        with it('Must return the #number when getting "number" ("1")'):
+            file = 'pull_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = github(json_data)
+            expect(hook.number).to(equal(1))
+
     with context('Review Comment on Pull Request event'):
         with it('must have pull_request_review_comment as event'):
             event = 'pull_request_review_comment'
@@ -490,6 +534,13 @@ with description('GitHub Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             expect(hook.branch_name).to(equal('master'))
+
+        with it('Must return the #number when getting "number" ("1")'):
+            file = 'pull_request_review_comment.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = github(json_data)
+            expect(hook.number).to(equal(1))
 
     with context('Push event'):
         with it('must have push as event'):
