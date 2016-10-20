@@ -60,9 +60,9 @@ class GitHubWebhook(webhook):
             # Case 2: a pull_request object is involved.
             # This is pull_request and pull_request_review_comment events.
             elif self.event in [PULL_REQUEST, REVIEW_PR_COMMENT]:
-                # This is the TARGET branch for the pull-request,
+                # This is the SOURCE branch for the pull-request,
                 #  not the source branch
-                branch = self.json['pull_request']['base']['ref']
+                branch = self.json['pull_request']['head']['ref']
 
             elif self.event in [EVENT_PUSH]:
                 # Push events provide a full Git ref in 'ref' and
@@ -74,6 +74,13 @@ class GitHubWebhook(webhook):
             #  we'll live without the branch name
             pass
         return branch
+
+    @property
+    def target_branch_name(self):
+        # Get TARGET branch from pull request
+        if self.event in [PULL_REQUEST, REVIEW_PR_COMMENT]:
+            branch = self.json['pull_request']['base']['ref']
+        return 'None'
 
     @property
     def status(self):
