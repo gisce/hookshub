@@ -115,6 +115,7 @@ with TempDir() as temp:
     # If build fails we can't continue
     if not target_build_path:
         output += '{} FAILED |'.format(out)
+        print (output)
         exit(1)
     output += '{} OK |'.format(out)
 
