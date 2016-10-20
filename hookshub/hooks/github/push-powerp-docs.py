@@ -124,7 +124,7 @@ with TempDir() as temp:
     # Construim el comentari:
     #   Docs path te /var/www/domain/URI
     base_url = util_docs_path.split('/', 3)[3]   # Kick out /var/www/
-    base_uri = '/powerp_{}'.format(     # Get docs uri
+    base_uri = 'powerp_{}'.format(     # Get docs uri
         branch_name
     )
     if port in ['80', '443']:
