@@ -79,7 +79,7 @@ class GitHubWebhook(webhook):
     def target_branch_name(self):
         # Get TARGET branch from pull request
         if self.event in [PULL_REQUEST, REVIEW_PR_COMMENT]:
-            branch = self.json['pull_request']['base']['ref']
+            return self.json['pull_request']['base']['ref']
         return 'None'
 
     @property
