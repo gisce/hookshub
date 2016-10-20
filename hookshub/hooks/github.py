@@ -7,6 +7,9 @@ from webhook import webhook
 import requests
 import sys
 
+# GitHub Events
+# For more info, see: https://developer.github.com/v3/activity/events/types/
+
 COMMIT_COMMENT = 'commit_comment'
 EVENT_CREATE = 'create'
 EVENT_DELETE = 'delete'
@@ -33,23 +36,46 @@ EVENT_WATCH = 'watch'
 class GitHubWebhook(webhook):
 
     def __init__(self, data):
+        """
+        :param data: Data loaded from the JSON of the hook's
+            payload served by GitHub
+            :type: Dictionary
+        """
         super(GitHubWebhook, self).__init__(data)
         self.origin = 'github'
 
     @property
     def ssh_url(self):
+        """
+        :return: Repository's ssh url
+        :rtype: String
+        """
         return self.json['repository']['ssh_url']
 
     @property
     def http_url(self):
+        """
+        :return: Repository's http url
+        :rtype: String
+        """
         return self.json['repository']['clone_url']
 
     @property
     def repo_name(self):
+        """
+        :return: Repository's name
+        :rtype: String
+        """
         return self.json['repository']['name']
 
     @property
     def branch_name(self):
+        """
+        :return: Branch name used on the hook's event, it can be None
+            if the event doesn't use one. If the branch is going to be gotten
+            from a PR's hook, it gets the SOURCE branch.
+        :rtype: String
+        """
         branch = 'None'
         try:
             # Case 1: a ref_type indicates the type of ref.
@@ -77,6 +103,10 @@ class GitHubWebhook(webhook):
 
     @property
     def target_branch_name(self):
+        """
+        :return: TARGET branch name from a PR's hook
+        :rtype: String
+        """
         # Get TARGET branch from pull request
         if self.event in [PULL_REQUEST, REVIEW_PR_COMMENT]:
             return self.json['pull_request']['base']['ref']
@@ -84,18 +114,30 @@ class GitHubWebhook(webhook):
 
     @property
     def status(self):
+        """
+        :return: State from the hook of an status event
+        :rtype: String
+        """
         if self.event == EVENT_STATUS:
             return self.json['state']
         return 'None'
 
     @property
     def action(self):
+        """
+        :return: Action from the hook of a PR event
+        :rtype: String
+        """
         if self.event == PULL_REQUEST:
             return self.json['action']
         return 'None'
 
     @property
     def number(self):
+        """
+        :return: Number (id) of the PR/Issue
+        :rtype: Int
+        """
         if self.event == PULL_REQUEST:
             return self.json['number']
         elif self.event == REVIEW_PR_COMMENT:
@@ -107,19 +149,39 @@ class GitHubWebhook(webhook):
 
     @property
     def repo_id(self):
+        """
+        :return: ID of the repository
+        :rtype: Int
+        """
         return self.json['repository']['id']
 
     @property
     def repo_full_name(self):
+        """
+        :return: Full name of the repository. It have the onwer name within it.
+        :rtype: String
+        """
         return self.json['repository']['full_name']
 
     @property
     def merged(self):
+        """
+        :return: Gets the merged state of a PR from the hook's payload
+        :rtype: Bool
+        """
         if self.event == PULL_REQUEST:
             return self.json['pull_request']['merged']
         return False
 
     def get_exe_action(self, action, conf):
+        """
+        :param action: event to get the scripts
+            :type: String
+        :param conf: Dictionary with the environment configurations
+            :type: Dictionary
+        :return: A list with the path to the scripts, the params they need
+            and the event used
+        """
         exe_path = join(self.actions_path, action)
         json = {}
         # Action for 'push', 'pull_request' event
@@ -147,6 +209,10 @@ class GitHubWebhook(webhook):
 
     @property
     def event(self):
+        """
+        :return: The GitHub event type decoded from the JSON payload (data attr)
+        :rtype: String
+        """
         if 'commits' in self.json.keys():
             return 'push'
 
@@ -220,6 +286,10 @@ class GitHubWebhook(webhook):
 
     @property
     def event_actions(self):
+        """
+        :return: All the scripts that match with the event decoded
+        :rtype: List<String>
+        """
         # We start with all actions that start with {event}
         # Then we filter them to not execute the actions for the same event
         #  with different repository.
@@ -247,7 +317,22 @@ class GitHubWebhook(webhook):
 
 class GitHubUtil:
     @staticmethod
-    def clone_on_dir(dir, branch, repository, url):
+    def clone_on_dir(dir, branch='None', repository, url):
+        """
+        :param dir: Directory where the clone will be applied. This may exist
+            or it'll throw an exception.
+            :type: String
+        :param branch: Branch to clone from the repository. If cloning master,
+            this may have the value 'None'
+            :type: String
+        :param repository: Repository to clone from. Cannot be None
+            :type: String
+        :param url: URL used to clone the repository
+            :type: String
+        :return: Returns the log output, the return code from the clone and the
+            clone error log.
+            :rtype: Tuple<String,Int,String>
+        """
         output = "Clonant el repositori '{}'".format(repository)
         command = 'git clone {}'.format(url)
         if branch != 'None':
@@ -266,6 +351,17 @@ class GitHubUtil:
 
     @staticmethod
     def pip_requirements(dir):
+        """
+        Installs all the requirements from the requirements.txt in the specified
+        directory. If no virtualenv is set previously for the Popen, they will
+        be installed in the user's python directory
+        :param dir: Directory where the requirements.txt is found. Used to call
+            Popen with the pip install.
+            :type: String
+        :return: Output with the log. Does not include any of the pip install
+            output or error prints.
+        :rtype: String
+        """
         output = 'Instal.lant dependencies...'
         command = 'pip install -r requirements.txt'
         dependencies = Popen(
@@ -278,6 +374,20 @@ class GitHubUtil:
 
     @staticmethod
     def docs_build(dir, target=None, clean=True):
+        """
+        :param dir: Directory used to call the build. This MUST exist.
+            :type:  String
+        :param target: Directory to build to. If not set or None, the target
+            build is the default one, that is the same as 'dir'
+            :type:  String
+        :param clean: Defines if the '--clean' tag is used or not. If true,
+            this cleans the directory before the build.
+            :type:  Bool
+        :return: An output log with some annotations and the output and error
+            log from the mkdocs build call. And a String containing the path
+            where the docs have been built
+            :type: Tuple<String, String>
+        """
         build_path = dir
         output = 'Building mkdocs from {} '.format(dir)
         command = 'mkdocs build '
@@ -303,6 +413,16 @@ class GitHubUtil:
 
     @staticmethod
     def get_pr(token, repository, branch):
+        """
+        :param token: The token from GitHub to use on the HTTP Request
+            :type:  String
+        :param repository: The source repository to get the PR
+            :type:  String
+        :param branch: The source branch used by the PR in the repository
+            :type:  String
+        :return: Returns the Pull Request JSON data for the PR
+        :rtype: String
+        """
         output = 'Getting pull request... '
         if not repository or not branch:
             output += 'Repository and branch needed to get pull request!'
@@ -346,6 +466,20 @@ class GitHubUtil:
 
     @staticmethod
     def post_comment_pr(token, repository, pr_num, message):
+        """
+        :param token:   GitHub Token used for the HTTP Requests
+            :type:  String
+        :param repository: The repository where the PR belongs to
+            :type:  String
+        :param pr_num: The PR number or ID for which we may send the comment
+            :type:  Int
+        :param message: The message to write the comment
+            :type:  String
+        :return: The HTTP Response's status code. If it works well, this may
+            return the status code 201 (Created). If it doesn't, this may
+            return the code 0 along with a text with the error found.
+        :rtype: Tuple<Int,String>
+        """
         import requests
         github_api_url = "https://api.github.com"
         # POST /repos/{:owner /:repo}/issues/{:pr_id}/comments
