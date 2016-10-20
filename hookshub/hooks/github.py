@@ -277,23 +277,28 @@ class GitHubUtil:
         return output
 
     @staticmethod
-    def docs_build(dir, target, clean=True):
+    def docs_build(dir, target=None, clean=True):
         build_path = dir
-        output = 'Building mkdocs '
+        output = 'Building mkdocs from {} '.format(dir)
         command = 'mkdocs build '
         if target:
             build_path = target
-            output += 'on {}...'.format(target)
+            output += 'to {}...'.format(target)
             command += '-d {}'.format(target)
         if clean:
             command += ' --clean'
-        new_build = Popen(
-            command.split(), cwd=dir, stdout=PIPE, stderr=PIPE
-        )
-        out, err = new_build.communicate()
-        if new_build.returncode != 0:
-            output += 'FAILED TO BUILD: {0}::{1}'.format(out, err)
+        try:
+            new_build = Popen(
+                command.split(), cwd=dir, stdout=PIPE, stderr=PIPE
+            )
+            out, err = new_build.communicate()
+            if new_build.returncode != 0:
+                output += 'FAILED TO BUILD: {0}::{1}'.format(out, err)
+                return output, False
+        except Exception as err:
+            output += 'Build Failed with exception from Popen... {}'.format(err)
             return output, False
+
         return output, build_path
 
     @staticmethod
