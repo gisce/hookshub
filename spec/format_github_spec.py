@@ -144,6 +144,14 @@ with description('GitHub Hook'):
             hook = github(json_data)
             expect(hook.number).to(equal("None"))
 
+        with it('Must return "False" when getting "merged" property and event'
+                'is not "pull_request" or it\'s merged'):
+            event = 'push'
+            file = 'push.json'
+            data = open(join(data_path, file)).read()
+            hook = github(loads(data))
+            expect(hook.merged).to(equal(False))
+
     with context('Commit Comment event'):
         with it('must have commit_comment as event'):
             event = 'commit_comment'
@@ -489,6 +497,13 @@ with description('GitHub Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             expect(hook.branch_name).to(equal('master'))
+
+        with it('must return if the pull_request is merged'):
+            event = 'pull_request'
+            file = 'pull_request.json'
+            data = open(join(data_path, file)).read()
+            hook = github(loads(data))
+            expect(hook.merged).to(equal(True))
 
         with it('Must return action status when getting "action" ("opened")'):
             file = 'pull_request.json'
