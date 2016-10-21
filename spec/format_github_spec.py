@@ -112,6 +112,14 @@ with description('GitHub Hook'):
             hook = github(json_data)
             expect(hook.branch_name).to(equal('None'))
 
+        with it('may return "None" when trying to get target branch name for a '
+                'non-target-branch event'):
+            file = 'status.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = github(json_data)
+            expect(hook.target_branch_name).to(equal('None'))
+
         with it('may return "None" when trying to get status for an event '
                 'that isn\'t state'):
             file = 'push.json'
@@ -127,6 +135,30 @@ with description('GitHub Hook'):
             json_data = loads(data)
             hook = github(json_data)
             expect(hook.repo_id).to(equal(35129377))
+
+        with it('Must return "None" when getting "action" and event!='
+                ' "pull_request"'):
+            file = 'push.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = github(json_data)
+            expect(hook.action).to(equal("None"))
+
+        with it('Must return "None" when getting "number" and event'
+                ' does not have #number (pr, pr_comm, issue, issue_comm)'):
+            file = 'push.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = github(json_data)
+            expect(hook.number).to(equal("None"))
+
+        with it('Must return "False" when getting "merged" property and event'
+                'is not "pull_request" or it\'s merged'):
+            event = 'push'
+            file = 'push.json'
+            data = open(join(data_path, file)).read()
+            hook = github(loads(data))
+            expect(hook.merged).to(equal(False))
 
     with context('Commit Comment event'):
         with it('must have commit_comment as event'):
@@ -148,7 +180,7 @@ with description('GitHub Hook'):
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event, config)).to(equal(exe_data))
-            
+
     with context('Create event'):
         with it('must have create as event'):
             event = 'create'
@@ -318,6 +350,13 @@ with description('GitHub Hook'):
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event, config)).to(equal(exe_data))
+
+        with it('Must return the #number when getting "number" ("1")'):
+            file = 'issue_comment.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = github(json_data)
+            expect(hook.number).to(equal(2))
             
     with context('Issues event'):
         with it('must have issues as event'):
@@ -340,6 +379,13 @@ with description('GitHub Hook'):
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event, config)).to(equal(exe_data))
+
+        with it('Must return the #number when getting "number" ("1")'):
+            file = 'issues.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = github(json_data)
+            expect(hook.number).to(equal(2))
             
     with context('Member event'):
         with it('must have member as event'):
@@ -436,7 +482,7 @@ with description('GitHub Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             expect(hook.event).to(equal('pull_request'))
-
+            
         with it('must return [exe_path, dump(json), event] when getting'
                 ' the execution params for the pull_request'
                 ' event'):
@@ -445,7 +491,7 @@ with description('GitHub Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             exe_path = join(hook.actions_path, event)
-            
+
             config = loads(open(join(data_path, 'conf.json'), 'r').read())
             dict_json = loads(data)
             json_data = dumps(dict_json)
@@ -453,12 +499,41 @@ with description('GitHub Hook'):
             expect(hook.get_exe_action(event, config)).to(equal(exe_data))
 
         with it('must return branch name from payload parse '
+                '("changes" on pull_request.json)'):
+            event = 'pull_request'
+            file = 'pull_request.json'
+            data = open(join(data_path, file)).read()
+            hook = github(loads(data))
+            expect(hook.branch_name).to(equal('changes'))
+
+        with it('must return target branch name from payload parse'
                 '("master" on pull_request.json)'):
             event = 'pull_request'
             file = 'pull_request.json'
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
-            expect(hook.branch_name).to(equal('master'))
+            expect(hook.target_branch_name).to(equal('master'))
+
+        with it('must return if the pull_request is merged'):
+            event = 'pull_request'
+            file = 'pull_request.json'
+            data = open(join(data_path, file)).read()
+            hook = github(loads(data))
+            expect(hook.merged).to(equal(True))
+
+        with it('Must return action status when getting "action" ("opened")'):
+            file = 'pull_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = github(json_data)
+            expect(hook.action).to(equal("opened"))
+
+        with it('Must return the #number when getting "number" ("1")'):
+            file = 'pull_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = github(json_data)
+            expect(hook.number).to(equal(1))
 
     with context('Review Comment on Pull Request event'):
         with it('must have pull_request_review_comment as event'):
@@ -484,12 +559,27 @@ with description('GitHub Hook'):
             expect(hook.get_exe_action(event, config)).to(equal(exe_data))
 
         with it('must return branch name from payload parse '
+                '("changes" on pull_request_review_comment.json)'):
+            event = 'pull_request_review_comment'
+            file = 'pull_request_review_comment.json'
+            data = open(join(data_path, file)).read()
+            hook = github(loads(data))
+            expect(hook.branch_name).to(equal('changes'))
+
+        with it('must return target branch name from payload parse '
                 '("master" on pull_request_review_comment.json)'):
             event = 'pull_request_review_comment'
             file = 'pull_request_review_comment.json'
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
-            expect(hook.branch_name).to(equal('master'))
+            expect(hook.target_branch_name).to(equal('master'))
+
+        with it('Must return the #number when getting "number" ("1")'):
+            file = 'pull_request_review_comment.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = github(json_data)
+            expect(hook.number).to(equal(1))
 
     with context('Push event'):
         with it('must have push as event'):
@@ -653,33 +743,6 @@ with description('GitHub Hook'):
             expect(hook.branch_name).to(equal('None'))
 
     with context('With powerp-docs repository events'):
-        with it('must return token, port, ssh and http url, repository and'
-                ' branch names and state; with "status-powerp-docs.py" action'
-                ' arguments from hook'):
-            action = 'status-powerp-docs.py'
-            file = 'status.json'
-            data = open(join(data_path, file)).read()
-            json_data = loads(data)
-            config = loads(open(join(data_path, 'conf.json'), 'r').read())
-            # Set required data from default data:
-            json_data['repository']['name'] = 'powerp-docs'
-            hook = github(json_data)
-            json = {}
-            json.update({'ssh_url': hook.ssh_url})
-            json.update({'http_url': hook.http_url})
-            json.update({'repo-name': hook.repo_name})
-            json.update({'branch-name': hook.branch_name})
-            json.update({'state': hook.status})
-            args_json = loads(hook.get_exe_action(action, config)[1])
-            checked = []
-            for key in args_json.keys():
-                checked.append(key)
-                expect(args_json[key]).to(
-                    equal(json.get(key, '{} Not found'.format(key)))
-                )
-            for key in json.keys():
-                expect(checked).to(contain(key))
-
         with it('must return token, port, vhost path, ssh and http urls, '
                 'repository and branch names, full repository name;'
                 ' with "push-powerp-docs.py" action arguments from hook'):
@@ -713,21 +776,27 @@ with description('GitHub Hook'):
         with it('must return [exe_path, payload, event] when getting'
                 ' the execution params for the pull_request event.'
                 ' Payload must include: vhost_path, ssh and http url,'
-                ' repo_name and if it\'s merged'):
-            action = 'pull_request-powerp-docs'
+                ' repo_name, the pr_number and the action'):
+            event = 'pull_request-powerp-docs'
             file = 'pull_request.json'
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
-            exe_path = join(hook.actions_path, action)
+            exe_path = join(hook.actions_path, event)
 
             config = loads(open(join(data_path, 'conf.json'), 'r').read())
             json = {}
+            json.update({'token': config['github_token']})
             json.update({'vhost_path': config['vhost_path']})
+            json.update({'port': config['nginx_port']})
             json.update({'ssh_url': hook.ssh_url})
             json.update({'http_url': hook.http_url})
             json.update({'repo_name': hook.repo_name})
-            json.update({'merged': hook.merged})
-            args_json = loads(hook.get_exe_action(action, config)[1])
+            json.update({'repo_full_name': hook.repo_full_name})
+            json.update({'branch_name': hook.branch_name})
+            json.update({'action': hook.action})
+            json.update({'number': hook.number})
+            json_data = dumps(json)
+            args_json = loads(hook.get_exe_action(event, config)[1])
             checked = []
             for key in args_json.keys():
                 checked.append(key)
@@ -802,6 +871,18 @@ with description('GitHub Utils'):
                 popen_mock.communicate.return_value = ['All Ok\n', 'Mocked!']
                 popen_mock.returncode = 1
                 popen.return_value = popen_mock
+                from_path = 'From docs'
+                to_path = 'To build'
+                log, dir = util.docs_build(from_path, to_path)
+                expect(len(log) > 0).to(equal(True))
+                expect(dir).to(equal(False))
+                popen.stop()
+
+        with it('Must return the error log String and a False directory (mocked)'
+                'when Popen throws an exception'):
+            with patch("hookshub.hooks.github.Popen") as popen:
+                popen.start()
+                popen.side_effect = Exception('Mocked exception')
                 from_path = 'From docs'
                 to_path = 'To build'
                 log, dir = util.docs_build(from_path, to_path)

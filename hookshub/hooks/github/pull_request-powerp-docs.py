@@ -29,11 +29,23 @@ def arguments():
     event = sys.argv[2]
     return payload, event
 
-
 payload, event = arguments()
 
 output = ''
 http_url = "https://api.github.com"
+
+action = payload['action']
+if action != 'opened':
+    output = 'PR not ready, aborted ...'
+    print (output)
+    exit(0)
+
+pr_num = payload['number']
+if not pr_num:
+    output = 'Failed to get number (Is the PR ready?)'
+    print (output)
+    exit(-1)
+
 url = payload['ssh_url'] or payload['http_url']
 if not url:
     output = 'Failed to get URL (was it in payload?)'
@@ -46,23 +58,14 @@ branch_name = payload['branch_name']
 output += ('Rebut event de <{}> |'.format(event))
 
 # Get from env_vars
-util_docs_path = '{0}/{1}'.format(payload['vhost_path'], repo_name)
 token = payload['token']
 port = payload['port']
+util_docs_path = '{0}/{1}_{2}'.format(
+    payload['vhost_path'], repo_name, branch_name
+)
 
-docs_dir = 'powerp'
+docs_path = util_docs_path
 
-# Mirem de quina branca es tracta i actualitzem el directori del build:
-#   Si es master el directori sera  /powerp/
-#   Altrament el directori sera     /powerp_XXX/
-#       on XXX es el nom de la branca
-if branch_name != 'master' and branch_name != 'None':
-    docs_dir += "_{}".format(branch_name)
-
-docs_path = join(util_docs_path, docs_dir)
-
-# Creem un directori temporal que guardarà les dades del clone
-#   Per actualitzar la pagina de la documentacio
 with TempDir() as temp:
     output += ('Creat Directori temporal: {} |'.format(temp.dir))
 
@@ -72,11 +75,12 @@ with TempDir() as temp:
     if code != 0:
         output += 'Clonant el repository desde http'
         url = payload['http_url']
-        out, code, err2 = Util.clone_on_dir(temp.dir, branch_name, repo_name, url)
+        out, code, err2 = Util.clone_on_dir(temp.dir, branch_name, repo_name,
+                                            url)
         if code != 0:
             # Could not clone >< => ABORT
             sys.stderr.write(
-                '| Failed to get repository {0};;{1}|'.format(err, err2)
+                '| Failed to get repository {0};\n;{1}|'.format(err, err2)
             )
             print(output)
             exit(-1)
@@ -84,22 +88,6 @@ with TempDir() as temp:
 
     # Pendent de solucionar: No es pot entrar al virtualenv si amb el binari
     # especificat a dalt... A més l'interpret no pot canviar amb subprocess
-
-    # output += 'Entrant al virtualenv: "docs" ... '
-    # command = 'workon docs'
-    # try:
-    #     new_virtenv = Popen(
-    #         command.split(), stdout=PIPE, stderr=PIPE
-    #     )
-    #     out, err = new_virtenv.communicate()
-    #     virtenv = new_virtenv.returncode == 0
-    #     if not virtenv:
-    #         output += 'FAILED to enter virtualenv, installing on default env|'
-    #     output += 'OK |'
-    # except OSError as err:
-    #     output += 'FAILED to enter virtualenv, installing on default env' \
-    #               '\n {}|'.format(err)
-    #     virtenv = False
 
     # Accedim al directori del clone utilitzant el nom del repositori
 
@@ -115,7 +103,7 @@ with TempDir() as temp:
     # If build fails we can't continue
     if not target_build_path:
         output += '{} FAILED |'.format(out)
-        print (output)
+        print(output)
         exit(1)
     output += '{} OK |'.format(out)
 
@@ -123,8 +111,8 @@ with TempDir() as temp:
 
     # Construim el comentari:
     #   Docs path te /var/www/domain/URI
-    base_url = util_docs_path.split('/', 3)[3]   # Kick out /var/www/
-    base_uri = 'powerp_{}'.format(     # Get docs uri
+    base_url = util_docs_path.split('/', 3)[3]  # Kick out /var/www/
+    base_uri = 'powerp_{}'.format(  # Get docs uri
         branch_name
     )
     if port in ['80', '443']:
@@ -133,20 +121,10 @@ with TempDir() as temp:
         res_url = '{0}:{1}/{2}'.format(base_url, port, base_uri)
     comment = 'Documentation build URL: http://{}/'.format(res_url)
 
-    # Necessitem agafar totes les pull request per trobar la nostra
-
-    my_pr, out = Util.get_pr(token, repo_full_name, branch_name)
-    output += out
-
-    # If getting pr fails, we ommit comment post
-    if my_pr <= 0:
-        print(output)
-        exit(0)
-
     # Postejem el comentari
 
     post_code, post_text = Util.post_comment_pr(
-        token, repo_full_name, my_pr['number'], comment
+        token, repo_full_name, pr_num, comment
     )
 
     if post_code == 201:
@@ -157,18 +135,5 @@ with TempDir() as temp:
         output += 'Failed to write comment. ' \
                   'Server responded with {} |'.format(post_code)
         output += dumps(loads(post_text))
-
-    # if virtenv:
-    #     output += 'Deactivate virtualenv ...'
-    #     command = 'deactivate'
-    #     deact = Popen(
-    #         command, cwd=clone_dir, stdout=PIPE, stderr=PIPE
-    #     )
-    #     out, err = deact.communicate()
-    #     if deact.returncode != 0:
-    #         output += 'FAILED TO DEACTIVATE: {0}::{1}'.format(out, err)
-    #         print(output)
-    #         exit(-1)
-    #     output += 'OK |'
 
 print(output)

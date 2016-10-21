@@ -292,7 +292,7 @@
         "href": "https://api.github.com/repos/baxterthehacker/public-repo/statuses/0d1a26e67d8f5eaf1f6ba5c57fc3c7d91ac0fd1c"
       }
     },
-    "merged": false,
+    "merged": true,
     "mergeable": null,
     "mergeable_state": "unknown",
     "merged_by": null,
