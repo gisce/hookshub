@@ -60,11 +60,14 @@ output += ('Rebut event de <{}> |'.format(event))
 # Get from env_vars
 token = payload['token']
 port = payload['port']
-util_docs_path = '{0}/{1}_{2}'.format(
-    payload['vhost_path'], repo_name, branch_name
+
+util_docs_path = '{0}/{1}'.format(
+    payload['vhost_path'], repo_name
 )
 
-docs_path = util_docs_path
+docs_path = '{0}/powerp_{2}'.format(
+    util_docs_path, branch_name
+)
 
 with TempDir() as temp:
     output += ('Creat Directori temporal: {} |'.format(temp.dir))
