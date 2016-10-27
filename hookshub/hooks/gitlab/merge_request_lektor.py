@@ -7,6 +7,7 @@ from os.path import join
 from json import loads
 from tempfile import mkdtemp
 from shutil import rmtree
+from hookshub.hooks.gitlab import GitLabUtil as Util
 import sys
 
 
@@ -29,17 +30,28 @@ def arguments():
 output = ''
 out = ''
 payload = arguments()
-http_res = payload['http_url'].split('/')
+
+# Get your GitLab's domain's URL
 # 'http:'/''/'url'/
+http_res = payload['http_url'].split('/')
 http_url = http_res[0]
 if http_url == 'http:':
     http_url += '//'
     http_url += http_res[1] if http_res[1] != '' else http_res[2]
-url = payload['ssh_url'] or payload['http_url']
+
+# Check for URL in payload
+
+url = payload['ssh_url']
+ssh_found = True
 if not url:
-    output = 'Failed to get URL (was it in payload?)'
-    print (output)
-    exit(-1)
+    # Not ssh_url? Get it from Http
+    ssh_found = False
+    url = payload['http_url']
+    if not url:
+        output = 'Failed to get URL (was it in payload?)'
+        print (output)
+        exit(-1)
+
 repo_name = payload['repo_name']        # Source Repository Name
 source_branch = payload['branch_name']  # Source branch
 project_id = payload['project_id']      # Source Project ID
@@ -54,56 +66,31 @@ port = payload['port']
 
 branch_path = '{0}/branch/{1}'.format(lektor_path, source_branch)
 mr_path = '{}/PR/'.format(lektor_path)
+master_path = ''
 if merged:
     master_path = '{0}/{1}'.format(lektor_path, 'master')
 
 with TempDir() as tmp:
     tmp_dir = tmp.dir
     output += ('Creat Directori temporal: {} |'.format(tmp_dir))
-    command = ''
-    if merged:
-        output += "Clonant el repositori '{0}' ...".format(repo_name)
-        command = 'git clone {0}'.format(url)
-    elif source_branch != 'None':
-        output += "Clonant el repositori '{0}', amb la branca '{1}' ...".format(
-            repo_name, source_branch
-        )
-        command = 'git clone {0} --branch {1}'.format(url, source_branch)
-    else:
-        output += "Clonant el repositori '{0}' ...".format(repo_name)
-        command = 'git clone {}'.format(url)
 
-    new_clone = Popen(
-        command.split(), cwd=tmp_dir, stdout=PIPE, stderr=PIPE
-    )
-    out, err = new_clone.communicate()
+    branch = 'None' if merged else source_branch
+    out, code, err = Util.clone_on_dir(tmp_dir, branch, repo_name, url)
 
-    if new_clone.returncode != 0:
-        # Could not clone >< => ABORT
-        output += 'FAILED TO CLONE: {}: | Trying to clone from https ' \
-                  '...'.format(out)
-        sys.stderr.write(
-            '[merge_request_lektor]:clone_repository_fail::{}'.format(err)
-        )
-        url = payload['http_url']
-        if merged:
-            output += "Clonant el repositori '{0}' ...".format(repo_name)
-            command = 'git clone {0}'.format(url)
-        elif source_branch != 'None':
-            output += "Clonant el repositori '{0}', amb la branca '{1}'" \
-                      " ...".format(repo_name, source_branch)
-            command = 'git clone {0} --branch {1}'.format(url, source_branch)
-        else:
-            output += "Clonant el repositori '{0}' ...".format(repo_name)
-            command = 'git clone {}'.format(url)
-
-        new_clone = Popen(
-            command.split(), cwd=tmp_dir, stdout=PIPE, stderr=PIPE
-        )
-        out, err = new_clone.communicate()
-
-        if new_clone.returncode != 0:
-            sys.stderr.write('| Failed to get repository |')
+    output += "Clonant desde ssh_url... "
+    if code != 0:
+        output += out
+        err2 = None
+        if ssh_found:
+            output += "Clonant desde http_url... "
+            out, code, err2 = Util.clone_on_dir(
+                tmp_dir, branch, repo_name, url
+            )
+        if not ssh_found or not err2:
+            sys.stderr.write('|(ssh) Failed to get repository {}|'.format(err))
+            if err2:
+                sys.stderr.write('|(http) Failed to get repository {}|'.format(err2))
+            output += out
             print(output)
             exit(-1)
 
@@ -111,56 +98,32 @@ with TempDir() as tmp:
 
     clone_dir = join(tmp_dir, repo_name)
 
-    output += 'Entrant al virtualenv: lektor ... '
-    command = 'workon lektor'
-    try:
-        new_virtenv = Popen(
-            command.split(), cwd=clone_dir, stdout=PIPE, stderr=PIPE
-        )
-        out, err = new_virtenv.communicate()
-        virtenv = new_virtenv.returncode == 0
-        if not virtenv:
-            output += 'FAILED to enter virtualenv, installing on default env |'
-        output += 'OK |'
-    except OSError as err:
-        output += 'FAILED to enter virtualenv, installing on default env |'
-        virtenv = False
+    # Pendent de solucionar: No es pot entrar al virtualenv si amb el binari
+    # especificat a dalt... A més l'interpret no pot canviar amb subprocess
+
     output += 'Instal.lant dependencies...'
-    command = 'pip install -r requirements.txt'
-    dependencies = Popen(
-        command.split(), cwd=clone_dir, stdout=PIPE, stderr=PIPE
-    )
-    out, err = dependencies.communicate()
-    output += 'OK |'
+    output += '{} DONE |'.format(Util.pip_requirements(clone_dir))
 
     # Fem build al directori on tenim la pagina des del directori del clone
-    if merged:
-        command = 'lektor --project gisce.net-lektor build -O {}'.format(
-            master_path
-        )
-        output += 'Building lektor on {}...'.format(master_path)
-    else:
-        command = 'lektor --project gisce.net-lektor build -O {}'.format(
-            branch_path
-        )
-        output += 'Building lektor on {}...'.format(branch_path)
-    new_build = Popen(
-        command.split(), cwd=clone_dir, stdout=PIPE, stderr=PIPE
+    path = master_path if merged else branch_path
+    out, ret_path = Util.lektor_build(
+        clone_dir, path, 'gisce.net-lektor'
     )
-    out, err = new_build.communicate()
-    if new_build.returncode != 0:
-        output += 'FAILED TO BUILD! - Output::{0}'.format(out)
-        sys.stderr.write(
-            '[merge_request_lektor]:build_lektor_error:{}'.format(err)
-        )
+    output += out
+    if not ret_path or path != ret_path:
+        print (output)
         exit(-1)
     output += 'OK |'
 
+    # If merged, there is no comment to be done, so we end
     if merged:
         print(output)
         exit(0)
 
-    # Creem el directori per /PR/
+    # SYMLINK built page to /PR/ Directory
+    # Create the directory for /PR/
+    #   |-> Instead of check and create, we create it and if it's already
+    #       created nothing may change
     command = 'mkdir -p {}'.format(mr_path)
     output += 'Making dir {} ...'.format(mr_path)
     mkdir = Popen(
@@ -168,7 +131,9 @@ with TempDir() as tmp:
     )
     out, err = mkdir.communicate()
 
-    # Esborrem el directori per /PR/{id} de possibles copies anteriors
+    # Remove old /PR/{id} dir, with old copies
+    #   |-> As before, if the dir does not exist, the command will fail, but
+    #       Nothing may change
     command = 'rm -r {0}{1}'.format(mr_path, index_id)
     output += 'Removing dir {0}{1} ...'.format(mr_path, index_id)
     rmdir = Popen(
@@ -176,7 +141,8 @@ with TempDir() as tmp:
     )
     out, err = rmdir.communicate()
 
-    # Enllaç simbolic per @ amb id
+    # Build the SymLing from the built path (branch_path) to the PR/{id} path
+    # Created from the (cwd=) mr_path where the directory {id} is
 
     command = 'ln -s {0} {1}'.format(branch_path, index_id)
     output += 'Symbolic link from data in {0} to {1} ...'.format(
@@ -186,6 +152,7 @@ with TempDir() as tmp:
         command.split(), cwd=mr_path, stdout=PIPE, stderr=PIPE
     )
     out, err = sym_link.communicate()
+
     if sym_link.returncode != 0:
         output += 'FAILED TO SYMLINK! - Output::{0}'.format(out)
         sys.stderr.write(
@@ -193,60 +160,40 @@ with TempDir() as tmp:
         )
     output += 'OK |'
 
-    try:
-        import requests
-        # POST /projects/:id/merge_requests/:merge_request_id/notes
-        req_url = '{0}/api/v3/projects/{1}/merge_requests/{2}/notes'.format(
-            http_url, project_id, merge_id
-        )
-        # Lektor path has /var/www/domain
-        base_url = lektor_path.split('/', 3)[3]       # Kick out /var/www/
-        base_uri = 'branch/{0}'.format(source_branch)
-        if port in ['80', '443']:
-            res_url_branch = '{0}/{1}'.format(base_url, base_uri)
-        else:
-            res_url_branch = '{0}:{1}/{2}'.format(base_url, port, base_uri)
-        base_uri = 'PR/{0}'.format(index_id)   # Get build uri
-        if port in ['80', '443']:
-            res_url_request = '{0}/{1}'.format(base_url, base_uri)
-        else:
-            res_url_request = '{0}:{1}/{2}'.format(base_url, port, base_uri)
-        comment = 'Branch URL: http://{0}/\nPR URL: http://{1}/'.format(
-            res_url_branch, res_url_request
-        )
-        output += 'Build comment as \n{} | '.format(comment)
-        output += 'POST comment to {} ... '.format(req_url)
-        head = {'PRIVATE-TOKEN': token}
-        payload = {'body': comment}
-        note = requests.post(req_url, headers=head, json=payload)
-        if note.status_code == 201:
-            output += 'OK |'.format(note.status_code)
-        else:
-            output += 'Failed to comment but server responded |'
-    except requests.ConnectionError as err:
-        sys.stderr.write('Failed to send comment to merge request -'
-                         ' Connection [{}]'.format(err))
-    except requests.HTTPError as err:
-        sys.stderr.write('Failed to send comment to merge request -'
-                         ' HTTP [{}]'.format(err))
-    except requests.RequestException as err:
-        sys.stderr.write('Failed to send comment to merge request -'
-                         ' REQUEST [{}]'.format(err))
-    except Exception as err:
-        sys.stderr.write('Failed to send comment to merge request -'
-                         ' INTERNAL SERVER ERROR [{}]'.format(err))
+    # After the Build and the SymLink => Comment on MR
 
-    if virtenv:
-        output += 'Deactivate virtualenv ...'
-        command = 'deactivate'
-        deact = Popen(
-            command, cwd=clone_dir, stdout=PIPE, stderr=PIPE
-        )
-        out, err = deact.communicate()
-        if deact.returncode != 0:
-            output += 'FAILED TO DEACTIVATE: {0}::{1}'.format(out, err)
-            print(output)
-            exit(-1)
-        output += 'OK |'
+    # POST /projects/:id/merge_requests/:merge_request_id/notes
+    req_url = '{0}/api/v3/projects/{1}/merge_requests/{2}/notes'.format(
+        http_url, project_id, merge_id
+    )
+
+    # Build the comment to be posted
+
+    # Lektor path has /var/www/domain
+    base_url = lektor_path.split('/', 3)[3]       # Kick out /var/www/
+    base_uri = 'branch/{0}'.format(source_branch)
+    if port in ['80', '443']:
+        res_url_branch = '{0}/{1}'.format(base_url, base_uri)
+    else:
+        res_url_branch = '{0}:{1}/{2}'.format(base_url, port, base_uri)
+    base_uri = 'PR/{0}'.format(index_id)   # Get build uri
+    if port in ['80', '443']:
+        res_url_request = '{0}/{1}'.format(base_url, base_uri)
+    else:
+        res_url_request = '{0}:{1}/{2}'.format(base_url, port, base_uri)
+    comment = 'Branch URL: http://{0}/\nPR URL: http://{1}/'.format(
+        res_url_branch, res_url_request
+    )
+    output += 'Build comment as \n{} | '.format(comment)
+    code, out = Util.post_comment_mr(
+        http_url, token, project_id, merge_id, comment
+    )
+    if code != 201:
+        output += out
+        sys.stderr.write("Could not POST comment on MR! {}|".format(code))
+        print(output)
+        exit(0)
+    else:
+        output += "Posted Comment Successfully"
 
 print(output)
