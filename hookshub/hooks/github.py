@@ -494,6 +494,12 @@ class GitHubUtil:
             post = requests.post(req_url, headers=head, json=payload)
             code = post.status_code
             text = post.text
+            if code != 201:
+                raise Exception(
+                    "Bad return code, returned text: \n[{}]\n".format(
+                        text
+                    )
+                )
         except requests.ConnectionError as err:
             text = 'Failed to send comment to pull request -' \
                              ' Connection [{}]'.format(err)
