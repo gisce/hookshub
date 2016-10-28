@@ -3,6 +3,7 @@ from webhook import webhook
 from json import dumps
 from subprocess import Popen, PIPE
 
+import requests
 # GitLab events
 #   For more information about GitLab events, check the official docs:
 # https://gitlab.com/gitlab-org/gitlab-ce/blob/master/doc/web_hooks/web_hooks.md
@@ -219,16 +220,12 @@ class GitLabUtil:
         """
         output = 'Instal.lant dependencies...'
         command = 'pip install -r requirements.txt'
-        try:
-            dependencies = Popen(
-                command.split(), cwd=dir, stdout=PIPE, stderr=PIPE
-            )
-            out, err = dependencies.communicate()
-            if dependencies.returncode != 0:
-                output += ' Couldn\'t install all dependencies '
-        except Exception as err:
-            output += 'Popen found an exception {} and couldn\'t install' \
-                      ' all required dependecies'.format(err)
+        dependencies = Popen(
+            command.split(), cwd=dir, stdout=PIPE, stderr=PIPE
+        )
+        out, err = dependencies.communicate()
+        if dependencies.returncode != 0:
+            output += ' Couldn\'t install all dependencies '
         return output
 
     @staticmethod
@@ -243,7 +240,7 @@ class GitLabUtil:
             May be None, and is not used if in the right directory.
             :type:  String
         :return: An output log with some annotations and the output and error
-            log from the mkdocs build call. And a String containing the path
+            log from the lektor build call. And a String containing the path
             where the docs have been built
             :type: Tuple<String, String>
         """
@@ -291,7 +288,6 @@ class GitLabUtil:
             return the code 0 along with a text with the error found.
         :rtype: Tuple<Int,String>
         """
-        import requests
         # POST /projects/:id/merge_requests/:merge_request_id/notes
         req_url = '{0}/api/v3/projects/{1}/merge_requests/{2}/notes'.format(
             http_url, project, merge_num
