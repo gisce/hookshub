@@ -14,7 +14,7 @@ project_path = dirname(my_path)  # project dir
 hook_testing = 'gitlab'
 data_path = join(project_path, join('test_data', hook_testing))
 
-with description('Gitlab Hook'):
+with description('GitLab Hook'):
     with context('Basic info'):
         with it('must have gitlab as origin'):
             file = 'push.json'
@@ -170,7 +170,6 @@ with description('Gitlab Hook'):
             json_data = loads(data)
             hook = gitlab(json_data)
             expect(hook.state).to(equal('None'))
-
 
     with context('Comment Event'):
         with it('must have "note" as event'):
@@ -426,3 +425,172 @@ with description('Gitlab Hook'):
                 )
             for key in json.keys():
                 expect(checked).to(contain(key))
+
+with description('GitLab Utils'):
+    # clone_on_dir
+    with context('Clone on Dir'):
+        with it('Must return a String and a returncode == 0 with the '
+                'right params(mocked)'):
+            with patch("hookshub.hooks.gitlab.Popen") as popen:
+                popen.start()
+                popen_mock = Mock()
+                popen_mock.communicate.return_value = ['All Ok\n', '']
+                popen_mock.returncode = 0
+                popen.return_value = popen_mock
+                log, result, err = util.clone_on_dir(
+                    'directory', 'branch', 'repository', 'gitlab url'
+                )
+                expect(len(log) > 0).to(equal(True))
+                expect(len(err)).to(equal(0))
+                expect(result).to(equal(0))
+                popen.stop()
+
+        with it('Must return a String and a returncode != 0 with the '
+                'wrong params(mocked)'):
+            with patch("hookshub.hooks.gitlab.Popen") as popen:
+                popen.start()
+                popen_mock = Mock()
+                popen_mock.communicate.return_value = ['Not Ok\n', 'Mocked!']
+                popen_mock.returncode = 1
+                popen.return_value = popen_mock
+                log, result, err = util.clone_on_dir(
+                    'directory', 'branch', 'repository', 'gitlab url'
+                )
+                expect(len(log) > 0).to(equal(True))
+                expect(len(err) > 0).to(equal(True))
+                expect(result).to(equal(1))
+                popen.stop()
+
+    # pip_requirements
+    with context('Install pip requirements'):
+        with it('Must try to pip install on a dir. If can\'t it\'ll print'
+                ' another line with the error'):
+            log = util.pip_requirements(data_path)
+            expect(len(log) > 0).to(equal(True))
+
+    # docs_build
+    with context('Build Lektor'):
+        with it('Must return two strings (log + build dir -> Mocked)'):
+            # All ok
+            with patch("hookshub.hooks.gitlab.Popen") as popen:
+                popen.start()
+                popen_mock = Mock()
+                popen_mock.communicate.return_value = ['All Ok\n', 'Mocked!']
+                popen_mock.returncode = 0
+                popen.return_value = popen_mock
+                from_path = 'From folder'
+                to_path = 'To build'
+                proj = 'Project in folder'
+                log, dir = util.lektor_build(from_path, to_path, proj)
+                expect(len(log) > 0).to(equal(True))
+                expect(dir).to(equal(to_path))
+                popen.stop()
+
+        with it('Must return the log String and a False directory (Mocked)'):
+            # Simulate can't build
+            with patch("hookshub.hooks.gitlab.Popen") as popen:
+                popen.start()
+                popen_mock = Mock()
+                popen_mock.communicate.return_value = ['All Ok\n', 'Mocked!']
+                popen_mock.returncode = 1
+                popen.return_value = popen_mock
+                from_path = 'From docs'
+                to_path = 'To build'
+                proj = 'Project in folder'
+                log, dir = util.lektor_build(from_path, to_path, proj)
+                expect(len(log) > 0).to(equal(True))
+                expect(dir).to(equal(False))
+                popen.stop()
+
+        with it('Must return the error log String and a False directory'
+                ' (mocked) when Popen throws an exception'):
+            with patch("hookshub.hooks.gitlab.Popen") as popen:
+                popen.start()
+                popen.side_effect = Exception('Mocked exception')
+                from_path = 'From docs'
+                to_path = 'To build'
+                proj = 'Project in folder'
+                log, dir = util.lektor_build(from_path, to_path, proj)
+                expect(len(log) > 0).to(equal(True))
+                expect(dir).to(equal(False))
+                popen.stop()
+
+    # post_comment_pr
+    with context('Post Comment On PR'):
+        with it('Must return a 201 status code if all OK (Mocked)'):
+            with patch("hookshub.hooks.gitlab.requests.post") as req_get:
+                req_get.start()
+
+                class MockedReturn:
+                    def __init__(self, status_code, text):
+                        self.status_code = status_code
+                        self.text = dumps(text)
+
+                req_get.return_value = MockedReturn(201, [])
+                code, log = util.post_comment_mr(
+                    'URL', 'Token', 1, 12, 'Comment'
+                )
+                expect(code).to(equal(201))
+                req_get.stop()
+                
+        with it('Must return a error code if status code != 201 (Mocked)'):
+            with patch("hookshub.hooks.gitlab.requests.post") as req_get:
+                req_get.start()
+
+
+                class MockedReturn:
+                    def __init__(self, status_code, text):
+                        self.status_code = status_code
+                        self.text = dumps(text)
+
+
+                req_get.return_value = MockedReturn(400, [])
+                code, log = util.post_comment_mr(
+                    'URL', 'Token', 1, 12, 'Comment'
+                )
+                expect(code).to(equal(400))
+                req_get.stop()
+
+        with it('Must raise an internal error if a connection exception'
+                ' is thrown (Mocked)'):
+            with patch("hookshub.hooks.gitlab.requests.post") as req_get:
+                req_get.start()
+                req_get.side_effect = requests.ConnectionError('Mocked Error')
+                code, log = util.post_comment_mr(
+                    'URL', 'Token', 1, 12, 'Comment'
+                )
+                expect(code).to(equal(0))
+                req_get.stop()
+
+        with it('Must raise an internal error if a http exception'
+                ' is thrown (Mocked)'):
+            with patch("hookshub.hooks.gitlab.requests.post") as req_get:
+                req_get.start()
+                req_get.side_effect = requests.HTTPError('Mocked Error')
+                code, log = util.post_comment_mr(
+                    'URL', 'Token', 1, 12, 'Comment'
+                )
+                expect(code).to(equal(0))
+                req_get.stop()
+
+        with it('Must raise an internal error if a request exception'
+                ' is thrown (Mocked)'):
+            with patch("hookshub.hooks.gitlab.requests.post") as req_get:
+                req_get.start()
+                req_get.side_effect = requests.RequestException('Mocked Error')
+                code, log = util.post_comment_mr(
+                    'URL', 'Token', 1, 12, 'Comment'
+                )
+                expect(code).to(equal(0))
+                req_get.stop()
+
+        with it('Must raise an internal error if an internal exception'
+                ' is thrown (Mocked)'):
+            with patch("hookshub.hooks.gitlab.requests.post") as req_get:
+                req_get.start()
+                req_get.side_effect = Exception('Mocked Error')
+                code, log = util.post_comment_mr(
+                    'URL', 'Token', 1, 12, 'Comment'
+                )
+                expect(code).to(equal(0))
+                req_get.stop()
