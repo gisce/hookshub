@@ -2,7 +2,11 @@ from os.path import abspath, normpath, dirname, join, isfile
 from os import listdir
 from json import loads, dumps
 from hookshub.hooks.gitlab import GitLabWebhook as gitlab
+from hookshub.hooks.gitlab import GitLabUtil as util
 from expects import *
+from mock import patch, Mock
+
+import requests
 
 my_path = normpath(abspath(dirname(__file__)))
 project_path = dirname(my_path)  # project dir
