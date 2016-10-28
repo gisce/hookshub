@@ -480,7 +480,6 @@ class GitHubUtil:
             return the code 0 along with a text with the error found.
         :rtype: Tuple<Int,String>
         """
-        import requests
         github_api_url = "https://api.github.com"
         # POST /repos/{:owner /:repo}/issues/{:pr_id}/comments
         req_url = '{0}/repos/{1}/issues/{2}/comments'.format(
