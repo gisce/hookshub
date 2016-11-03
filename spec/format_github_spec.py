@@ -1014,6 +1014,24 @@ with description('GitHub Utils'):
                 expect(code).to(equal(201))
                 req_get.stop()
 
+        with it('Must return a error code if status code != 201 (Mocked)'):
+            with patch("hookshub.hooks.github.requests.post") as req_get:
+                req_get.start()
+
+
+                class MockedReturn:
+                    def __init__(self, status_code, text):
+                        self.status_code = status_code
+                        self.text = dumps(text)
+
+
+                req_get.return_value = MockedReturn(400, [])
+                code, log = util.post_comment_pr(
+                    'Token', 'Repository', 1234, 'Comment'
+                )
+                expect(code).to(equal(400))
+                req_get.stop()
+
         with it('Must raise an internal error if a connection exception'
                 ' is thrown (Mocked)'):
             with patch("hookshub.hooks.github.requests.post") as req_get:

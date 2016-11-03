@@ -480,7 +480,6 @@ class GitHubUtil:
             return the code 0 along with a text with the error found.
         :rtype: Tuple<Int,String>
         """
-        import requests
         github_api_url = "https://api.github.com"
         # POST /repos/{:owner /:repo}/issues/{:pr_id}/comments
         req_url = '{0}/repos/{1}/issues/{2}/comments'.format(
@@ -494,6 +493,12 @@ class GitHubUtil:
             post = requests.post(req_url, headers=head, json=payload)
             code = post.status_code
             text = post.text
+            if code != 201:
+                raise Exception(
+                    "Bad return code, returned text: \n[{}]\n".format(
+                        text
+                    )
+                )
         except requests.ConnectionError as err:
             text = 'Failed to send comment to pull request -' \
                              ' Connection [{}]'.format(err)
