@@ -65,7 +65,7 @@ util_docs_path = '{0}/{1}'.format(
     payload['vhost_path'], repo_name
 )
 
-docs_path = '{0}/powerp_{2}'.format(
+docs_path = '{0}/powerp_{1}'.format(
     util_docs_path, branch_name
 )
 
