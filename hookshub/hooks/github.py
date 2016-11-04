@@ -373,6 +373,28 @@ class GitHubUtil:
         return output
 
     @staticmethod
+    def export_pythonpath(docs_path):
+        """
+        :param docs_path: Path to the docs clone. Must have the sitecustomize
+            directory, as that's what the $PYTHONPATH will point to
+            :type:  String
+        :return: An output log saying if everything was ok
+        """
+        sc_path = join(docs_path, 'sitecustomize')
+        command = 'export PYTHONPATH={}'.format(sc_path)
+        try:
+            export = Popen(
+                command.split(), cwd=docs_path, stdout=PIPE, stderr=PIPE
+            )
+            if export.returncode == 0:
+                output = 'Success to export sitecustomize path'
+            else:
+                output = 'Failed to export sitecustomize path'
+        except Exception as err:
+            output = 'Failed to export sitecustomize path'
+        return output
+
+    @staticmethod
     def docs_build(dir, target=None, clean=True):
         """
         :param dir: Directory used to call the build. This MUST exist.
