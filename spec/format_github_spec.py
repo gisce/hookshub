@@ -850,8 +850,7 @@ with description('GitHub Utils'):
 
     # export PYTHONPATH
     with context('Export PYTHONPATH with sitecustomize'):
-        with it('Must have the PYTHONPATH variable with the pwd and'
-                ' sitecustomize directory'):
+        with it('Must return a log with a success message when seting the var'):
             with patch("hookshub.hooks.github.Popen") as popen:
                 popen.start()
                 popen_mock = Mock()
@@ -860,9 +859,33 @@ with description('GitHub Utils'):
                 popen.return_value = popen_mock
                 log = util.export_pythonpath('Path')
                 expect(len(log) > 0).to(equal(True))
-                expect(result).to(equal(0))
+                expect(log).to(equal('Success to export sitecustomize path'))
                 popen.stop()
 
+        with it('Must return a log with a failure message when seting the var'):
+            with patch("hookshub.hooks.github.Popen") as popen:
+                popen.start()
+                popen_mock = Mock()
+                popen_mock.communicate.return_value = ['All Bad\n']
+                popen_mock.returncode = -1
+                popen.return_value = popen_mock
+                log = util.export_pythonpath('Path')
+                expect(len(log) > 0).to(equal(True))
+                expect(log).to(equal('Failed to export sitecustomize path'))
+                popen.stop()
+
+        with it('Must return a log with a failure message when seting the var'
+                'and an exception is thrown'):
+            with patch("hookshub.hooks.github.Popen") as popen:
+                popen.start()
+                popen_mock = Mock()
+                popen_mock.side_effect = Exception('Mocked')
+                popen_mock.returncode = -1
+                popen.return_value = popen_mock
+                log = util.export_pythonpath('Path')
+                expect(len(log) > 0).to(equal(True))
+                expect(log).to(equal('Failed to export sitecustomize path'))
+                popen.stop()
 
     # docs_build
     with context('Build docs'):
