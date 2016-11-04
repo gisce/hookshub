@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from json import dumps, loads
-from os.path import join
+from os.path import join, isfile
 from subprocess import Popen, PIPE
 from webhook import webhook
 
@@ -395,7 +395,7 @@ class GitHubUtil:
         return output
 
     @staticmethod
-    def docs_build(dir, target=None, clean=True):
+    def docs_build(dir, target=None, file=None, clean=True):
         """
         :param dir: Directory used to call the build. This MUST exist.
             :type:  String
@@ -417,6 +417,8 @@ class GitHubUtil:
             build_path = target
             output += 'to {}...'.format(target)
             command += '-d {}'.format(target)
+        if file and isfile(file):
+            command += '-f {}'.format(file)
         if clean:
             command += ' --clean'
         try:
