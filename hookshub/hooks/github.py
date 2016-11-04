@@ -418,6 +418,7 @@ class GitHubUtil:
             output += 'to {}...'.format(target)
             command += '-d {}'.format(target)
         if file and isfile(file):
+            output += ' using file config file "{}"...'.format(file)
             command += '-f {}'.format(file)
         if clean:
             command += ' --clean'
