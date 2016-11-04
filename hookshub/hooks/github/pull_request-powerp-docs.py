@@ -139,10 +139,14 @@ with TempDir() as temp:
         branch_name
     )
     if port in ['80', '443']:
-        res_url = '{0}/{1}'.format(base_url, base_uri)
+        res_url = '{0}/ca/{1}'.format(base_url, base_uri)
+        res_url_es = '{0}/es/{1}'.format(base_url, base_uri)
     else:
-        res_url = '{0}:{1}/{2}'.format(base_url, port, base_uri)
-    comment = 'Documentation build URL: http://{}/'.format(res_url)
+        res_url = '{0}:{1}/ca/{2}'.format(base_url, port, base_uri)
+        res_url_es = '{0}:{1}/es/{2}'.format(base_url, port, base_uri)
+    comment = 'Documentation build URL:\n'
+    comment += 'ca_ES: http://{}/'.format(res_url)
+    comment += 'es_ES: http://{}/'.format(res_url_es)
 
     # Postejem el comentari
 
