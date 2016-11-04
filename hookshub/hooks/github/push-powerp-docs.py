@@ -113,7 +113,7 @@ with TempDir() as temp:
         # Build en castella
 
     out, target_build_path = (
-        Util.docs_build(clone_dir, ca_docs_path), 'mkdocs_es.yml'
+        Util.docs_build(clone_dir, ca_docs_path, 'mkdocs_es.yml')
     )
     # If build fails we can't continue
     if not target_build_path:
