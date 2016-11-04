@@ -417,7 +417,7 @@ class GitHubUtil:
             build_path = target
             output += 'to {}...'.format(target)
             command += '-d {}'.format(target)
-        if file and isfile(file):
+        if file:
             output += ' using file config file "{}"...'.format(file)
             command += '-f {}'.format(file)
         if clean:
