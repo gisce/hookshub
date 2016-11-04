@@ -903,6 +903,22 @@ with description('GitHub Utils'):
                 expect(dir).to(equal(to_path))
                 popen.stop()
 
+        with it('Must return two strings (log + build dir -> Mocked) '
+                'when calling with file and clean'):
+            with patch("hookshub.hooks.github.Popen") as popen:
+                popen.start()
+                popen_mock = Mock()
+                popen_mock.communicate.return_value = ['All Ok\n', 'Mocked!']
+                popen_mock.returncode = 0
+                popen.return_value = popen_mock
+                from_path = 'From docs'
+                to_path = 'To build'
+                file = 'Config File'
+                log, dir = util.docs_build(from_path, to_path, file, True)
+                expect(len(log) > 0).to(equal(True))
+                expect(dir).to(equal(to_path))
+                popen.stop()
+
         with it('Must return the log String and a False directory (Mocked)'):
             with patch("hookshub.hooks.github.Popen") as popen:
                 popen.start()
