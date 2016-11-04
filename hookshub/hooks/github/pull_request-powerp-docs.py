@@ -65,7 +65,10 @@ util_docs_path = '{0}/{1}'.format(
     payload['vhost_path'], repo_name
 )
 
-docs_path = '{0}/powerp_{1}'.format(
+ca_docs_path = '{0}/ca/powerp_{1}'.format(
+    util_docs_path, branch_name
+)
+es_docs_path = '{0}/es/powerp_{1}'.format(
     util_docs_path, branch_name
 )
 
@@ -100,9 +103,26 @@ with TempDir() as temp:
 
     output += '{} OK |'.format(Util.pip_requirements(clone_dir))
 
-    # Fem build al directori on tenim la pagina des del directori del clone
+    # Exportem PYTHONPATH
 
-    out, target_build_path = (Util.docs_build(clone_dir, docs_path))
+    output += '{} OK |'.format(Util.export_pythonpath(clone_dir))
+
+    # Fem build al directori on tenim la pagina des del directori del clone
+    #   Build en català
+    out, target_build_path = (Util.docs_build(clone_dir, ca_docs_path))
+
+    # If build fails we can't continue
+    if not target_build_path:
+        output += '{} FAILED |'.format(out)
+        print(output)
+        exit(1)
+    output += '{} OK |'.format(out)
+
+    #   Build en castellà
+    out, target_build_path = (
+        Util.docs_build(clone_dir, es_docs_path, 'mkdocs_es.yml')
+    )
+
     # If build fails we can't continue
     if not target_build_path:
         output += '{} FAILED |'.format(out)
