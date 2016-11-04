@@ -412,14 +412,14 @@ class GitHubUtil:
         """
         build_path = dir
         output = 'Building mkdocs from {} '.format(dir)
-        command = 'mkdocs build '
+        command = 'mkdocs build'
         if target:
             build_path = target
             output += 'to {}...'.format(target)
-            command += '-d {}'.format(target)
+            command += ' -d {}'.format(target)
         if file:
             output += ' using file config file "{}"...'.format(file)
-            command += '-f {}'.format(file)
+            command += ' -f {}'.format(file)
         if clean:
             command += ' --clean'
         try:
