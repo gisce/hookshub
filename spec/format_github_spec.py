@@ -848,6 +848,22 @@ with description('GitHub Utils'):
             log = util.pip_requirements(data_path)
             expect(len(log) > 0).to(equal(True))
 
+    # export PYTHONPATH
+    with context('Export PYTHONPATH with sitecustomize'):
+        with it('Must have the PYTHONPATH variable with the pwd and'
+                ' sitecustomize directory'):
+            with patch("hookshub.hooks.github.Popen") as popen:
+                popen.start()
+                popen_mock = Mock()
+                popen_mock.communicate.return_value = ['All Ok\n']
+                popen_mock.returncode = 0
+                popen.return_value = popen_mock
+                log = util.export_pythonpath('Path')
+                expect(len(log) > 0).to(equal(True))
+                expect(result).to(equal(0))
+                popen.stop()
+
+
     # docs_build
     with context('Build docs'):
         with it('Must return two strings (log + build dir -> Mocked)'):
