@@ -109,7 +109,9 @@ with TempDir() as temp:
 
     # Fem build al directori on tenim la pagina des del directori del clone
     #   Build en català
-    out, target_build_path = (Util.docs_build(clone_dir, ca_docs_path))
+    out, target_build_path = (
+        Util.docs_build(clone_dir, ca_docs_path, None, True)
+    )
 
     # If build fails we can't continue
     if not target_build_path:
@@ -120,7 +122,7 @@ with TempDir() as temp:
 
     #   Build en castellà
     out, target_build_path = (
-        Util.docs_build(clone_dir, es_docs_path, 'mkdocs_es.yml')
+        Util.docs_build(clone_dir, es_docs_path, 'mkdocs_es.yml', True)
     )
 
     # If build fails we can't continue
