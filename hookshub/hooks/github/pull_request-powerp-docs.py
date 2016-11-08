@@ -147,7 +147,7 @@ with TempDir() as temp:
         res_url = '{0}:{1}/ca/{2}'.format(base_url, port, base_uri)
         res_url_es = '{0}:{1}/es/{2}'.format(base_url, port, base_uri)
     comment = 'Documentation build URL:\n'
-    comment += 'ca_ES: http://{}/'.format(res_url)
+    comment += 'ca_ES: http://{}/\n'.format(res_url)
     comment += 'es_ES: http://{}/'.format(res_url_es)
 
     # Postejem el comentari
