@@ -8,6 +8,7 @@ from os.path import join
 import json
 import tempfile
 import shutil
+import logging
 
 
 class TempDir(object):
@@ -38,6 +39,7 @@ class HookListener(object):
             return github(payload)
 
     def run_event_actions(self, config_file):
+        logger = logging.getLogger('__main__')
         def_conf = {}
 
         with open(config_file, 'r') as config:
@@ -52,11 +54,11 @@ class HookListener(object):
 
         hook = self.instancer(self.payload)
         i = 0
-        log = 'Executed {} actions\n'.format(len(hook.event_actions))
+        logger.info('Executing {} actions\n'.format(len(hook.event_actions)))
 
         for action in hook.event_actions:
             i += 1
-            log += ('[Running: <{0}/{1}> - {2}]\n'.format(
+            logger.info('[Running: <{0}/{1}> - {2}]\n'.format(
                 i, len(hook.event_actions), action)
             )
             args = hook.get_exe_action(action, conf)
@@ -75,11 +77,13 @@ class HookListener(object):
                     action, stderr
                 ))
                 if proc.returncode != 0:
-                    log += ('[{0}]:{1}\n[{0}]:Failed!\n'.format(
+                    log = ('[{0}]:{1}\n[{0}]:Failed!\n'.format(
                         action, output
                     ))
+                    logger.error(log.replace('|', '\n'))
                     return -1, log
-                log += ('[{0}]:{1}\n[{0}]:Success!\n'.format(
+                log = ('[{0}]:{1}\n[{0}]:Success!\n'.format(
                     action, output
                 ))
+                logger.info(log.replace('|', '\n'))
         return 0, log
