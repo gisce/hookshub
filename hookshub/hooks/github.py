@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from json import dumps, loads
-from os.path import join
+from os.path import join, isfile
 from subprocess import Popen, PIPE
 from webhook import webhook
 
@@ -373,7 +373,29 @@ class GitHubUtil:
         return output
 
     @staticmethod
-    def docs_build(dir, target=None, clean=True):
+    def export_pythonpath(docs_path):
+        """
+        :param docs_path: Path to the docs clone. Must have the sitecustomize
+            directory, as that's what the $PYTHONPATH will point to
+            :type:  String
+        :return: An output log saying if everything was ok
+        """
+        sc_path = join(docs_path, 'sitecustomize')
+        command = 'export PYTHONPATH={}'.format(sc_path)
+        try:
+            export = Popen(
+                command.split(), cwd=docs_path, stdout=PIPE, stderr=PIPE
+            )
+            if export.returncode == 0:
+                output = 'Success to export sitecustomize path'
+            else:
+                output = 'Failed to export sitecustomize path'
+        except Exception as err:
+            output = 'Failed to export sitecustomize path'
+        return output
+
+    @staticmethod
+    def docs_build(dir, target=None, file=None, clean=True):
         """
         :param dir: Directory used to call the build. This MUST exist.
             :type:  String
@@ -390,11 +412,14 @@ class GitHubUtil:
         """
         build_path = dir
         output = 'Building mkdocs from {} '.format(dir)
-        command = 'mkdocs build '
+        command = 'mkdocs build'
         if target:
             build_path = target
             output += 'to {}...'.format(target)
-            command += '-d {}'.format(target)
+            command += ' -d {}'.format(target)
+        if file:
+            output += ' using file config file "{}"...'.format(file)
+            command += ' -f {}'.format(file)
         if clean:
             command += ' --clean'
         try:

@@ -848,6 +848,45 @@ with description('GitHub Utils'):
             log = util.pip_requirements(data_path)
             expect(len(log) > 0).to(equal(True))
 
+    # export PYTHONPATH
+    with context('Export PYTHONPATH with sitecustomize'):
+        with it('Must return a log with a success message when seting the var'):
+            with patch("hookshub.hooks.github.Popen") as popen:
+                popen.start()
+                popen_mock = Mock()
+                popen_mock.communicate.return_value = ['All Ok\n']
+                popen_mock.returncode = 0
+                popen.return_value = popen_mock
+                log = util.export_pythonpath('Path')
+                expect(len(log) > 0).to(equal(True))
+                expect(log).to(equal('Success to export sitecustomize path'))
+                popen.stop()
+
+        with it('Must return a log with a failure message when seting the var'):
+            with patch("hookshub.hooks.github.Popen") as popen:
+                popen.start()
+                popen_mock = Mock()
+                popen_mock.communicate.return_value = ['All Bad\n']
+                popen_mock.returncode = -1
+                popen.return_value = popen_mock
+                log = util.export_pythonpath('Path')
+                expect(len(log) > 0).to(equal(True))
+                expect(log).to(equal('Failed to export sitecustomize path'))
+                popen.stop()
+
+        with it('Must return a log with a failure message when seting the var'
+                'and an exception is thrown'):
+            with patch("hookshub.hooks.github.Popen") as popen:
+                popen.start()
+                popen_mock = Mock()
+                popen_mock.side_effect = Exception('Mocked')
+                popen_mock.returncode = -1
+                popen.return_value = popen_mock
+                log = util.export_pythonpath('Path')
+                expect(len(log) > 0).to(equal(True))
+                expect(log).to(equal('Failed to export sitecustomize path'))
+                popen.stop()
+
     # docs_build
     with context('Build docs'):
         with it('Must return two strings (log + build dir -> Mocked)'):
@@ -860,6 +899,22 @@ with description('GitHub Utils'):
                 from_path = 'From docs'
                 to_path = 'To build'
                 log, dir = util.docs_build(from_path, to_path)
+                expect(len(log) > 0).to(equal(True))
+                expect(dir).to(equal(to_path))
+                popen.stop()
+
+        with it('Must return two strings (log + build dir -> Mocked) '
+                'when calling with file and clean'):
+            with patch("hookshub.hooks.github.Popen") as popen:
+                popen.start()
+                popen_mock = Mock()
+                popen_mock.communicate.return_value = ['All Ok\n', 'Mocked!']
+                popen_mock.returncode = 0
+                popen.return_value = popen_mock
+                from_path = 'From docs'
+                to_path = 'To build'
+                file = 'Config File'
+                log, dir = util.docs_build(from_path, to_path, file, True)
                 expect(len(log) > 0).to(equal(True))
                 expect(dir).to(equal(to_path))
                 popen.stop()

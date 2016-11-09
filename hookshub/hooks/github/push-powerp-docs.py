@@ -59,7 +59,8 @@ docs_dir = 'powerp'
 if branch_name != 'master' and branch_name != 'None':
     docs_dir += "_{}".format(branch_name)
 
-docs_path = join(util_docs_path, docs_dir)
+ca_docs_path = join(util_docs_path, join('ca', docs_dir))
+es_docs_path = join(util_docs_path, join('es', docs_dir))
 
 # Creem un directori temporal que guardarà les dades del clone
 #   Per actualitzar la pagina de la documentacio
@@ -85,22 +86,6 @@ with TempDir() as temp:
     # Pendent de solucionar: No es pot entrar al virtualenv si amb el binari
     # especificat a dalt... A més l'interpret no pot canviar amb subprocess
 
-    # output += 'Entrant al virtualenv: "docs" ... '
-    # command = 'workon docs'
-    # try:
-    #     new_virtenv = Popen(
-    #         command.split(), stdout=PIPE, stderr=PIPE
-    #     )
-    #     out, err = new_virtenv.communicate()
-    #     virtenv = new_virtenv.returncode == 0
-    #     if not virtenv:
-    #         output += 'FAILED to enter virtualenv, installing on default env|'
-    #     output += 'OK |'
-    # except OSError as err:
-    #     output += 'FAILED to enter virtualenv, installing on default env' \
-    #               '\n {}|'.format(err)
-    #     virtenv = False
-
     # Accedim al directori del clone utilitzant el nom del repositori
 
     clone_dir = join(temp.dir, repo_name)
@@ -109,13 +94,33 @@ with TempDir() as temp:
 
     output += '{} OK |'.format(Util.pip_requirements(clone_dir))
 
+    # Exportem PYTHONPATH
+
+    output += '{} OK |'.format(Util.export_pythonpath(clone_dir))
+
     # Fem build al directori on tenim la pagina des del directori del clone
 
-    out, target_build_path = (Util.docs_build(clone_dir, docs_path))
+        # Build en catala
+
+    out, target_build_path = (
+        Util.docs_build(clone_dir, ca_docs_path, None, True)
+    )
     # If build fails we can't continue
     if not target_build_path:
         output += '{} FAILED |'.format(out)
         print (output)
+        exit(1)
+    output += '{} OK |'.format(out)
+
+        # Build en castella
+
+    out, target_build_path = (
+        Util.docs_build(clone_dir, es_docs_path, 'mkdocs_es.yml', True)
+    )
+    # If build fails we can't continue
+    if not target_build_path:
+        output += '{} FAILED |'.format(out)
+        print(output)
         exit(1)
     output += '{} OK |'.format(out)
 
@@ -128,10 +133,14 @@ with TempDir() as temp:
         branch_name
     )
     if port in ['80', '443']:
-        res_url = '{0}/{1}'.format(base_url, base_uri)
+        res_url = '{0}/ca/{1}'.format(base_url, base_uri)
+        res_url_es = '{0}/es/{1}'.format(base_url, base_uri)
     else:
-        res_url = '{0}:{1}/{2}'.format(base_url, port, base_uri)
-    comment = 'Documentation build URL: http://{}/'.format(res_url)
+        res_url = '{0}:{1}/ca/{2}'.format(base_url, port, base_uri)
+        res_url_es = '{0}:{1}/es/{2}'.format(base_url, port, base_uri)
+    comment = 'Documentation build URL:\n'
+    comment += 'ca_ES: http://{}/\n'.format(res_url)
+    comment += 'es_ES: http://{}/'.format(res_url_es)
 
     # Necessitem agafar totes les pull request per trobar la nostra
 
