@@ -27,7 +27,8 @@ class HookListener(object):
         self.payload = {}
         with open(payload_file, 'r') as jsf:
             self.payload = json.loads(jsf.read())
-        self.logger = logging.getLogger(__name__) or False
+        import logging
+        self.logger = logging.getLogger('__main__')
 
     @staticmethod
     def instancer(payload):
@@ -83,11 +84,10 @@ class HookListener(object):
                     log = ('[{0}]:{1}\n[{0}]:Failed!\n'.format(
                         action, output
                     ))
-                    logger.error(log.replace('|', '\n'))
+                    self.logger.error(log.replace('|', '\n'))
                     return -1, log
                 log = ('[{0}]:{1}\n[{0}]:Success!\n'.format(
                     action, output
                 ))
-                if self.logger:
-                    self.logger.info(log.replace('|', '\n'))
+                self.logger.info(log.replace('|', '\n'))
         return 0, log
