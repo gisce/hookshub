@@ -10,6 +10,8 @@ import tempfile
 import shutil
 import logging
 
+logger = logging.getLogger(__name__)
+
 
 class TempDir(object):
     def __init__(self):
@@ -39,7 +41,6 @@ class HookListener(object):
             return github(payload)
 
     def run_event_actions(self, config_file):
-        logger = logging.getLogger('__main__')
         def_conf = {}
 
         with open(config_file, 'r') as config:
