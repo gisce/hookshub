@@ -132,6 +132,13 @@ with TempDir() as temp:
         exit(1)
     output += '{} OK |'.format(out)
 
+    # CP landing page (if exists)
+    from os.path import isdir
+    landing_dir = join(clone_dir, 'landing_page')
+    if isdir(landing_dir):
+        from distutils.dir_util import copy_tree as copy
+        copy(landing_dir, util_docs_path)
+
     output += ' Writting comment on PR ...'
 
     # Construim el comentari:
