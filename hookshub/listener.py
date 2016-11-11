@@ -28,7 +28,7 @@ class HookListener(object):
         self.payload = {}
         with open(payload_file, 'r') as jsf:
             self.payload = json.loads(jsf.read())
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__) or False
 
     @staticmethod
     def instancer(payload):
@@ -55,13 +55,16 @@ class HookListener(object):
 
         hook = self.instancer(self.payload)
         i = 0
-        self.logger.info('Executing {} actions\n'.format(len(hook.event_actions)))
+
+        if self.logger:
+            self.logger.info('Executing {} actions\n'.format(len(hook.event_actions)))
 
         for action in hook.event_actions:
             i += 1
-            self.logger.info('[Running: <{0}/{1}> - {2}]\n'.format(
-                i, len(hook.event_actions), action)
-            )
+            if self.logger:
+                self.logger.info('[Running: <{0}/{1}> - {2}]\n'.format(
+                    i, len(hook.event_actions), action)
+                )
             args = hook.get_exe_action(action, conf)
             with TempDir() as tmp:
                 tmp_path = join(tmp.dir, action)
@@ -86,5 +89,6 @@ class HookListener(object):
                 log = ('[{0}]:{1}\n[{0}]:Success!\n'.format(
                     action, output
                 ))
-                self.logger.info(log.replace('|', '\n'))
+                if self.logger:
+                    self.logger.info(log.replace('|', '\n'))
         return 0, log
