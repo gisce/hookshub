@@ -10,8 +10,6 @@ import tempfile
 import shutil
 import logging
 
-logger = logging.getLogger(__name__)
-
 
 class TempDir(object):
     def __init__(self):
@@ -30,6 +28,7 @@ class HookListener(object):
         self.payload = {}
         with open(payload_file, 'r') as jsf:
             self.payload = json.loads(jsf.read())
+        logger = logging.getLogger(__name__)
 
     @staticmethod
     def instancer(payload):
