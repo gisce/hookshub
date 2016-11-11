@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
-from hooks.github import GitHubWebhook as github
-from hooks.gitlab import GitLabWebhook as gitlab
+from hookshub.hooks.github import GitHubWebhook as github
+from hookshub.hooks.gitlab import GitLabWebhook as gitlab
 from osconf import config_from_environment
-from hooks.webhook import webhook
+from hookshub.hooks.webhook import webhook
 from subprocess import Popen, PIPE
 from os.path import join
 import json
 import tempfile
 import shutil
-import logging
 
 
 class TempDir(object):
