@@ -28,7 +28,7 @@ class HookListener(object):
         self.payload = {}
         with open(payload_file, 'r') as jsf:
             self.payload = json.loads(jsf.read())
-        logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__)
 
     @staticmethod
     def instancer(payload):
@@ -41,7 +41,8 @@ class HookListener(object):
 
     def run_event_actions(self, config_file):
         def_conf = {}
-
+        log = ''
+        
         with open(config_file, 'r') as config:
             def_conf = json.loads(config.read())
 
@@ -54,11 +55,11 @@ class HookListener(object):
 
         hook = self.instancer(self.payload)
         i = 0
-        logger.info('Executing {} actions\n'.format(len(hook.event_actions)))
+        self.logger.info('Executing {} actions\n'.format(len(hook.event_actions)))
 
         for action in hook.event_actions:
             i += 1
-            logger.info('[Running: <{0}/{1}> - {2}]\n'.format(
+            self.logger.info('[Running: <{0}/{1}> - {2}]\n'.format(
                 i, len(hook.event_actions), action)
             )
             args = hook.get_exe_action(action, conf)
@@ -85,5 +86,5 @@ class HookListener(object):
                 log = ('[{0}]:{1}\n[{0}]:Success!\n'.format(
                     action, output
                 ))
-                logger.info(log.replace('|', '\n'))
+                self.logger.info(log.replace('|', '\n'))
         return 0, log
