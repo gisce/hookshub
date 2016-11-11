@@ -136,10 +136,8 @@ with TempDir() as temp:
     from os.path import isdir
     landing_dir = join(clone_dir, 'landing_page')
     if isdir(landing_dir):
-        from os import listdir
-        from shutil import copyfile
-        for item in listdir(landing_dir):
-            copyfile(join(landing_dir, item), join(util_docs_path, item))
+        from distutils.dir_util import copy_tree as copy
+        copy(landing_dir, util_docs_path)
 
     output += ' Writting comment on PR ...'
 
