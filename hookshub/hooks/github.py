@@ -2,7 +2,7 @@
 from json import dumps, loads
 from os.path import join, isfile
 from subprocess import Popen, PIPE
-from webhook import webhook
+from hookshub.hooks.webhook import webhook
 
 import requests
 import sys

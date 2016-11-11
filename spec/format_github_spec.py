@@ -878,13 +878,13 @@ with description('GitHub Utils'):
                 'and an exception is thrown'):
             with patch("hookshub.hooks.github.Popen") as popen:
                 popen.start()
-                popen_mock = Mock()
-                popen_mock.side_effect = Exception('Mocked')
-                popen_mock.returncode = -1
-                popen.return_value = popen_mock
+                popen.side_effect = Exception('Mocked exception')
+                popen.return_value = 0
                 log = util.export_pythonpath('Path')
                 expect(len(log) > 0).to(equal(True))
-                expect(log).to(equal('Failed to export sitecustomize path'))
+                expect(log).to(equal(
+                    'Failed to export sitecustomize path'
+                ))
                 popen.stop()
 
     # docs_build

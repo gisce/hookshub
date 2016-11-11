@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from hooks.github import GitHubWebhook as github
-from hooks.gitlab import GitLabWebhook as gitlab
+from hookshub.hooks.github import GitHubWebhook as github
+from hookshub.hooks.gitlab import GitLabWebhook as gitlab
 from osconf import config_from_environment
-from hooks.webhook import webhook
+from hookshub.hooks.webhook import webhook
 from subprocess import Popen, PIPE
 from os.path import join
 import json
@@ -27,6 +27,8 @@ class HookListener(object):
         self.payload = {}
         with open(payload_file, 'r') as jsf:
             self.payload = json.loads(jsf.read())
+        import logging
+        self.logger = logging.getLogger('__main__')
 
     @staticmethod
     def instancer(payload):
@@ -39,7 +41,8 @@ class HookListener(object):
 
     def run_event_actions(self, config_file):
         def_conf = {}
-
+        log = ''
+        
         with open(config_file, 'r') as config:
             def_conf = json.loads(config.read())
 
@@ -52,13 +55,16 @@ class HookListener(object):
 
         hook = self.instancer(self.payload)
         i = 0
-        log = 'Executed {} actions\n'.format(len(hook.event_actions))
+
+        if self.logger:
+            self.logger.info('Executing {} actions\n'.format(len(hook.event_actions)))
 
         for action in hook.event_actions:
             i += 1
-            log += ('[Running: <{0}/{1}> - {2}]\n'.format(
-                i, len(hook.event_actions), action)
-            )
+            if self.logger:
+                self.logger.info('[Running: <{0}/{1}> - {2}]\n'.format(
+                    i, len(hook.event_actions), action)
+                )
             args = hook.get_exe_action(action, conf)
             with TempDir() as tmp:
                 tmp_path = join(tmp.dir, action)
@@ -75,11 +81,13 @@ class HookListener(object):
                     action, stderr
                 ))
                 if proc.returncode != 0:
-                    log += ('[{0}]:{1}\n[{0}]:Failed!\n'.format(
+                    log = ('[{0}]:{1}\n[{0}]:Failed!\n'.format(
                         action, output
                     ))
+                    self.logger.error(log.replace('|', '\n'))
                     return -1, log
-                log += ('[{0}]:{1}\n[{0}]:Success!\n'.format(
+                log = ('[{0}]:{1}\n[{0}]:Success!\n'.format(
                     action, output
                 ))
+                self.logger.info(log.replace('|', '\n'))
         return 0, log

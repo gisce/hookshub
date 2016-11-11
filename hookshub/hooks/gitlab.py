@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from webhook import webhook
+from hookshub.hooks.webhook import webhook
 from json import dumps
 from subprocess import Popen, PIPE
 
