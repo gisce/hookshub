@@ -62,8 +62,8 @@ else:
     docs_dir = 'master'
 
 util_docs_path = join(util_docs_path, docs_dir)
-ca_docs_path = join(util_docs_path, join(docs_dir, 'ca'))
-es_docs_path = join(util_docs_path, join(docs_dir, 'es'))
+ca_docs_path = join(util_docs_path, 'ca')
+es_docs_path = join(util_docs_path, 'es')
 
 # Creem un directori temporal que guardarà les dades del clone
 #   Per actualitzar la pagina de la documentacio
