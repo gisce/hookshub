@@ -61,15 +61,16 @@ output += ('Rebut event de <{}> |'.format(event))
 token = payload['token']
 port = payload['port']
 
-util_docs_path = '{0}/{1}'.format(
-    payload['vhost_path'], repo_name
+
+util_docs_path = '{0}/{1}/powerp_{2}'.format(
+    payload['vhost_path'], repo_name, branch_name
 )
 
-ca_docs_path = '{0}/ca/powerp_{1}'.format(
-    util_docs_path, branch_name
+ca_docs_path = '{0}/ca/'.format(
+    util_docs_path
 )
-es_docs_path = '{0}/es/powerp_{1}'.format(
-    util_docs_path, branch_name
+es_docs_path = '{0}/es/'.format(
+    util_docs_path
 )
 
 with TempDir() as temp:
@@ -132,23 +133,23 @@ with TempDir() as temp:
         exit(1)
     output += '{} OK |'.format(out)
 
+    # CP landing page (if exists)
+    from os.path import isdir
+    landing_dir = join(clone_dir, 'landing_page')
+    if isdir(landing_dir):
+        from distutils.dir_util import copy_tree as copy
+        copy(landing_dir, util_docs_path)
+
     output += ' Writting comment on PR ...'
 
     # Construim el comentari:
     #   Docs path te /var/www/domain/URI
-    base_url = util_docs_path.split('/', 3)[3]  # Kick out /var/www/
-    base_uri = 'powerp_{}'.format(  # Get docs uri
-        branch_name
-    )
+    base_url = util_docs_path.split('/', 3)[3]   # Kick out /var/www/
     if port in ['80', '443']:
-        res_url = '{0}/ca/{1}'.format(base_url, base_uri)
-        res_url_es = '{0}/es/{1}'.format(base_url, base_uri)
+        res_url = '{0}/'.format(base_url)
     else:
-        res_url = '{0}:{1}/ca/{2}'.format(base_url, port, base_uri)
-        res_url_es = '{0}:{1}/es/{2}'.format(base_url, port, base_uri)
-    comment = 'Documentation build URL:\n'
-    comment += 'ca_ES: http://{}/\n'.format(res_url)
-    comment += 'es_ES: http://{}/'.format(res_url_es)
+        res_url = '{0}:{1}/'.format(base_url, port)
+    comment = 'Documentation build URL:\nhttp://{}'.format(res_url)
 
     # Postejem el comentari
 
