@@ -144,15 +144,9 @@ with TempDir() as temp:
     base_url = util_docs_path.split('/', 3)[3]   # Kick out /var/www/
     if port in ['80', '443']:
         res_url = '{0}/'.format(base_url)
-        res_url_ca = '{0}/ca/'.format(base_url)
-        res_url_es = '{0}/es/'.format(base_url)
     else:
         res_url = '{0}:{1}/'.format(base_url, port)
-        res_url_ca = '{0}:{1}/ca/'.format(base_url, port)
-        res_url_es = '{0}:{1}/es/'.format(base_url, port)
-    comment = 'Documentation build URL: http://{}\n'.format(res_url)
-    comment += 'ca_ES: http://{}/\n'.format(res_url_ca)
-    comment += 'es_ES: http://{}/'.format(res_url_es)
+    comment = 'Documentation build URL:\nhttp://{}\n'.format(res_url)
 
     # Necessitem agafar totes les pull request per trobar la nostra
 
