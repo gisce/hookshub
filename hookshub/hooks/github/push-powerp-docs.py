@@ -58,9 +58,12 @@ docs_dir = 'powerp'
 #       on XXX es el nom de la branca
 if branch_name != 'master' and branch_name != 'None':
     docs_dir += "_{}".format(branch_name)
+else:
+    docs_dir = 'master'
 
-ca_docs_path = join(util_docs_path, join('ca', docs_dir))
-es_docs_path = join(util_docs_path, join('es', docs_dir))
+util_docs_path = join(util_docs_path, docs_dir)
+ca_docs_path = join(util_docs_path, join(docs_dir, 'ca'))
+es_docs_path = join(util_docs_path, join(docs_dir, 'es'))
 
 # Creem un directori temporal que guardarà les dades del clone
 #   Per actualitzar la pagina de la documentacio
@@ -73,7 +76,9 @@ with TempDir() as temp:
     if code != 0:
         output += 'Clonant el repository desde http'
         url = payload['http_url']
-        out, code, err2 = Util.clone_on_dir(temp.dir, branch_name, repo_name, url)
+        out, code, err2 = Util.clone_on_dir(
+            temp.dir, branch_name, repo_name, url
+        )
         if code != 0:
             # Could not clone >< => ABORT
             sys.stderr.write(
@@ -98,9 +103,9 @@ with TempDir() as temp:
 
     output += '{} OK |'.format(Util.export_pythonpath(clone_dir))
 
-    # Fem build al directori on tenim la pagina des del directori del clone
+    # Fem build al directori on tenim la pàgina des del directori del clone
 
-        # Build en catala
+    #   Build en català
 
     out, target_build_path = (
         Util.docs_build(clone_dir, ca_docs_path, None, True)
@@ -112,7 +117,7 @@ with TempDir() as temp:
         exit(1)
     output += '{} OK |'.format(out)
 
-        # Build en castella
+    #   Build en castellà
 
     out, target_build_path = (
         Util.docs_build(clone_dir, es_docs_path, 'mkdocs_es.yml', True)
@@ -125,6 +130,7 @@ with TempDir() as temp:
     output += '{} OK |'.format(out)
 
     # CP landing page (if exists)
+
     from os.path import isdir
     landing_dir = join(clone_dir, 'landing_page')
     if isdir(landing_dir):
@@ -136,17 +142,14 @@ with TempDir() as temp:
     # Construim el comentari:
     #   Docs path te /var/www/domain/URI
     base_url = util_docs_path.split('/', 3)[3]   # Kick out /var/www/
-    base_uri = 'powerp_{}'.format(     # Get docs uri
-        branch_name
-    )
     if port in ['80', '443']:
         res_url = '{0}/'.format(base_url)
-        res_url_ca = '{0}/ca/{1}'.format(base_url, base_uri)
-        res_url_es = '{0}/es/{1}'.format(base_url, base_uri)
+        res_url_ca = '{0}/ca/'.format(base_url)
+        res_url_es = '{0}/es/'.format(base_url)
     else:
         res_url = '{0}:{1}/'.format(base_url, port)
-        res_url_ca = '{0}:{1}/ca/{2}'.format(base_url, port, base_uri)
-        res_url_es = '{0}:{1}/es/{2}'.format(base_url, port, base_uri)
+        res_url_ca = '{0}:{1}/ca/'.format(base_url, port)
+        res_url_es = '{0}:{1}/es/'.format(base_url, port)
     comment = 'Documentation build URL: http://{}\n'.format(res_url)
     comment += 'ca_ES: http://{}/\n'.format(res_url_ca)
     comment += 'es_ES: http://{}/'.format(res_url_es)
