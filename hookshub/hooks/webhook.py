@@ -11,7 +11,10 @@ class webhook(object):
 
     @property
     def actions_path(self):
-        return join(normpath(abspath(dirname(__file__))), self.origin)
+        return join(
+            normpath(abspath(dirname(__file__))),
+            '{}_hooks'.format(self.origin)
+        )
 
     @property
     def event(self):
