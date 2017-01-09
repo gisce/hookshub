@@ -13,6 +13,7 @@ import requests
 my_path = normpath(abspath(dirname(__file__)))
 project_path = dirname(my_path)  # project dir
 
+hook_path = 'github_hooks'
 hook_testing = 'github'
 data_path = join(project_path, join('test_data', hook_testing))
 
@@ -24,14 +25,12 @@ with description('GitHub Hook'):
             hook = github(loads(data))
             expect(hook.origin).to(equal(hook_testing))
 
-        with it('must have project_path/hooks/github as actions_path'):
+        with it('must have project_path/hooks/github_hooks as actions_path'):
             file = 'status.json'
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             expect(hook.actions_path).to(equal(join(
-                project_path, join(
-                    'hookshub', join('hooks', hook_testing)
-                )
+                project_path, 'hookshub', 'hooks', hook_path
             )))
 
         with it('must contain all actions in actions directory'):
