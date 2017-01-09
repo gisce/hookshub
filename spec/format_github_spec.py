@@ -794,6 +794,7 @@ with description('GitHub Hook'):
             json.update({'branch_name': hook.branch_name})
             json.update({'action': hook.action})
             json.update({'number': hook.number})
+            json.update({'merged': hook.merged})
             json_data = dumps(json)
             args_json = loads(hook.get_exe_action(event, config)[1])
             checked = []
