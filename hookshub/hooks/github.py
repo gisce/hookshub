@@ -80,17 +80,19 @@ class GitHubWebhook(webhook):
         try:
             # Case 1: a ref_type indicates the type of ref.
             # This true for create and delete events.
-            if self.event in [EVENT_CREATE, EVENT_DELETE]:
+            if self.event in [GitHubUtil.events['EVENT_CREATE'],
+                              GitHubUtil.events['EVENT_DELETE']]:
                 if self.json['ref_type'] == 'branch':
                     branch = self.json['ref']
             # Case 2: a pull_request object is involved.
             # This is pull_request and pull_request_review_comment events.
-            elif self.event in [PULL_REQUEST, REVIEW_PR_COMMENT]:
+            elif self.event in [GitHubUtil.events['PULL_REQUEST'],
+                                GitHubUtil.events['REVIEW_PR_COMMENT']]:
                 # This is the SOURCE branch for the pull-request,
                 #  not the source branch
                 branch = self.json['pull_request']['head']['ref']
 
-            elif self.event in [EVENT_PUSH]:
+            elif self.event in [GitHubUtil.events['EVENT_PUSH']]:
                 # Push events provide a full Git ref in 'ref' and
                 #  not a 'ref_type'.
                 branch = self.json['ref'].split('/')[2]
@@ -108,7 +110,8 @@ class GitHubWebhook(webhook):
         :rtype: String
         """
         # Get TARGET branch from pull request
-        if self.event in [PULL_REQUEST, REVIEW_PR_COMMENT]:
+        if self.event in [GitHubUtil.events['PULL_REQUEST'],
+                          GitHubUtil.events['REVIEW_PR_COMMENT']]:
             return self.json['pull_request']['base']['ref']
         return 'None'
 
@@ -118,7 +121,7 @@ class GitHubWebhook(webhook):
         :return: State from the hook of an status event
         :rtype: String
         """
-        if self.event == EVENT_STATUS:
+        if self.event == GitHubUtil.events['EVENT_STATUS']:
             return self.json['state']
         return 'None'
 
@@ -128,7 +131,7 @@ class GitHubWebhook(webhook):
         :return: Action from the hook of a PR event
         :rtype: String
         """
-        if self.event == PULL_REQUEST:
+        if self.event == GitHubUtil.events['PULL_REQUEST']:
             return self.json['action']
         return 'None'
 
@@ -138,11 +141,12 @@ class GitHubWebhook(webhook):
         :return: Number (id) of the PR/Issue
         :rtype: Int
         """
-        if self.event == PULL_REQUEST:
+        if self.event == GitHubUtil.events['PULL_REQUEST']:
             return self.json['number']
-        elif self.event == REVIEW_PR_COMMENT:
+        elif self.event == GitHubUtil.events['REVIEW_PR_COMMENT']:
             return self.json['pull_request']['number']
-        elif self.event in [EVENT_ISSUE, ISSUE_COMMENT]:
+        elif self.event in [GitHubUtil.events['EVENT_ISSUE'],
+                            GitHubUtil.events['ISSUE_COMMENT']]:
             return self.json['issue']['number']
         else:
             return 'None'
@@ -169,7 +173,7 @@ class GitHubWebhook(webhook):
         :return: Gets the merged state of a PR from the hook's payload
         :rtype: Bool
         """
-        if self.event == PULL_REQUEST:
+        if self.event == GitHubUtil.events['PULL_REQUEST']:
             return self.json['pull_request']['merged']
         return False
 
@@ -186,8 +190,11 @@ class GitHubWebhook(webhook):
         json = {}
         # Action for 'push', 'pull_request' event
         #       on repository 'powerp-docs'
-        if action.startswith('{}-powerp-docs'.format(EVENT_PUSH)) or\
-                action.startswith('{}-powerp-docs'.format(PULL_REQUEST)):
+        if action.startswith('{}-powerp-docs'.format(
+                GitHubUtil.events['EVENT_PUSH'])
+        ) or action.startswith('{}-powerp-docs'.format(
+            GitHubUtil.events['PULL_REQUEST']
+        )):
             json.update({'token': conf['github_token']})
             json.update({'vhost_path': conf['vhost_path']})
             json.update({'port': conf['nginx_port']})
@@ -198,7 +205,9 @@ class GitHubWebhook(webhook):
             json.update({'branch_name': self.branch_name})
 
             # If 'pull_request' event, we may add more params
-            if action.startswith('{}-powerp-docs'.format(PULL_REQUEST)):
+            if action.startswith('{}-powerp-docs'.format(
+                    GitHubUtil.events['PULL_REQUEST'])
+            ):
                 json.update({'action': self.action})
                 json.update({'number': self.number})
                 json.update({'merged': self.merged})
