@@ -201,6 +201,7 @@ class GitHubWebhook(webhook):
             if action.startswith('{}-powerp-docs'.format(PULL_REQUEST)):
                 json.update({'action': self.action})
                 json.update({'number': self.number})
+                json.update({'merged': self.merged})
 
             # Return the params
             return [exe_path, dumps(json), self.event]
