@@ -538,3 +538,32 @@ class GitHubUtil:
             text = 'Failed to send comment to pull request, ' \
                              'INTERNAL ERROR [{}]'.format(err)
         return code, text
+
+    actions = [
+        'assigned', 'unassigned', 'labeled', 'unlabeled', 'opened',
+        'edited', 'closed', 'reopened'
+    ]
+
+    events = {
+        'COMMIT_COMMENT': 'commit_comment',
+        'EVENT_CREATE': 'create',
+        'EVENT_DELETE': 'delete',
+        'EVENT_DEPLOYMENT': 'deployment',
+        'DEPLOYMENT_STATUS': 'deployment_status',
+        'EVENT_FORK': 'fork',
+        'EVENT_WIKI': 'gollum',
+        'ISSUE_COMMENT': 'issue_comment',
+        'EVENT_ISSUE': 'issues',
+        'EVENT_MEMBER': 'member',
+        'EVENT_MEMBERSHIP': 'membership',
+        'EVENT_PAGE_BUILD': 'page_build',
+        'PUBLIC_EVENT': 'public',
+        'PULL_REQUEST': 'pull_request',
+        'REVIEW_PR_COMMENT': 'pull_request_review_comment',
+        'EVENT_PUSH': 'push',
+        'EVENT_RELEASE': 'release',
+        'EVENT_REPOSITORY': 'repository',
+        'EVENT_STATUS': 'status',
+        'EVENT_TEAM_ADD': 'team_add',
+        'EVENT_WATCH': 'watch'
+    }
