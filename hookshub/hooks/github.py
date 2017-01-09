@@ -148,6 +148,9 @@ class GitHubWebhook(webhook):
     @property
     def merged(self):
         """
+        From: https://developer.github.com/v3/activity/events/types/#pullrequestevent
+        If the action is "closed" and the merged key is true,
+          the pull request was merged.
         :return: Gets the merged state of a PR from the hook's payload
         :rtype: Bool
         """
