@@ -526,10 +526,16 @@ class GitHubUtil:
                              'INTERNAL ERROR [{}]'.format(err)
         return code, text
 
-    actions = [
-        'assigned', 'unassigned', 'labeled', 'unlabeled', 'opened',
-        'edited', 'closed', 'reopened'
-    ]
+    actions = {
+        'ACT_ASSIGNED': 'assigned',
+        'ACT_UNASSIGN': 'unassigned',
+        'ACT_LABELED': 'labeled',
+        'ACT_UNLABELED': 'unlabeled',
+        'ACT_OPENED': 'opened',
+        'ACT_EDITED': 'edited',
+        'ACT_CLOSED': 'closed',
+        'ACT_REOPENED': 'reopened'
+    }
 
     events = {
         'COMMIT_COMMENT': 'commit_comment',
