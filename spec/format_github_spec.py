@@ -1165,14 +1165,22 @@ with description('GitHub Utils'):
                 name = events.get(key, False)
                 expect(name).to(equal(util.events[key]))
 
-        with it('Must have the actions property with a named tuple of the'
+        with it('Must have the actions property with a dictionary of the'
                 'GitHub Pull Request actions property that the hook is able'
                 'to read from the hook'):
-            actions = [
-                'assigned', 'unassigned', 'labeled', 'unlabeled', 'opened',
-                'edited', 'closed', 'reopened'
-            ]
-            for a in actions:
-                expect(a in util.actions).to(equal(True))
-            for a in util.actions:
-                expect(a in actions).to(equal(True))
+            actions = {
+                'ACT_ASSIGNED': 'assigned',
+                'ACT_UNASSIGN': 'unassigned',
+                'ACT_LABELED': 'labeled',
+                'ACT_UNLABELED': 'unlabeled',
+                'ACT_OPENED': 'opened',
+                'ACT_EDITED': 'edited',
+                'ACT_CLOSED': 'closed',
+                'ACT_REOPENED': 'reopened'
+            }
+            for key in actions.keys():
+                name = util.actions.get(key, False)
+                expect(name).to(equal(actions[key]))
+            for key in util.actions.keys():
+                name = actions.get(key, False)
+                expect(name).to(equal(util.actions[key]))
