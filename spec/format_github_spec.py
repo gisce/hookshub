@@ -1130,3 +1130,49 @@ with description('GitHub Utils'):
                 )
                 expect(code).to(equal(0))
                 req_get.stop()
+
+    # GitHub data
+    with context('Events and globals'):
+        with it('Must have the events property with a dictionary of the '
+                'GitHub events that the hook is able to read and process'):
+            events = {
+                'COMMIT_COMMENT': 'commit_comment',
+                'EVENT_CREATE': 'create',
+                'EVENT_DELETE': 'delete',
+                'EVENT_DEPLOYMENT': 'deployment',
+                'DEPLOYMENT_STATUS': 'deployment_status',
+                'EVENT_FORK': 'fork',
+                'EVENT_WIKI': 'gollum',
+                'ISSUE_COMMENT': 'issue_comment',
+                'EVENT_ISSUE': 'issues',
+                'EVENT_MEMBER': 'member',
+                'EVENT_MEMBERSHIP': 'membership',
+                'EVENT_PAGE_BUILD': 'page_build',
+                'PUBLIC_EVENT': 'public',
+                'PULL_REQUEST': 'pull_request',
+                'REVIEW_PR_COMMENT': 'pull_request_review_comment',
+                'EVENT_PUSH': 'push',
+                'EVENT_RELEASE': 'release',
+                'EVENT_REPOSITORY': 'repository',
+                'EVENT_STATUS': 'status',
+                'EVENT_TEAM_ADD': 'team_add',
+                'EVENT_WATCH': 'watch'
+            }
+            for key in events.keys():
+                name = util.events.get(key, False)
+                expect(name).to(equal(events[key]))
+            for key  in util.events.keys():
+                name = events.get(key, False)
+                expect(name).to(equal(util.events[key]))
+
+        with it('Must have the actions property with a named tuple of the'
+                'GitHub Pull Request actions property that the hook is able'
+                'to read from the hook'):
+            actions = [
+                'assigned', 'unassigned', 'labeled', 'unlabeled', 'opened',
+                'edited', 'closed', 'reopened'
+            ]
+            for a in actions:
+                expect(a in util.actions).to(equal(True))
+            for a in util.actions:
+                expect(a in actions).to(equal(True))
