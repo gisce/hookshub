@@ -1161,21 +1161,21 @@ with description('GitHub Utils'):
         with it('Must have the events property with a dictionary of the '
                 'GitHub events that the hook is able to read and process'):
             events = {
-                'COMMIT_COMMENT': 'commit_comment',
+                'EVENT_COMMIT_COMMENT': 'commit_comment',
                 'EVENT_CREATE': 'create',
                 'EVENT_DELETE': 'delete',
                 'EVENT_DEPLOYMENT': 'deployment',
-                'DEPLOYMENT_STATUS': 'deployment_status',
+                'EVENT_DEPLOYMENT_STATUS': 'deployment_status',
                 'EVENT_FORK': 'fork',
                 'EVENT_WIKI': 'gollum',
-                'ISSUE_COMMENT': 'issue_comment',
+                'EVENT_ISSUE_COMMENT': 'issue_comment',
                 'EVENT_ISSUE': 'issues',
                 'EVENT_MEMBER': 'member',
                 'EVENT_MEMBERSHIP': 'membership',
                 'EVENT_PAGE_BUILD': 'page_build',
-                'PUBLIC_EVENT': 'public',
-                'PULL_REQUEST': 'pull_request',
-                'REVIEW_PR_COMMENT': 'pull_request_review_comment',
+                'EVENT_PUBLIC_EVENT': 'public',
+                'EVENT_PULL_REQUEST': 'pull_request',
+                'EVENT_REVIEW_PR_COMMENT': 'pull_request_review_comment',
                 'EVENT_PUSH': 'push',
                 'EVENT_RELEASE': 'release',
                 'EVENT_REPOSITORY': 'repository',
@@ -1201,7 +1201,9 @@ with description('GitHub Utils'):
                 'ACT_OPENED': 'opened',
                 'ACT_EDITED': 'edited',
                 'ACT_CLOSED': 'closed',
-                'ACT_REOPENED': 'reopened'
+                'ACT_REOPENED': 'reopened',
+                'ACT_SYNC': 'synchronize',
+                'ACT_CREATED': 'created'
             }
             for key in actions.keys():
                 name = util.actions.get(key, False)
