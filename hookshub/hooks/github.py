@@ -345,7 +345,7 @@ class GitHubUtil:
         """
         output = "Clonant el repositori '{}'".format(repository)
         command = 'git clone {}'.format(url)
-        if branch != 'None':
+        if branch and branch != 'None':
             output += ", amb la branca '{}'".format(branch)
             command += ' --branch {}'.format(branch)
             output += ' ... '
