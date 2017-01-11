@@ -155,7 +155,25 @@ class GitHubWebhook(webhook):
         :rtype: Bool
         """
         if self.event == GitHubUtil.events['PULL_REQUEST']:
-            return self.json['pull_request']['merged']
+            return self.json['pull_request']['merged'] == True
+        return False
+
+    @property
+    def closed(self):
+        """
+        From: https://developer.github.com/v3/activity/events/types/#pullrequestevent
+         If the action is "closed" and the merged key is false,
+         the pull request was closed with unmerged commits.
+         If the action is "closed" and the merged key is true,
+         the pull request was merged
+        As the action can be obtained from the 'action' property, we use this
+        property to know if it closed but not merged.
+        :return: True when the action of the PR is 'closed' and not 'merged'
+        :rtype: Bool
+        """
+        if self.event == GitHubUtil.events['PULL_REQUEST']:
+            if self.json['action'] == GitHubUtil.actions['ACT_CLOSED']:
+                return not self.merged
         return False
 
     def get_exe_action(self, action, conf):
