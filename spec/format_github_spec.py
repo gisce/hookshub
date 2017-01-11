@@ -513,12 +513,16 @@ with description('GitHub Hook'):
             hook = github(loads(data))
             expect(hook.target_branch_name).to(equal('master'))
 
-        with it('must return if the pull_request is merged'):
+        with it('must return if the pull_request is merged or not'):
             event = 'pull_request'
             file = 'pull_request.json'
             data = open(join(data_path, file)).read()
-            hook = github(loads(data))
+            json_data = loads(data)
+            hook = github(json_data)
             expect(hook.merged).to(equal(True))
+            json_data['pull_request']['merged'] = False
+            hook = github(json_data)
+            expect(hook.merged).to(equal(False))
 
         with it('Must return action status when getting "action" ("opened")'):
             file = 'pull_request.json'
@@ -533,7 +537,7 @@ with description('GitHub Hook'):
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             json_data['action'] = 'closed'
-            json_data['pull_request']['merged'] = 'false'
+            json_data['pull_request']['merged'] = False
             hook = github(json_data)
             expect(hook.closed).to(equal(True))
 
