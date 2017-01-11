@@ -210,6 +210,7 @@ class GitHubWebhook(webhook):
                 json.update({'action': self.action})
                 json.update({'number': self.number})
                 json.update({'merged': self.merged})
+                json.update({'closed': self.closed})
 
             # Return the params
             return [exe_path, dumps(json), self.event]
