@@ -36,7 +36,7 @@ http_url = "https://api.github.com"
 
 action = payload['action']
 if action != 'opened':
-    output = 'PR not ready, aborted ...'
+    output = 'PR is not "opened", aborting ...'
     print (output)
     exit(0)
 
@@ -77,13 +77,16 @@ with TempDir() as temp:
     output += ('Creat Directori temporal: {} |'.format(temp.dir))
 
     # Primer clonem el repositori
-    out, code, err = Util.clone_on_dir(temp.dir, branch_name, repo_name, url)
+    out, code, err = Util.clone_on_dir(
+        temp.dir, repo_name, url, branch=branch_name
+    )
     output += out
     if code != 0:
         output += 'Clonant el repository desde http'
         url = payload['http_url']
-        out, code, err2 = Util.clone_on_dir(temp.dir, branch_name, repo_name,
-                                            url)
+        out, code, err2 = Util.clone_on_dir(
+            temp.dir, repo_name, url, branch=branch_name
+        )
         if code != 0:
             # Could not clone >< => ABORT
             sys.stderr.write(
