@@ -79,20 +79,21 @@ es_docs_path = '{0}/es/'.format(
     docs_path
 )
 
-output = 'Removing data on: {}'.format(util_docs_path)
+output = 'Removing data on: {} ...'.format(util_docs_path)
 command = 'rm -r {}'.format(util_docs_path)
 
 delete = Popen(
     command.split(), stdout=PIPE, stderr=PIPE
 )
+out, err = delete.communicate()
 
 if delete.returncode != 0:
-    output = 'Failed! {}|'.format(delete.stdout)
-    output = 'Error: {}'.format(delete.stderr)
+    output += 'Failed to remove files! {}|'.format(out)
+    output += 'Error on "rm -r": {}'.format(err)
     print(output)
     exit(-1)
 
-output = 'Removed!|'
+output += 'Removed!|'
 
 # Es pot fer despres de respondre:
 
