@@ -327,7 +327,7 @@ class GitHubWebhook(webhook):
 
 class GitHubUtil:
     @staticmethod
-    def clone_on_dir(dir, branch, repository, url):
+    def clone_on_dir(dir, repository, url, branch=None):
         """
         :param dir: Directory where the clone will be applied. This may exist
             or it'll throw an exception.
