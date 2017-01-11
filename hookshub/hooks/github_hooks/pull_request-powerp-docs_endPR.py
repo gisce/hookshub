@@ -11,6 +11,10 @@ import sys
 import tempfile
 import shutil
 
+# This script is called whenever a PR is closed. Let it be the cases:
+# - A PR has been merged (action= 'closed', merged= 'True')
+# - A PR has been closed (action= 'closed', merged= 'False')
+
 
 class TempDir(object):
     def __init__(self):

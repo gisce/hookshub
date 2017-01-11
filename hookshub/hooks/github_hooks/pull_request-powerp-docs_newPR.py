@@ -10,6 +10,10 @@ import sys
 import tempfile
 import shutil
 
+# This Hook is used whenever a PR is opened, this includes the following cases:
+# - A new PR (action = 'opened')
+# - A closed PR is reopened (action = 'reopened')
+
 
 class TempDir(object):
     def __init__(self):
@@ -35,7 +39,8 @@ output = ''
 http_url = "https://api.github.com"
 
 action = payload['action']
-if action != 'opened':
+if action != Util.actions['ACT_REOPENED'] or\
+                action != Util.actions['ACT_OPENED']:
     output = 'PR is not "opened", aborting ...'
     print (output)
     exit(0)
