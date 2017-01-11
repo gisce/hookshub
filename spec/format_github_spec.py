@@ -527,6 +527,25 @@ with description('GitHub Hook'):
             hook = github(json_data)
             expect(hook.action).to(equal("opened"))
 
+        with it('Must have action status "closed", Merged status "false"'
+                ' and return "closed" "true"'):
+            file = 'pull_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            json_data['action'] = 'closed'
+            json_data['pull_request']['merged'] = 'false'
+            hook = github(json_data)
+            expect(hook.closed).to(equal(True))
+
+        with it('Must have action status "closed", Merged status "true"'
+                ' and return "closed" "false"'):
+            file = 'pull_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            json_data['action'] = 'closed'
+            hook = github(json_data)
+            expect(hook.closed).to(equal(False))
+
         with it('Must return the #number when getting "number" ("1")'):
             file = 'pull_request.json'
             data = open(join(data_path, file)).read()
