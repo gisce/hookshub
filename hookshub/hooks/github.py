@@ -10,28 +10,6 @@ import sys
 # GitHub Events
 # For more info, see: https://developer.github.com/v3/activity/events/types/
 
-COMMIT_COMMENT = 'commit_comment'
-EVENT_CREATE = 'create'
-EVENT_DELETE = 'delete'
-EVENT_DEPLOYMENT = 'deployment'
-DEPLOYMENT_STATUS = 'deployment_status'
-EVENT_FORK = 'fork'
-EVENT_WIKI = 'gollum'
-ISSUE_COMMENT = 'issue_comment'
-EVENT_ISSUE = 'issues'
-EVENT_MEMBER = 'member'
-EVENT_MEMBERSHIP = 'membership'
-EVENT_PAGE_BUILD = 'page_build'
-PUBLIC_EVENT = 'public'
-PULL_REQUEST = 'pull_request'
-REVIEW_PR_COMMENT = 'pull_request_review_comment'
-EVENT_PUSH = 'push'
-EVENT_RELEASE = 'release'
-EVENT_REPOSITORY = 'repository'
-EVENT_STATUS = 'status'
-EVENT_TEAM_ADD = 'team_add'
-EVENT_WATCH = 'watch'
-
 
 class GitHubWebhook(webhook):
 
@@ -80,17 +58,19 @@ class GitHubWebhook(webhook):
         try:
             # Case 1: a ref_type indicates the type of ref.
             # This true for create and delete events.
-            if self.event in [EVENT_CREATE, EVENT_DELETE]:
+            if self.event in [GitHubUtil.events['EVENT_CREATE'],
+                              GitHubUtil.events['EVENT_DELETE']]:
                 if self.json['ref_type'] == 'branch':
                     branch = self.json['ref']
             # Case 2: a pull_request object is involved.
             # This is pull_request and pull_request_review_comment events.
-            elif self.event in [PULL_REQUEST, REVIEW_PR_COMMENT]:
+            elif self.event in [GitHubUtil.events['EVENT_PULL_REQUEST'],
+                                GitHubUtil.events['EVENT_REVIEW_PR_COMMENT']]:
                 # This is the SOURCE branch for the pull-request,
                 #  not the source branch
                 branch = self.json['pull_request']['head']['ref']
 
-            elif self.event in [EVENT_PUSH]:
+            elif self.event in [GitHubUtil.events['EVENT_PUSH']]:
                 # Push events provide a full Git ref in 'ref' and
                 #  not a 'ref_type'.
                 branch = self.json['ref'].split('/')[2]
@@ -108,7 +88,8 @@ class GitHubWebhook(webhook):
         :rtype: String
         """
         # Get TARGET branch from pull request
-        if self.event in [PULL_REQUEST, REVIEW_PR_COMMENT]:
+        if self.event in [GitHubUtil.events['EVENT_PULL_REQUEST'],
+                          GitHubUtil.events['EVENT_REVIEW_PR_COMMENT']]:
             return self.json['pull_request']['base']['ref']
         return 'None'
 
@@ -118,7 +99,7 @@ class GitHubWebhook(webhook):
         :return: State from the hook of an status event
         :rtype: String
         """
-        if self.event == EVENT_STATUS:
+        if self.event == GitHubUtil.events['EVENT_STATUS']:
             return self.json['state']
         return 'None'
 
@@ -128,7 +109,7 @@ class GitHubWebhook(webhook):
         :return: Action from the hook of a PR event
         :rtype: String
         """
-        if self.event == PULL_REQUEST:
+        if self.event == GitHubUtil.events['EVENT_PULL_REQUEST']:
             return self.json['action']
         return 'None'
 
@@ -138,11 +119,12 @@ class GitHubWebhook(webhook):
         :return: Number (id) of the PR/Issue
         :rtype: Int
         """
-        if self.event == PULL_REQUEST:
+        if self.event == GitHubUtil.events['EVENT_PULL_REQUEST']:
             return self.json['number']
-        elif self.event == REVIEW_PR_COMMENT:
+        elif self.event == GitHubUtil.events['EVENT_REVIEW_PR_COMMENT']:
             return self.json['pull_request']['number']
-        elif self.event in [EVENT_ISSUE, ISSUE_COMMENT]:
+        elif self.event in [GitHubUtil.events['EVENT_ISSUE'],
+                            GitHubUtil.events['EVENT_ISSUE_COMMENT']]:
             return self.json['issue']['number']
         else:
             return 'None'
@@ -166,11 +148,32 @@ class GitHubWebhook(webhook):
     @property
     def merged(self):
         """
+        From: https://developer.github.com/v3/activity/events/types/#pullrequestevent
+        If the action is "closed" and the merged key is true,
+          the pull request was merged.
         :return: Gets the merged state of a PR from the hook's payload
         :rtype: Bool
         """
-        if self.event == PULL_REQUEST:
-            return self.json['pull_request']['merged']
+        if self.event == GitHubUtil.events['EVENT_PULL_REQUEST']:
+            return self.json['pull_request']['merged'] == True
+        return False
+
+    @property
+    def closed(self):
+        """
+        From: https://developer.github.com/v3/activity/events/types/#pullrequestevent
+         If the action is "closed" and the merged key is false,
+         the pull request was closed with unmerged commits.
+         If the action is "closed" and the merged key is true,
+         the pull request was merged
+        As the action can be obtained from the 'action' property, we use this
+        property to know if it closed but not merged.
+        :return: True when the action of the PR is 'closed' and not 'merged'
+        :rtype: Bool
+        """
+        if self.event == GitHubUtil.events['EVENT_PULL_REQUEST']:
+            if self.json['action'] == GitHubUtil.actions['ACT_CLOSED']:
+                return not self.merged
         return False
 
     def get_exe_action(self, action, conf):
@@ -186,8 +189,11 @@ class GitHubWebhook(webhook):
         json = {}
         # Action for 'push', 'pull_request' event
         #       on repository 'powerp-docs'
-        if action.startswith('{}-powerp-docs'.format(EVENT_PUSH)) or\
-                action.startswith('{}-powerp-docs'.format(PULL_REQUEST)):
+        if action.startswith('{}-powerp-docs'.format(
+                GitHubUtil.events['EVENT_PUSH'])
+        ) or action.startswith('{}-powerp-docs'.format(
+            GitHubUtil.events['EVENT_PULL_REQUEST']
+        )):
             json.update({'token': conf['github_token']})
             json.update({'vhost_path': conf['vhost_path']})
             json.update({'port': conf['nginx_port']})
@@ -198,9 +204,13 @@ class GitHubWebhook(webhook):
             json.update({'branch_name': self.branch_name})
 
             # If 'pull_request' event, we may add more params
-            if action.startswith('{}-powerp-docs'.format(PULL_REQUEST)):
+            if action.startswith('{}-powerp-docs'.format(
+                    GitHubUtil.events['EVENT_PULL_REQUEST'])
+            ):
                 json.update({'action': self.action})
                 json.update({'number': self.number})
+                json.update({'merged': self.merged})
+                json.update({'closed': self.closed})
 
             # Return the params
             return [exe_path, dumps(json), self.event]
@@ -214,75 +224,75 @@ class GitHubWebhook(webhook):
         :rtype: String
         """
         if 'commits' in self.json.keys():
-            return 'push'
+            return GitHubUtil.events['EVENT_PUSH']
 
         elif 'master_branch' in self.json.keys():
-            return 'create'
+            return GitHubUtil.events['EVENT_CREATE']
 
         elif 'ref_type' in self.json.keys():
             # This case must be under 'create'
             #   as it also has the 'ref_type' field on the payload
-            return 'delete'
+            return GitHubUtil.events['EVENT_DELETE']
 
         elif 'deployment_status' in self.json.keys():
-            return 'deployment_status'
+            return GitHubUtil.events['EVENT_DEPLOYMENT_STATUS']
 
         elif 'deployment' in self.json.keys():
             # This case must be under 'deployment_status'
             #   as it also has the 'deployment' field on the payload
-            return 'deployment'
+            return GitHubUtil.events['EVENT_DEPLOYMENT']
 
         elif 'forkee' in self.json.keys():
-            return 'fork'
+            return GitHubUtil.events['EVENT_FORK']
 
         elif 'pages' in self.json.keys():
-            return 'gollum'
+            return GitHubUtil.events['EVENT_WIKI']
 
         elif 'issue' in self.json.keys():
-            return ('issue_comment'
-                    if self.json['action'] == 'created'
-                    else 'issues')
+            return (GitHubUtil.events['EVENT_ISSUE_COMMENT']
+                    if self.json['action'] == GitHubUtil.actions['ACT_CREATED']
+                    else GitHubUtil.events['EVENT_ISSUE'])
 
         elif 'scope' in self.json.keys():
-            return 'membership'
+            return GitHubUtil.events['EVENT_MEMBERSHIP']
 
         elif 'build' in self.json.keys():
-            return 'page_build'
+            return GitHubUtil.events['EVENT_PAGE_BUILD']
 
         elif 'member' in self.json.keys():
-            return 'member'
+            return GitHubUtil.events['EVENT_MEMBER']
 
         elif 'comment' in self.json.keys():
-            return ('pull_request_review_comment'
+            return (GitHubUtil.events['EVENT_REVIEW_PR_COMMENT']
                     if 'pull_request' in self.json.keys()
-                    else 'commit_comment'
+                    else GitHubUtil.events['EVENT_COMMIT_COMMENT']
                     )
 
         elif 'pull_request' in self.json.keys():
-            return 'pull_request'
+            return GitHubUtil.events['EVENT_PULL_REQUEST']
 
         elif 'release' in self.json.keys():
-            return 'release'
+            return GitHubUtil.events['EVENT_RELEASE']
 
         elif 'state' in self.json.keys():
-            return 'status'
+            return GitHubUtil.events['EVENT_STATUS']
 
         elif 'team' in self.json.keys():
             # membership also uses 'team' in payload,
             # so this case may be under that case
-            return 'team_add'
+            return GitHubUtil.events['EVENT_TEAM_ADD']
 
         elif 'organization' in self.json.keys():
-            return 'repository'
+            return GitHubUtil.events['EVENT_REPOSITORY']
 
         elif 'action' in self.json.keys():
             # Some other events use 'action' on its payload, so this case
             #   must be almost at the end where it's the last one to use it
-            return 'watch'
+            return GitHubUtil.events['EVENT_WATCH']
 
         else:
             # As it has no specific payload, this one may be the last one
-            return 'public'
+            return GitHubUtil.events['EVENT_PUBLIC_EVENT']
 
     @property
     def event_actions(self):
@@ -317,7 +327,7 @@ class GitHubWebhook(webhook):
 
 class GitHubUtil:
     @staticmethod
-    def clone_on_dir(dir, branch, repository, url):
+    def clone_on_dir(dir, repository, url, branch=None):
         """
         :param dir: Directory where the clone will be applied. This may exist
             or it'll throw an exception.
@@ -335,7 +345,7 @@ class GitHubUtil:
         """
         output = "Clonant el repositori '{}'".format(repository)
         command = 'git clone {}'.format(url)
-        if branch != 'None':
+        if branch and branch != 'None':
             output += ", amb la branca '{}'".format(branch)
             command += ' --branch {}'.format(branch)
             output += ' ... '
@@ -537,3 +547,40 @@ class GitHubUtil:
             text = 'Failed to send comment to pull request, ' \
                              'INTERNAL ERROR [{}]'.format(err)
         return code, text
+
+    actions = {
+        'ACT_ASSIGNED': 'assigned',
+        'ACT_UNASSIGN': 'unassigned',
+        'ACT_LABELED': 'labeled',
+        'ACT_UNLABELED': 'unlabeled',
+        'ACT_OPENED': 'opened',
+        'ACT_EDITED': 'edited',
+        'ACT_CLOSED': 'closed',
+        'ACT_REOPENED': 'reopened',
+        'ACT_SYNC': 'synchronize',
+        'ACT_CREATED': 'created'
+    }
+
+    events = {
+        'EVENT_COMMIT_COMMENT': 'commit_comment',
+        'EVENT_CREATE': 'create',
+        'EVENT_DELETE': 'delete',
+        'EVENT_DEPLOYMENT': 'deployment',
+        'EVENT_DEPLOYMENT_STATUS': 'deployment_status',
+        'EVENT_FORK': 'fork',
+        'EVENT_WIKI': 'gollum',
+        'EVENT_ISSUE_COMMENT': 'issue_comment',
+        'EVENT_ISSUE': 'issues',
+        'EVENT_MEMBER': 'member',
+        'EVENT_MEMBERSHIP': 'membership',
+        'EVENT_PAGE_BUILD': 'page_build',
+        'EVENT_PUBLIC_EVENT': 'public',
+        'EVENT_PULL_REQUEST': 'pull_request',
+        'EVENT_REVIEW_PR_COMMENT': 'pull_request_review_comment',
+        'EVENT_PUSH': 'push',
+        'EVENT_RELEASE': 'release',
+        'EVENT_REPOSITORY': 'repository',
+        'EVENT_STATUS': 'status',
+        'EVENT_TEAM_ADD': 'team_add',
+        'EVENT_WATCH': 'watch'
+    }

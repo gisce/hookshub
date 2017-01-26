@@ -13,6 +13,7 @@ import requests
 my_path = normpath(abspath(dirname(__file__)))
 project_path = dirname(my_path)  # project dir
 
+hook_path = 'github_hooks'
 hook_testing = 'github'
 data_path = join(project_path, join('test_data', hook_testing))
 
@@ -24,14 +25,12 @@ with description('GitHub Hook'):
             hook = github(loads(data))
             expect(hook.origin).to(equal(hook_testing))
 
-        with it('must have project_path/hooks/github as actions_path'):
+        with it('must have project_path/hooks/github_hooks as actions_path'):
             file = 'status.json'
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             expect(hook.actions_path).to(equal(join(
-                project_path, join(
-                    'hookshub', join('hooks', hook_testing)
-                )
+                project_path, 'hookshub', 'hooks', hook_path
             )))
 
         with it('must contain all actions in actions directory'):
@@ -514,12 +513,16 @@ with description('GitHub Hook'):
             hook = github(loads(data))
             expect(hook.target_branch_name).to(equal('master'))
 
-        with it('must return if the pull_request is merged'):
+        with it('must return if the pull_request is merged or not'):
             event = 'pull_request'
             file = 'pull_request.json'
             data = open(join(data_path, file)).read()
-            hook = github(loads(data))
+            json_data = loads(data)
+            hook = github(json_data)
             expect(hook.merged).to(equal(True))
+            json_data['pull_request']['merged'] = False
+            hook = github(json_data)
+            expect(hook.merged).to(equal(False))
 
         with it('Must return action status when getting "action" ("opened")'):
             file = 'pull_request.json'
@@ -527,6 +530,25 @@ with description('GitHub Hook'):
             json_data = loads(data)
             hook = github(json_data)
             expect(hook.action).to(equal("opened"))
+
+        with it('Must have action status "closed", Merged status "false"'
+                ' and return "closed" "true"'):
+            file = 'pull_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            json_data['action'] = 'closed'
+            json_data['pull_request']['merged'] = False
+            hook = github(json_data)
+            expect(hook.closed).to(equal(True))
+
+        with it('Must have action status "closed", Merged status "true"'
+                ' and return "closed" "false"'):
+            file = 'pull_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            json_data['action'] = 'closed'
+            hook = github(json_data)
+            expect(hook.closed).to(equal(False))
 
         with it('Must return the #number when getting "number" ("1")'):
             file = 'pull_request.json'
@@ -795,6 +817,9 @@ with description('GitHub Hook'):
             json.update({'branch_name': hook.branch_name})
             json.update({'action': hook.action})
             json.update({'number': hook.number})
+            json.update({'merged': hook.merged})
+            json.update({'closed': hook.closed})
+
             json_data = dumps(json)
             args_json = loads(hook.get_exe_action(event, config)[1])
             checked = []
@@ -1130,3 +1155,59 @@ with description('GitHub Utils'):
                 )
                 expect(code).to(equal(0))
                 req_get.stop()
+
+    # GitHub data
+    with context('Events and globals'):
+        with it('Must have the events property with a dictionary of the '
+                'GitHub events that the hook is able to read and process'):
+            events = {
+                'EVENT_COMMIT_COMMENT': 'commit_comment',
+                'EVENT_CREATE': 'create',
+                'EVENT_DELETE': 'delete',
+                'EVENT_DEPLOYMENT': 'deployment',
+                'EVENT_DEPLOYMENT_STATUS': 'deployment_status',
+                'EVENT_FORK': 'fork',
+                'EVENT_WIKI': 'gollum',
+                'EVENT_ISSUE_COMMENT': 'issue_comment',
+                'EVENT_ISSUE': 'issues',
+                'EVENT_MEMBER': 'member',
+                'EVENT_MEMBERSHIP': 'membership',
+                'EVENT_PAGE_BUILD': 'page_build',
+                'EVENT_PUBLIC_EVENT': 'public',
+                'EVENT_PULL_REQUEST': 'pull_request',
+                'EVENT_REVIEW_PR_COMMENT': 'pull_request_review_comment',
+                'EVENT_PUSH': 'push',
+                'EVENT_RELEASE': 'release',
+                'EVENT_REPOSITORY': 'repository',
+                'EVENT_STATUS': 'status',
+                'EVENT_TEAM_ADD': 'team_add',
+                'EVENT_WATCH': 'watch'
+            }
+            for key in events.keys():
+                name = util.events.get(key, False)
+                expect(name).to(equal(events[key]))
+            for key  in util.events.keys():
+                name = events.get(key, False)
+                expect(name).to(equal(util.events[key]))
+
+        with it('Must have the actions property with a dictionary of the'
+                'GitHub Pull Request actions property that the hook is able'
+                'to read from the hook'):
+            actions = {
+                'ACT_ASSIGNED': 'assigned',
+                'ACT_UNASSIGN': 'unassigned',
+                'ACT_LABELED': 'labeled',
+                'ACT_UNLABELED': 'unlabeled',
+                'ACT_OPENED': 'opened',
+                'ACT_EDITED': 'edited',
+                'ACT_CLOSED': 'closed',
+                'ACT_REOPENED': 'reopened',
+                'ACT_SYNC': 'synchronize',
+                'ACT_CREATED': 'created'
+            }
+            for key in actions.keys():
+                name = util.actions.get(key, False)
+                expect(name).to(equal(actions[key]))
+            for key in util.actions.keys():
+                name = actions.get(key, False)
+                expect(name).to(equal(util.actions[key]))

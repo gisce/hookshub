@@ -11,6 +11,7 @@ import requests
 my_path = normpath(abspath(dirname(__file__)))
 project_path = dirname(my_path)  # project dir
 
+hook_path = 'gitlab_hooks'
 hook_testing = 'gitlab'
 data_path = join(project_path, join('test_data', hook_testing))
 
@@ -28,7 +29,7 @@ with description('GitLab Hook'):
             hook = gitlab(loads(data))
             expect(hook.actions_path).to(equal(join(
                 project_path, join(
-                    'hookshub', join('hooks', hook_testing)
+                    'hookshub', join('hooks', hook_path)
                 )
             )))
 

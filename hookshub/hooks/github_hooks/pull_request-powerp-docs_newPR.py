@@ -10,6 +10,10 @@ import sys
 import tempfile
 import shutil
 
+# This Hook is used whenever a PR is opened, this includes the following cases:
+# - A new PR (action = 'opened')
+# - A closed PR is reopened (action = 'reopened')
+
 
 class TempDir(object):
     def __init__(self):
@@ -29,11 +33,24 @@ def arguments():
     event = sys.argv[2]
     return payload, event
 
-
 payload, event = arguments()
 
 output = ''
 http_url = "https://api.github.com"
+
+action = payload['action']
+if action != Util.actions['ACT_REOPENED'] or\
+                action != Util.actions['ACT_OPENED']:
+    output = 'PR is not "opened", aborting ...'
+    print (output)
+    exit(0)
+
+pr_num = payload['number']
+if not pr_num:
+    output = 'Failed to get number (Is the PR ready?)'
+    print (output)
+    exit(-1)
+
 url = payload['ssh_url'] or payload['http_url']
 if not url:
     output = 'Failed to get URL (was it in payload?)'
@@ -46,43 +63,39 @@ branch_name = payload['branch_name']
 output += ('Rebut event de <{}> |'.format(event))
 
 # Get from env_vars
-util_docs_path = '{0}/{1}'.format(payload['vhost_path'], repo_name)
 token = payload['token']
 port = payload['port']
 
-docs_dir = 'powerp'
 
-# Mirem de quina branca es tracta i actualitzem el directori del build:
-#   Si es master el directori sera  /powerp/
-#   Altrament el directori sera     /powerp_XXX/
-#       on XXX es el nom de la branca
-if branch_name != 'master' and branch_name != 'None':
-    docs_dir += "_{}".format(branch_name)
-else:
-    docs_dir = 'master'
+util_docs_path = '{0}/{1}/powerp_{2}'.format(
+    payload['vhost_path'], repo_name, branch_name
+)
 
-util_docs_path = join(util_docs_path, docs_dir)
-ca_docs_path = join(util_docs_path, 'ca')
-es_docs_path = join(util_docs_path, 'es')
+ca_docs_path = '{0}/ca/'.format(
+    util_docs_path
+)
+es_docs_path = '{0}/es/'.format(
+    util_docs_path
+)
 
-# Creem un directori temporal que guardarà les dades del clone
-#   Per actualitzar la pagina de la documentacio
 with TempDir() as temp:
     output += ('Creat Directori temporal: {} |'.format(temp.dir))
 
     # Primer clonem el repositori
-    out, code, err = Util.clone_on_dir(temp.dir, branch_name, repo_name, url)
+    out, code, err = Util.clone_on_dir(
+        temp.dir, repo_name, url, branch=branch_name
+    )
     output += out
     if code != 0:
         output += 'Clonant el repository desde http'
         url = payload['http_url']
         out, code, err2 = Util.clone_on_dir(
-            temp.dir, branch_name, repo_name, url
+            temp.dir, repo_name, url, branch=branch_name
         )
         if code != 0:
             # Could not clone >< => ABORT
             sys.stderr.write(
-                '| Failed to get repository {0};;{1}|'.format(err, err2)
+                '| Failed to get repository {0};\n;{1}|'.format(err, err2)
             )
             print(output)
             exit(-1)
@@ -103,25 +116,24 @@ with TempDir() as temp:
 
     output += '{} OK |'.format(Util.export_pythonpath(clone_dir))
 
-    # Fem build al directori on tenim la pàgina des del directori del clone
-
+    # Fem build al directori on tenim la pagina des del directori del clone
     #   Build en català
-
     out, target_build_path = (
         Util.docs_build(clone_dir, ca_docs_path, None, True)
     )
+
     # If build fails we can't continue
     if not target_build_path:
         output += '{} FAILED |'.format(out)
-        print (output)
+        print(output)
         exit(1)
     output += '{} OK |'.format(out)
 
     #   Build en castellà
-
     out, target_build_path = (
         Util.docs_build(clone_dir, es_docs_path, 'mkdocs_es.yml', True)
     )
+
     # If build fails we can't continue
     if not target_build_path:
         output += '{} FAILED |'.format(out)
@@ -130,7 +142,6 @@ with TempDir() as temp:
     output += '{} OK |'.format(out)
 
     # CP landing page (if exists)
-
     from os.path import isdir
     landing_dir = join(clone_dir, 'landing_page')
     if isdir(landing_dir):
@@ -146,22 +157,12 @@ with TempDir() as temp:
         res_url = '{0}/'.format(base_url)
     else:
         res_url = '{0}:{1}/'.format(base_url, port)
-    comment = 'Documentation build URL:\nhttp://{}\n'.format(res_url)
-
-    # Necessitem agafar totes les pull request per trobar la nostra
-
-    my_pr, out = Util.get_pr(token, repo_full_name, branch_name)
-    output += out
-
-    # If getting pr fails, we ommit comment post
-    if my_pr <= 0:
-        print(output)
-        exit(0)
+    comment = 'Documentation build URL:\nhttp://{}'.format(res_url)
 
     # Postejem el comentari
 
     post_code, post_text = Util.post_comment_pr(
-        token, repo_full_name, my_pr['number'], comment
+        token, repo_full_name, pr_num, comment
     )
 
     if post_code == 201:
@@ -172,18 +173,5 @@ with TempDir() as temp:
         output += 'Failed to write comment. ' \
                   'Server responded with {} |'.format(post_code)
         output += dumps(loads(post_text))
-
-    # if virtenv:
-    #     output += 'Deactivate virtualenv ...'
-    #     command = 'deactivate'
-    #     deact = Popen(
-    #         command, cwd=clone_dir, stdout=PIPE, stderr=PIPE
-    #     )
-    #     out, err = deact.communicate()
-    #     if deact.returncode != 0:
-    #         output += 'FAILED TO DEACTIVATE: {0}::{1}'.format(out, err)
-    #         print(output)
-    #         exit(-1)
-    #     output += 'OK |'
 
 print(output)
