@@ -409,6 +409,9 @@ class GitHubUtil:
         """
         :param dir: Directory used to call the build. This MUST exist.
             :type:  String
+        :param file: Configuration file used to build with. If None is set,
+            the '-f' option is not used, using the default 'mkdocs.yml' config
+            :type:  String
         :param target: Directory to build to. If not set or None, the target
             build is the default one, that is the same as 'dir'
             :type:  String
@@ -418,7 +421,7 @@ class GitHubUtil:
         :return: An output log with some annotations and the output and error
             log from the mkdocs build call. And a String containing the path
             where the docs have been built
-            :type: Tuple<String, String>
+            :type:  Tuple<String, String>
         """
         build_path = dir
         output = 'Building mkdocs from {} '.format(dir)
