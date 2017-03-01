@@ -41,7 +41,9 @@ http_url = "https://api.github.com"
 action = payload['action']
 if action != Util.actions['ACT_REOPENED'] or\
                 action != Util.actions['ACT_OPENED']:
-    output = 'PR is not "opened", aborting ...'
+    output = 'PR is "{}", not "{}" or "{}".\nAborting ...'.format(
+        action, Util.actions['ACT_OPENED'], Util.actions['ACT_REOPENED']
+    )
     print (output)
     exit(0)
 
