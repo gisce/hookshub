@@ -40,8 +40,6 @@ def index():
     with open(join(path, 'config.json'), 'r') as cfg:
         config = loads(cfg.read())
 
-    hooks = config.get('hooks_path', join(path, 'hooks'))
-
     # Get Event // Implement ping
     event = request.headers.get(
         'X-GitHub-Event', request.headers.get(
