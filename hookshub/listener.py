@@ -85,7 +85,7 @@ class HookListener(object):
             return github(payload)
 
     def run_event_actions(self, config_file):
-        def_conf = {}
+        timeout = 2
         log = ''
         
         with open(config_file, 'r') as config:
@@ -102,37 +102,42 @@ class HookListener(object):
         i = 0
 
         if self.logger:
-            self.logger.info('Executing {} actions\n'.format(len(hook.event_actions)))
-
+            self.logger.error('Executing {} actions for event: {}\n'.format(
+                len(hook.event_actions), hook.event
+            ))
         for action in hook.event_actions:
             i += 1
             if self.logger:
-                self.logger.info('[Running: <{0}/{1}> - {2}]\n'.format(
+                self.logger.error('[Running: <{0}/{1}> - {2}]\n'.format(
                     i, len(hook.event_actions), action)
                 )
-            args = hook.get_exe_action(action, conf)
-            with TempDir() as tmp:
-                tmp_path = join(tmp.dir, action)
-                with open(tmp_path, 'w') as tmp_json:
-                    tmp_json.write(args[1])
-                args[1] = tmp_path
-                proc = Popen(args, stdout=PIPE, stderr=PIPE)
-                stdout, stderr = proc.communicate()
-                output = ''
-                output += ('[{0}]:ProcOut:\n{1}'.format(
-                    action, stdout
-                ))
-                output += ('[{0}]:ProcErr:\n{1}'.format(
-                    action, stderr
-                ))
-                if proc.returncode != 0:
-                    log = ('[{0}]:{1}\n[{0}]:Failed!\n'.format(
-                        action, output
-                    ))
-                    self.logger.error(log.replace('|', '\n'))
-                    return -1, log
-                log = ('[{0}]:{1}\n[{0}]:Success!\n'.format(
+            proc = self.pool.apply_async(
+                run_action, args=(action, hook, conf),
+                callback=log_result
+            )
+            proc.wait(timeout=timeout)
+            if proc.ready():
+                stdout, stderr, returncode, pid = proc.get()
+            else:
+                stdout = stderr = 'Still running async, but answering.' \
+                                  ' Check log for detailed result...'
+                self.logger.error('[{}]:{}'.format(action, stderr))
+                returncode = 0
+
+            output = ''
+            output += ('[{0}]:ProcOut:\n{1}'.format(
+                action, stdout
+            ))
+            output += ('[{0}]:ProcErr:\n{1}'.format(
+                action, stderr
+            ))
+            if returncode and returncode != 0:
+                log += ('[{0}]:{1}\n[{0}]:Failed!\n'.format(
                     action, output
                 ))
-                self.logger.info(log.replace('|', '\n'))
+                return -1, log
+            log += ('[{0}]:{1}\n[{0}]:Success!\n'.format(
+                action, output
+            ))
+
         return 0, log
