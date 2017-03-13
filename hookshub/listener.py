@@ -66,13 +66,14 @@ def log_result(res):
 
 
 class HookListener(object):
-    def __init__(self, payload_file, event):
+    def __init__(self, payload_file, event, pool=Pool(1)):
         self.event = event
         self.payload = {}
         with open(payload_file, 'r') as jsf:
             self.payload = json.loads(jsf.read())
         import logging
         self.logger = logging.getLogger('__main__')
+        self.pool = pool
 
     @staticmethod
     def instancer(payload):
