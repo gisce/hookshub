@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from hookshub.hooks.github import GitHubWebhook as github
 from hookshub.hooks.gitlab import GitLabWebhook as gitlab
+from multiprocessing import Pool
 from osconf import config_from_environment
 from hookshub.hooks.webhook import webhook
 from subprocess import Popen, PIPE
@@ -8,6 +9,7 @@ from os.path import join
 import json
 import tempfile
 import shutil
+import logging
 
 
 class TempDir(object):
@@ -19,6 +21,48 @@ class TempDir(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         shutil.rmtree(self.dir)
+
+
+def run_action(action, hook, conf):
+    logger = logging.getLogger('__main__')
+    import os
+    pid = os.getpid()
+    logger.error('[ASYNC({})]Running: {} - {}'.format(pid, action, hook.event))
+    args = hook.get_exe_action(action, conf)
+    with TempDir() as tmp:
+        tmp_path = join(tmp.dir, action)
+        with open(tmp_path, 'w') as tmp_json:
+            tmp_json.write(args[1])
+        args[1] = tmp_path
+        proc = Popen(args, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = proc.communicate()
+        logger.error('[{}]:ProcOut:\n{}'.format(
+            action, stdout.replace('|', '\n')
+        ))
+        logger.error('[{}]:ProcErr:\n{}'.format(
+            action, stderr.replace('|', '\n')
+        ))
+        if proc.returncode != 0:
+            logger.error('[{0}]:Failed!\n'.format(
+                action
+            ))
+        else:
+            logger.error('[{0}]:Success!\n'.format(
+                action
+            ))
+    return stdout, stderr, proc.returncode, pid
+
+
+def log_result(res):
+    stdout, stderr, returncode, pid = res
+    logger = logging.getLogger('__main__')
+    if returncode == 0:
+        result = 'Success!'
+    else:
+        result = 'Failure!'
+    logger.error('[ASYNC({})] Result: {}'.format(
+        pid, result
+    ))
 
 
 class HookListener(object):
