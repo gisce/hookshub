@@ -84,7 +84,7 @@ with description('Hook Listener'):
                     pool.stop()
 
     with context('Run Actions (mocked), called from subprocess in production.'):
-        with it('must run successfully all actions'):
+        with it('must run successfully the action'):
             from hookshub.parser import run_action
             webhook_data_path = join(
                 data_path, join('webhook', 'default_event')
@@ -98,6 +98,35 @@ with description('Hook Listener'):
                 res_out = 'All Ok\n'
                 res_err = ''
                 res_code = 0
+                popen.start()
+                popen_mock = Mock()
+                popen_mock.communicate.return_value = [res_out, res_err]
+                popen_mock.returncode = res_code
+                popen.return_value = popen_mock
+                stdout, stderr, returncode, pid = run_action(
+                    parser.event, hook, config
+                )
+                expect(stdout).to(equal(res_out))
+                expect(stderr).to(equal(res_err))
+                expect(returncode).to(equal(res_code))
+                popen.stop()
+
+    with context('Run Actions (mocked), called from subprocess in production.'):
+        with it('must fail running the action'):
+            from hookshub.parser import run_action
+
+            webhook_data_path = join(
+                data_path, join('webhook', 'default_event')
+            )
+            parser = HookParser(webhook_data_path, 'default_event')
+            hook = parser.instancer(parser.payload)
+            config = join(
+                data_path, join('webhook', 'conf.json')
+            )
+            with patch("hookshub.parser.Popen") as popen:
+                res_out = 'All Ok\n'
+                res_err = ''
+                res_code = -1
                 popen.start()
                 popen_mock = Mock()
                 popen_mock.communicate.return_value = [res_out, res_err]
