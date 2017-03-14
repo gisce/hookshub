@@ -35,6 +35,14 @@ def init_worker():
 
 
 def get_args():
+    '''
+    Parse arguments from sys.argv. Expected Arguments are:
+    --ip=<ip_address>       -   Specify ip address to bind and listen
+    --port=<port_num>       -   Specify port num to bind and listen
+    --procs=<process_num>   -   Number of processes to spawn and run actions
+    --help                  -   Show Usage and close
+    :return: Useful params always as a tuple (ip, port number, process number)
+    '''
     from sys import argv
     host_ip = '0.0.0.0'
     host_port = 5000
