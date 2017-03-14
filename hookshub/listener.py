@@ -160,8 +160,7 @@ if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(message)s',
                         datefmt='[%Y/%m/%d-%H:%M:%S]')
     host_ip, host_port, proc_num = get_args()
-    log = logging.getLogger(__name__)
-    log.info(
+    print(
         'Start Listening on {}:{} with {} procs'.format(
             host_ip, host_port, proc_num
         )
