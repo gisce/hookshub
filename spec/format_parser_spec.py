@@ -27,15 +27,18 @@ with description('Hook Listener'):
                 config = join(
                     data_path, join('webhook', 'conf.json')
                 )
-                with patch("hookshub.parser.Popen") as popen:
-                    popen.start()
-                    popen_mock = Mock()
-                    popen_mock.communicate.return_value = ['All Ok\n', '']
-                    popen_mock.returncode = 0
-                    popen.return_value = popen_mock
+                with patch("hookshub.parser.Pool") as pool:
+                    action_return = ['All Ok\n', '', 0, 0]
+                    pool.start()
+                    apply_async = Mock()
+                    apply_async.wait.return_value = True
+                    apply_async.ready.return_value = True
+                    apply_async.get.return_value = action_return
+                    pool.apply_async.return_value = apply_async
+                    listener.pool = pool
                     result, log = listener.run_event_actions(config)
                     expect(result).to(equal(0))
-                    popen.stop()
+                    pool.stop()
 
         with context('running actions wrongly (mocked)'):
             with it('must run failing all actions'):
@@ -46,15 +49,18 @@ with description('Hook Listener'):
                 config = join(
                     data_path, join('webhook', 'conf.json')
                 )
-                with patch("hookshub.parser.Popen") as popen:
-                    popen.start()
-                    popen_mock = Mock()
-                    popen_mock.communicate.return_value = ['', 'All bad\n']
-                    popen_mock.returncode = -1
-                    popen.return_value = popen_mock
+                with patch("hookshub.parser.Pool") as pool:
+                    action_return = ['All Bad\n', '', -1, 0]
+                    pool.start()
+                    apply_async = Mock()
+                    apply_async.wait.return_value = True
+                    apply_async.ready.return_value = True
+                    apply_async.get.return_value = action_return
+                    pool.apply_async.return_value = apply_async
+                    listener.pool = pool
                     result, log = listener.run_event_actions(config)
                     expect(result).to(equal(-1))
-                    popen.stop()
+                    pool.stop()
 
     with context('GitLab test data'):
         with it('must return a hook with "GitLab" origin on instancer method'):
