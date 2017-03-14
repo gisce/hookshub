@@ -1,143 +1,86 @@
-# -*- coding: utf-8 -*-
-from hookshub.hooks.github import GitHubWebhook as github
-from hookshub.hooks.gitlab import GitLabWebhook as gitlab
+from __future__ import print_function
 from multiprocessing import Pool
-from osconf import config_from_environment
-from hookshub.hooks.webhook import webhook
-from subprocess import Popen, PIPE
-from os.path import join
-import json
-import tempfile
-import shutil
+
 import logging
 
+from json import loads, dumps
+from tempfile import mkstemp
+from os import remove, fdopen
+from os.path import abspath, normpath, dirname, join
 
-class TempDir(object):
-    def __init__(self):
-        self.dir = tempfile.mkdtemp()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        shutil.rmtree(self.dir)
+from flask import Flask, request, abort, jsonify
+from hookshub.parser import HookListener
 
 
-def run_action(action, hook, conf):
-    logger = logging.getLogger('__main__')
-    import os
-    pid = os.getpid()
-    logger.error('[ASYNC({})]Running: {} - {}'.format(pid, action, hook.event))
-    args = hook.get_exe_action(action, conf)
-    with TempDir() as tmp:
-        tmp_path = join(tmp.dir, action)
-        with open(tmp_path, 'w') as tmp_json:
-            tmp_json.write(args[1])
-        args[1] = tmp_path
-        proc = Popen(args, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = proc.communicate()
-        logger.error('[{}]:ProcOut:\n{}'.format(
-            action, stdout.replace('|', '\n')
-        ))
-        logger.error('[{}]:ProcErr:\n{}'.format(
-            action, stderr.replace('|', '\n')
-        ))
-        if proc.returncode != 0:
-            logger.error('[{0}]:Failed!\n'.format(
-                action
-            ))
-        else:
-            logger.error('[{0}]:Success!\n'.format(
-                action
-            ))
-    return stdout, stderr, proc.returncode, pid
+class AbortException(Exception):
+    def __init__(self, msg):
+        msg = 'Internal Server Error\n{}'.format(msg)
+        self.message = msg
+        self.code = 500
+
+application = Flask(__name__)
 
 
-def log_result(res):
-    stdout, stderr, returncode, pid = res
-    logger = logging.getLogger('__main__')
-    if returncode == 0:
-        result = 'Success!'
-    else:
-        result = 'Failure!'
-    logger.error('[ASYNC({})] Result: {}'.format(
-        pid, result
-    ))
+@application.errorhandler(AbortException)
+def handle_abort(e):
+    response = jsonify(e.message)
+    response.content_type = 'text/html'
+    response.status_code = e.code
+    return response
 
 
-class HookListener(object):
-    def __init__(self, payload_file, event, pool=Pool(1)):
-        self.event = event
-        self.payload = {}
-        with open(payload_file, 'r') as jsf:
-            self.payload = json.loads(jsf.read())
-        import logging
-        self.logger = logging.getLogger('__main__')
-        self.pool = pool
+@application.route('/', methods=['POST'])
+def index():
+    """
+    Main WSGI application entry.
+    """
+    path = normpath(abspath(dirname(__file__)))
 
-    @staticmethod
-    def instancer(payload):
-        if 'object_kind' in payload.keys():
-            return gitlab(payload)
-        elif 'hook' in payload.keys():
-            return webhook(payload)
-        else:
-            return github(payload)
+    # Load config
+    with open(join(path, 'config.json'), 'r') as cfg:
+        config = loads(cfg.read())
 
-    def run_event_actions(self, config_file):
-        timeout = 2
-        log = ''
-        
-        with open(config_file, 'r') as config:
-            def_conf = json.loads(config.read())
+    # Get Event // Implement ping
+    event = request.headers.get(
+        'X-GitHub-Event', request.headers.get(
+            'X-GitLab-Event', 'ping'
+        )
+    )
+    if event == 'ping':
+        return dumps({'msg': 'pong'})
 
-        if not 'nginx_port' in def_conf.keys():
-            def_conf.update({'nginx_port': '80'})
-            
-        conf = config_from_environment('HOOKSHUB', [
-            'github_token', 'gitlab_token', 'vhost_path', 'nginx_port'
-        ], **def_conf)
+    # Gather data
+    try:
+        payload = loads(request.data)
+    except:
+        abort(400)
 
-        hook = self.instancer(self.payload)
-        i = 0
+    # Save payload to temporal file
+    osfd, tmpfile = mkstemp()
+    with fdopen(osfd, 'w') as pf:
+        pf.write(dumps(payload))
 
-        if self.logger:
-            self.logger.error('Executing {} actions for event: {}\n'.format(
-                len(hook.event_actions), hook.event
-            ))
-        for action in hook.event_actions:
-            i += 1
-            if self.logger:
-                self.logger.error('[Running: <{0}/{1}> - {2}]\n'.format(
-                    i, len(hook.event_actions), action)
-                )
-            proc = self.pool.apply_async(
-                run_action, args=(action, hook, conf),
-                callback=log_result
-            )
-            proc.wait(timeout=timeout)
-            if proc.ready():
-                stdout, stderr, returncode, pid = proc.get()
-            else:
-                stdout = stderr = 'Still running async, but answering.' \
-                                  ' Check log for detailed result...'
-                self.logger.error('[{}]:{}'.format(action, stderr))
-                returncode = 0
+    # Use HooksHub to run actions
+    parser = HookListener(tmpfile, event, pool)
 
-            output = ''
-            output += ('[{0}]:ProcOut:\n{1}'.format(
-                action, stdout
-            ))
-            output += ('[{0}]:ProcErr:\n{1}'.format(
-                action, stderr
-            ))
-            if returncode and returncode != 0:
-                log += ('[{0}]:{1}\n[{0}]:Failed!\n'.format(
-                    action, output
-                ))
-                return -1, log
-            log += ('[{0}]:{1}\n[{0}]:Success!\n'.format(
-                action, output
-            ))
+    log_out = ('Processing: {}...'.format(parser.event))
 
-        return 0, log
+    code, output = parser.run_event_actions(config)
+
+    output = '{0}|{1}'.format(log_out, output)
+    # Remove temporal file
+    remove(tmpfile)
+
+    if code != 0:  # Error executing actions
+        output = 'Fail with {}\n{}'.format(event, output)
+        raise AbortException(output)
+    else:  # All ok
+        output = 'Success with {}\n{}'.format(event, output)
+    return dumps({'msg': output})
+
+
+if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s %(message)s',
+                        datefmt='[%Y/%m/%d-%H:%M:%S]')
+    pool = Pool(processes=4)
+    application.run(debug=False, host='0.0.0.0')
