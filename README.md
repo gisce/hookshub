@@ -44,8 +44,24 @@ The required variables are:
 $VHOST_PATH     - Contains the path to the virtualhost (target path to build)
 $GITHUB_TOKEN   - Your github_token required to OAuth with GitHub
 $GITLAB_TOKEN   - Your github_token required to OAuth with GitLab
-$ACTION_TIMEOUT - Timeout for the spawned processes
+$ACTION_TIMEOUT - Timeout for the spawned processes. They'll keep running but async
 ```
+
+### Listener Server
+
+When running the listener server, you can use some parameters to improve the usability.
+
+Usage can be described using the `--help` parameter, and it shows:
+
+```
+python listener.py [options]
+
+    [--ip=<ip_address>]         -   @IP address to bind and listen to hooks
+    [--port=<port_number>]      -   Port number to bind and listen to hooks
+    [--procs=<process_number>]  -   Process number to spawn to run actions
+```
+
+----
 
 A defaults file for the environment variables is required in order to instanciate the `listener` class.
 This file may be readed as a JSON Document with the variables names as key names.
