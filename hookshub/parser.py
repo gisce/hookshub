@@ -42,7 +42,8 @@ def run_action(action, hook, conf):
         logger.error('[{}]:ProcErr:\n{}'.format(
             action, stderr.replace('|', '\n')
         ))
-        if proc.returncode != 0:
+        returncode = proc.returncode
+        if returncode != 0:
             logger.error('[{0}]:Failed!\n'.format(
                 action
             ))
@@ -50,7 +51,7 @@ def run_action(action, hook, conf):
             logger.error('[{0}]:Success!\n'.format(
                 action
             ))
-    return stdout, stderr, proc.returncode, pid
+    return stdout, stderr, returncode, pid
 
 
 def log_result(res):
