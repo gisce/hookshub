@@ -23,7 +23,7 @@ with description('Hook Listener'):
                 webhook_data_path = join(
                     data_path, join('webhook', 'default_event')
                 )
-                listener = HookParser(webhook_data_path, 'default_event')
+                parser = HookParser(webhook_data_path, 'default_event')
                 config = join(
                     data_path, join('webhook', 'conf.json')
                 )
@@ -35,8 +35,8 @@ with description('Hook Listener'):
                     apply_async.ready.return_value = True
                     apply_async.get.return_value = action_return
                     pool.apply_async.return_value = apply_async
-                    listener.pool = pool
-                    result, log = listener.run_event_actions(config)
+                    parser.pool = pool
+                    result, log = parser.run_event_actions(config)
                     expect(result).to(equal(0))
                     pool.stop()
 
@@ -45,7 +45,7 @@ with description('Hook Listener'):
                 webhook_data_path = join(
                     data_path, join('webhook', 'default_event')
                 )
-                listener = HookParser(webhook_data_path, 'default_event')
+                parser = HookParser(webhook_data_path, 'default_event')
                 config = join(
                     data_path, join('webhook', 'conf.json')
                 )
@@ -57,8 +57,8 @@ with description('Hook Listener'):
                     apply_async.ready.return_value = True
                     apply_async.get.return_value = action_return
                     pool.apply_async.return_value = apply_async
-                    listener.pool = pool
-                    result, log = listener.run_event_actions(config)
+                    parser.pool = pool
+                    result, log = parser.run_event_actions(config)
                     expect(result).to(equal(-1))
                     pool.stop()
 
