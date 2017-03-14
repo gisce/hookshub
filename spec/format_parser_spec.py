@@ -62,6 +62,27 @@ with description('Hook Listener'):
                     expect(result).to(equal(-1))
                     pool.stop()
 
+        with context('running actions delayed (mocked)'):
+            with it('must run async the actions and log it'):
+                webhook_data_path = join(
+                    data_path, join('webhook', 'default_event')
+                )
+                parser = HookParser(webhook_data_path, 'default_event')
+                config = join(
+                    data_path, join('webhook', 'conf.json')
+                )
+                with patch("hookshub.parser.Pool") as pool:
+                    action_return = ['All Ok\n', '', 0, 0]
+                    pool.start()
+                    apply_async = Mock()
+                    apply_async.wait.return_value = True
+                    apply_async.ready.return_value = False
+                    pool.apply_async.return_value = apply_async
+                    parser.pool = pool
+                    result, log = parser.run_event_actions(config)
+                    expect(result).to(equal(0))
+                    pool.stop()
+
     with context('GitLab test data'):
         with it('must return a hook with "GitLab" origin on instancer method'):
             webhook_data_path = join(data_path, join('gitlab', 'issue.json'))
