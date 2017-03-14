@@ -14,6 +14,11 @@ from hookshub.parser import HookParser
 
 class AbortException(Exception):
     def __init__(self, msg):
+        '''
+        Override Exception so we can return our own message to the request as
+        an error response.
+        :param msg: Message to print on the response
+        '''
         msg = 'Internal Server Error\n{}'.format(msg)
         self.message = msg
         self.code = 500
