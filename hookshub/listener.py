@@ -18,6 +18,39 @@ class AbortException(Exception):
         self.message = msg
         self.code = 500
 
+
+def get_args():
+    from sys import argv
+    host_ip = '0.0.0.0'
+    host_port = 5000
+    proc_num = 4
+    if len(argv) > 1:
+        log = logging.getLogger(__name__)
+        for arg in argv:
+            if arg.startswith('--ip='):
+                host_ip = arg[5::]
+            elif arg.startswith('--port='):
+                host_port = int(arg[7::])
+            elif arg.startswith('--procs='):
+                proc_num = int(arg[8::])
+            elif arg.startswith('--help'):
+                out = 'Usage:\npython listener.py [options]'
+                out += '\n\t[--ip=<ip_address>]\t\t\t- sets listening address'
+                out += '\n\t[--port=<port_number>]\t\t- sets listening port'
+                out += '\n\t[--procs=<process_number>]\t- sets the number of' \
+                       ' processes to start running actions'
+                log.error(
+                    out
+                )
+                exit(0)
+            elif not arg.endswith('listener.py'):
+                log.error(
+                    'Got unrecognized argument: [{}]'.format(arg)
+                )
+        return host_ip, host_port, proc_num
+    return host_ip, host_port, proc_num
+
+
 application = Flask(__name__)
 
 
