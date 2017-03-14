@@ -24,6 +24,20 @@ class AbortException(Exception):
         self.code = 500
 
 
+def close_worker(signum, frame):
+    from os import getpid
+    from signal import SIGTERM, SIGINT, SIGQUIT
+    sig = 'TERM' if signum == SIGTERM else (
+        'INT' if signum == SIGINT else (
+            'QUIT' if signum == SIGQUIT else 'UNKNOWN'
+        )
+    )
+    print('Stopping worker {} with: SIG{}'.format(
+        getpid(), sig
+    ))
+    return SIGQUIT
+
+
 def init_worker():
     '''
     This method initializes the workers from the action pool.
@@ -31,7 +45,9 @@ def init_worker():
     parent process.
     '''
     import signal
-    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    signal.signal(signal.SIGTERM, close_worker)
+    signal.signal(signal.SIGINT, close_worker)
+    signal.signal(signal.SIGQUIT, close_worker)
 
 
 def get_args():
@@ -144,12 +160,14 @@ if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(message)s',
                         datefmt='[%Y/%m/%d-%H:%M:%S]')
     host_ip, host_port, proc_num = get_args()
-    application.logger.info('Start Listening on {}:{} with {} procs'.format(
-        host_ip, host_port, proc_num
-    ))
+    log = logging.getLogger(__name__)
+    log.info(
+        'Start Listening on {}:{} with {} procs'.format(
+            host_ip, host_port, proc_num
+        )
+    )
+    pool = Pool(processes=proc_num, initializer=init_worker)
     try:
-        pool = Pool(processes=proc_num, initializer=init_worker)
         application.run(debug=False, host=host_ip, port=host_port)
     finally:
-        print ('Closing pool')
-        pool.close()
+        pool.terminate()
