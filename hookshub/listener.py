@@ -115,5 +115,13 @@ def index():
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(message)s',
                         datefmt='[%Y/%m/%d-%H:%M:%S]')
-    pool = Pool(processes=4)
-    application.run(debug=False, host='0.0.0.0')
+    host_ip, host_port, proc_num = get_args()
+    application.logger.info('Start Listening on {}:{} with {} procs'.format(
+        host_ip, host_port, proc_num
+    ))
+    try:
+        pool = Pool(processes=proc_num, initializer=init_worker)
+        application.run(debug=False, host=host_ip, port=host_port)
+    finally:
+        print ('Closing pool')
+        pool.close()
