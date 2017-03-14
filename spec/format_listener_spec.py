@@ -1,6 +1,6 @@
 from os.path import abspath, normpath, dirname, join
 from json import loads
-from hookshub.listener import HookListener
+from hookshub.parser import HookParser
 from expects import *
 from mock import patch, Mock
 
@@ -15,7 +15,7 @@ with description('Hook Listener'):
                 data_path, join('webhook', 'default_event')
             )
             webhook_data = loads(open(webhook_data_path, 'r').read())
-            hook = HookListener.instancer(webhook_data)
+            hook = HookParser.instancer(webhook_data)
             expect(hook.origin).to(equal('webhook'))
 
         with context('running actions correctly (mocked)'):
@@ -23,11 +23,11 @@ with description('Hook Listener'):
                 webhook_data_path = join(
                     data_path, join('webhook', 'default_event')
                 )
-                listener = HookListener(webhook_data_path, 'default_event')
+                listener = HookParser(webhook_data_path, 'default_event')
                 config = join(
                     data_path, join('webhook', 'conf.json')
                 )
-                with patch("hookshub.listener.Popen") as popen:
+                with patch("hookshub.parser.Popen") as popen:
                     popen.start()
                     popen_mock = Mock()
                     popen_mock.communicate.return_value = ['All Ok\n', '']
@@ -42,11 +42,11 @@ with description('Hook Listener'):
                 webhook_data_path = join(
                     data_path, join('webhook', 'default_event')
                 )
-                listener = HookListener(webhook_data_path, 'default_event')
+                listener = HookParser(webhook_data_path, 'default_event')
                 config = join(
                     data_path, join('webhook', 'conf.json')
                 )
-                with patch("hookshub.listener.Popen") as popen:
+                with patch("hookshub.parser.Popen") as popen:
                     popen.start()
                     popen_mock = Mock()
                     popen_mock.communicate.return_value = ['', 'All bad\n']
@@ -60,12 +60,12 @@ with description('Hook Listener'):
         with it('must return a hook with "GitLab" origin on instancer method'):
             webhook_data_path = join(data_path, join('gitlab', 'issue.json'))
             webhook_data = loads(open(webhook_data_path, 'r').read())
-            hook = HookListener.instancer(webhook_data)
+            hook = HookParser.instancer(webhook_data)
             expect(hook.origin).to(equal('gitlab'))
 
     with context('GitHub test data'):
         with it('must return a hook with "GitHub" origin on instancer method'):
             webhook_data_path = join(data_path, join('github', 'status.json'))
             webhook_data = loads(open(webhook_data_path, 'r').read())
-            hook = HookListener.instancer(webhook_data)
+            hook = HookParser.instancer(webhook_data)
             expect(hook.origin).to(equal('github'))
