@@ -9,7 +9,7 @@ from os import remove, fdopen
 from os.path import abspath, normpath, dirname, join
 
 from flask import Flask, request, abort, jsonify
-from hookshub.parser import HookListener
+from hookshub.parser import HookParser
 
 
 class AbortException(Exception):
@@ -61,7 +61,7 @@ def index():
         pf.write(dumps(payload))
 
     # Use HooksHub to run actions
-    parser = HookListener(tmpfile, event, pool)
+    parser = HookParser(tmpfile, event, pool)
 
     log_out = ('Processing: {}...'.format(parser.event))
 
