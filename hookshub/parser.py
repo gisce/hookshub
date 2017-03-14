@@ -86,7 +86,6 @@ class HookParser(object):
             return github(payload)
 
     def run_event_actions(self, config_file):
-        timeout = 2
         log = ''
         
         with open(config_file, 'r') as config:
@@ -94,10 +93,16 @@ class HookParser(object):
 
         if not 'nginx_port' in def_conf.keys():
             def_conf.update({'nginx_port': '80'})
+
+        if not 'action_timeout' in def_conf.keys():
+            def_conf.update({'action_timeout': '30'})
             
         conf = config_from_environment('HOOKSHUB', [
-            'github_token', 'gitlab_token', 'vhost_path', 'nginx_port'
+            'github_token', 'gitlab_token', 'vhost_path', 'nginx_port',
+            'action_timeout'
         ], **def_conf)
+
+        timeout = conf.get('action_timeout')
 
         hook = self.instancer(self.payload)
         i = 0
