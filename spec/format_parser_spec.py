@@ -140,6 +140,19 @@ with description('Hook Listener'):
                 expect(returncode).to(equal(res_code))
                 popen.stop()
 
+    with context('Log Result (mocked), called async after timeout.'):
+        with it('must log result'):
+            from hookshub.parser import log_result
+
+            res_out = 'All Ok\n'
+            res_err = ''
+            res_pid = res_code = 0
+            res = (res_out, res_err, res_code, res_pid)
+            log_result(res)
+            res_code = -1
+            res = (res_out, res_err, res_code, res_pid)
+            log_result(res)
+
     with context('GitLab test data'):
         with it('must return a hook with "GitLab" origin on instancer method'):
             webhook_data_path = join(data_path, join('gitlab', 'issue.json'))
