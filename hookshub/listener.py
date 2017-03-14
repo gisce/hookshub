@@ -24,6 +24,16 @@ class AbortException(Exception):
         self.code = 500
 
 
+def init_worker():
+    '''
+    This method initializes the workers from the action pool.
+    Basically this makes SIGINT to be 'ignored' so it can be catched in the
+    parent process.
+    '''
+    import signal
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+
 def get_args():
     from sys import argv
     host_ip = '0.0.0.0'
