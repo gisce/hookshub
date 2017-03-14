@@ -31,8 +31,7 @@ There are a few configurations in order to work properly. Check the [configurati
   * [How to create a github token](https://help.github.com/articles/creating-an-access-token-for-command-line-use/)
   * [GitHub and OAuth](https://developer.github.com/v3/oauth/)
 * [GitLab API](https://docs.gitlab.com/ce/api/)
-* Our [Python HTTP Listener](https://github.com/gisce/python-github-webhooks)
-  * [Original HTTP Listener](https://github.com/carlos-jenkins/python-github-webhooks)(only for github, does not work with this repository but may work with our GitHub actions)
+* [Flask Docs](http://flask.pocoo.org/docs/0.12/)
 * [Mamba Testing](https://github.com/nestorsalceda/mamba)
 * [JSON Example](http://json.org/example.html)
 
@@ -42,9 +41,10 @@ In order to work properly some environment variables may be declared. That way t
 
 The required variables are:
 ```
-$vhost_path   - Contains the path to the virtualhost (target path to build)
-$github_token - Your github_token required to OAuth with GitHub
-$gitlab_token - Your github_token required to OAuth with GitLab
+$VHOST_PATH     - Contains the path to the virtualhost (target path to build)
+$GITHUB_TOKEN   - Your github_token required to OAuth with GitHub
+$GITLAB_TOKEN   - Your github_token required to OAuth with GitLab
+$ACTION_TIMEOUT - Timeout for the spawned processes
 ```
 
 A defaults file for the environment variables is required in order to instanciate the `listener` class.
@@ -54,7 +54,7 @@ Doing so, if there's no environment variable, the data in the defaults file will
 
 If those variables are not found in any of the two resources, the listener may raise an exception.
 
-As probably you'll be using our [Python HTTP Listener](https://github.com/gisce/python-github-webhooks) you may want to create this file in its folder as it may be looking for it (check its readme)
+The configuration file is loaded in the path _{cwd}/config.json_
 
 ## Tokens
 
