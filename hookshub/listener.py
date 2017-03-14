@@ -79,6 +79,11 @@ application = Flask(__name__)
 
 @application.errorhandler(AbortException)
 def handle_abort(e):
+    '''
+    Return handled exception as an error page from AbortException
+    :param e: Exception - May contain information generated from AbortException
+    :return: HTTP Response to return by the WSGI server
+    '''
     response = jsonify(e.message)
     response.content_type = 'text/html'
     response.status_code = e.code
