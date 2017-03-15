@@ -162,7 +162,9 @@ def index():
     return dumps({'msg': output})
 
 
-def start_listening(host_ip, host_port, proc_num):
+def start_listening(host_ip=DEFAULT_IP,
+                    host_port=DEFAULT_PORT,
+                    proc_num=DEFAULT_PROCS):
     logging.getLogger(__name__).info(
         'Start Listening on {}:{} with {} procs'.format(
             host_ip, host_port, proc_num
