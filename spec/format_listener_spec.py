@@ -94,6 +94,32 @@ with description('Application Requests'):
 
                 HookParser.stop()
 
+        with it('Must make an abort response with bad hook data'):
+            from os.path import abspath, normpath, dirname, join
+            from json import loads, dumps
+
+            my_path = normpath(abspath(dirname(__file__)))
+            project_path = dirname(my_path)  # Project Directory
+
+            data_path = join(
+                project_path, 'test_data', 'github', 'bad_push.json'
+            )
+            with open(data_path, 'r') as f:
+                hook_data = dumps(loads(f.read()))
+            hook_headers = {
+                'X-GitHub-Event': True,
+                'Content-Length': len(hook_data)
+            }
+            hook_headers = loads(dumps(hook_headers))
+            global client
+            with patch('hookshub.listener.loads') as load:
+                load.side_effect = Exception('Mocked Bad JSON Data')
+                response = client.post('/', data=hook_data,
+                                           headers=hook_headers)
+                ping_data = {
+                    'msg': 'pong'
+                }
+                expect(response.status_code).to(equal(400))
 
 
 with description('Listener Methods'):
