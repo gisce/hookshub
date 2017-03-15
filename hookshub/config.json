@@ -1,0 +1,5 @@
+{
+  "gitlab_token": "AGitLabToken",
+  "vhost_path": "/Path/To/Virtual/Host/To/Build",
+  "github_token": "AGitHubToken"
+}
