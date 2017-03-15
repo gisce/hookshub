@@ -1,2 +1,6 @@
 [run]
 source = ./hookshub
+
+[report]
+exclude_lines =
+    if __name__ == .__main__.:
