@@ -144,6 +144,9 @@ def index():
         pf.write(dumps(payload))
 
     # Use HooksHub to run actions
+    global pool
+    if not ('pool' in globals()):
+        pool = None
     parser = HookParser(tmpfile, event, pool)
 
     log_out = ('Processing: {}...'.format(parser.event))
@@ -170,6 +173,7 @@ def start_listening(host_ip=DEFAULT_IP,
             host_ip, host_port, proc_num
         )
     )
+    global pool
     pool = Pool(processes=proc_num, initializer=init_worker)
     try:
         application.run(debug=False, host=host_ip, port=host_port)
