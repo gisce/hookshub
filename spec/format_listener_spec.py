@@ -100,6 +100,29 @@ with patch('hookshub.listener.Pool') as pool:
 
                         logging.stop()
 
+        with context('On Application Starting'):
+            with it('Must start (mocked) with the specified args'):
+                with patch('hookshub.listener.Pool') as pool:
+                    pool.start()
+                    proc_pool = Mock()
+                    proc_pool.terminate.return_value = True
+                    pool.return_value = proc_pool
+                    with patch('hookshub.listener.logging') as logging:
+                        logging.start()
+                        logging.basicConfig.return_value = True
+                        logging.info = True
+                        logger = Mock()
+                        logger.info.return_value = True
+                        logger.error.return_value = True
+                        logging.getLogger.return_value = logger
+
+                        app_mock = Mock()
+                        app_mock.run.return_value = True
+                        listener.application = app_mock
+                        listener.start_listening('asd', 23, 2)
+
+                        logging.stop()
+                    pool.stop()
     pool.stop()
 
 
