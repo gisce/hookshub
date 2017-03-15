@@ -34,7 +34,6 @@ with description('Application Requests'):
             data_path = join(project_path, 'test_data', 'github', 'gollum.json')
             with open(data_path, 'r') as f:
                 hook_data = dumps(loads(f.read()))
-            import pudb; pu.db
             hook_headers = {
                 'X-GitHub-Event': True,
                 'Content-Length': len(hook_data)
@@ -49,8 +48,49 @@ with description('Application Requests'):
                 parser.run_event_actions.return_value = (0, 'All OK')
                 HookParser.return_value = parser
 
-                response = client.post('/', data=hook_data, headers=hook_headers)
+                response = client.post(
+                    '/', data=hook_data, headers=hook_headers
+                )
+                ping_data = {
+                    'msg': 'pong'
+                }
                 data = loads(response.data)
+                expect(response.status_code).to(equal(200))
+                expect(data).not_to(equal(ping_data))
+                HookParser.stop()
+
+        with it('Must make an abort response with hook parser message'):
+            from os.path import abspath, normpath, dirname, join
+            from json import loads, dumps
+
+            my_path = normpath(abspath(dirname(__file__)))
+            project_path = dirname(my_path)  # Project Directory
+
+            data_path = join(project_path, 'test_data', 'github', 'gollum.json')
+            with open(data_path, 'r') as f:
+                hook_data = dumps(loads(f.read()))
+            hook_headers = {
+                'X-GitHub-Event': True,
+                'Content-Length': len(hook_data)
+            }
+            hook_headers = loads(dumps(hook_headers))
+            global client
+
+            with patch('hookshub.listener.HookParser') as HookParser:
+                HookParser.start()
+                parser = Mock()
+                parser.event.return_value = 'Mocked Event'
+                parser.run_event_actions.return_value = (-1, 'All Bad')
+                HookParser.return_value = parser
+
+                response = client.post('/', data=hook_data,
+                                       headers=hook_headers)
+                ping_data = {
+                    'msg': 'pong'
+                }
+                data = loads(response.data)
+                expect(response.status_code).to(equal(500))
+                expect(data).not_to(equal(ping_data))
 
                 HookParser.stop()
 
