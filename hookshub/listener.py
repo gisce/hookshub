@@ -162,11 +162,8 @@ def index():
     return dumps({'msg': output})
 
 
-if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s %(message)s',
-                        datefmt='[%Y/%m/%d-%H:%M:%S]')
-    host_ip, host_port, proc_num = get_args()
-    print(
+def start_listening(host_ip, host_port, proc_num):
+    logging.getLogger(__name__).info(
         'Start Listening on {}:{} with {} procs'.format(
             host_ip, host_port, proc_num
         )
@@ -176,3 +173,13 @@ if __name__ == '__main__':
         application.run(debug=False, host=host_ip, port=host_port)
     finally:
         pool.terminate()
+        pool.close()
+
+
+logging.basicConfig(format='%(asctime)s %(message)s',
+                    datefmt='[%Y/%m/%d-%H:%M:%S]',
+                    level=logging.INFO)
+
+if __name__ == '__main__':
+    host_ip, host_port, proc_num = get_args()
+    start_listening(host_ip, host_port, proc_num)
