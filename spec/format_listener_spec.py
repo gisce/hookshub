@@ -32,15 +32,13 @@ with patch('hookshub.listener.Pool') as pool:
             with context('Given a list of arguments'):
                 with it('Must return default host_ip, host_port and proc_num'
                         'Given 0 arguments'):
-                    with patch('sys.argv') as args:
-                        args.start()
-                        args.return_value = ['listener.py']
+                    args = ['listener.py']
+                    with patch.object(listener, 'argv', args) as argv:
                         expect(listener.get_args()).to(equal((
                             listener.DEFAULT_IP,
                             listener.DEFAULT_PORT,
                             listener.DEFAULT_PROCS
                         )))
-                        args.stop()
 
                 with it('Must return given args as host_ip, host_port and'
                         'proc_num; Also Must Ignore incorrect params'):
