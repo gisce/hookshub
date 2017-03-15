@@ -24,6 +24,37 @@ with description('Application Requests'):
             }
             expect(expected_data).to(equal(data))
 
+        with it('Must make a response with hook parser message'):
+            from os.path import abspath, normpath, dirname, join
+            from json import loads, dumps
+
+            my_path = normpath(abspath(dirname(__file__)))
+            project_path = dirname(my_path)  # Project Directory
+
+            data_path = join(project_path, 'test_data', 'github', 'gollum.json')
+            with open(data_path, 'r') as f:
+                hook_data = dumps(loads(f.read()))
+            import pudb; pu.db
+            hook_headers = {
+                'X-GitHub-Event': True,
+                'Content-Length': len(hook_data)
+            }
+            hook_headers = loads(dumps(hook_headers))
+            global client
+
+            with patch('hookshub.listener.HookParser') as HookParser:
+                HookParser.start()
+                parser = Mock()
+                parser.event.return_value = 'Mocked Event'
+                parser.run_event_actions.return_value = (0, 'All OK')
+                HookParser.return_value = parser
+
+                response = client.post('/', data=hook_data, headers=hook_headers)
+                data = loads(response.data)
+
+                HookParser.stop()
+
+
 
 with description('Listener Methods'):
     with context("With Workers' init and close methods"):
