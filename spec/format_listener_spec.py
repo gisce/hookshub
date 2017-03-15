@@ -8,27 +8,6 @@ with patch('hookshub.listener.Pool') as pool:
     pool.return_value = proc_pool
     from hookshub import listener
 
-        # app_mock = Mock()
-        # app_mock.run.return_value = True
-        #
-        # listener.application = app_mock
-
-    # with context('Start listening (must not fail)'):
-    #     with it('Must start the listening with the specified args'):
-    #         errors = False
-    #         try:
-    #             listener.start_listening('1.2.3.4', 1234, 12)
-    #         except:
-    #             errors = True
-    #         expect(errors).to(equal(False))
-    #     with it('Must start the listening without args'):
-    #         errors = False
-    #         try:
-    #             listener.start_listening()
-    #         except:
-    #             errors = True
-    #         expect(errors).to(equal(False))
-
     with description('Listener Methods'):
         with context("With Workers' init and close methods"):
             with it('Must not close the worker and return SIGQUIT signal'):
