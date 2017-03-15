@@ -29,7 +29,37 @@ with patch('hookshub.listener.Pool') as pool:
                         listener.init_worker()
                         signal_mock.stop()
 
-            
+            with context('Given a list of arguments'):
+                with it('Must return default host_ip, host_port and proc_num'
+                        'Given 0 arguments'):
+                    with patch('sys.argv') as args:
+                        args.start()
+                        args.return_value = ['listener.py']
+                        expect(listener.get_args()).to(equal((
+                            listener.DEFAULT_IP,
+                            listener.DEFAULT_PORT,
+                            listener.DEFAULT_PROCS
+                        )))
+                        args.stop()
+
+                with it('Must return given args as host_ip, host_port and'
+                        'proc_num; Also Must Ignore incorrect params'):
+                    given_ip = '1.2.3.4'
+                    given_port = '1234'
+                    given_procs = '12'
+                    args = [
+                        'listener.py',
+                        '--ip={}'.format(given_ip),
+                        '--port={}'.format(given_port),
+                        '--ports=1234,2341',
+                        '--procs={}'.format(given_procs)
+                    ]
+                    with patch.object(listener, 'argv', args) as argv:
+                        expect(listener.get_args()).to(equal((
+                            given_ip,
+                            int(given_port),
+                            int(given_procs)
+                        )))
 
         flask.stop()
     pool.stop()
