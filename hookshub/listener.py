@@ -39,7 +39,8 @@ def close_worker(signum, frame):
             'QUIT' if signum == SIGQUIT else 'UNKNOWN'
         )
     )
-    print('Stopping worker {} with: SIG{}'.format(
+    log = logging.getLogger(__name__)
+    log.warning('Stopping worker {} with: SIG{}'.format(
         getpid(), sig
     ))
     return SIGQUIT
