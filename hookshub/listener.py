@@ -120,8 +120,10 @@ def index():
     path = normpath(abspath(dirname(__file__)))
 
     # Load config
-    with open(join(path, 'config.json'), 'r') as cfg:
-        config = loads(cfg.read())
+    global config
+    if 'config' not in globals():
+        with open(join(path, 'config.json'), 'r') as cfg:
+            config = loads(cfg.read())
 
     # Get Event // Implement ping
     event = request.headers.get(
