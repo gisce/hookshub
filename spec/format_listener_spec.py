@@ -2,6 +2,28 @@ from mock import patch, Mock
 from expects import *
 from hookshub import listener
 
+# These Test must execute before mocks on listner!
+#   Just leave the tests in this description in top of the file :D
+with description('Application Requests'):
+    with context('On Sample Hook'):
+        with it('Must make a simple response (act as PONG from PING request)'):
+            from os.path import abspath, normpath, dirname, join
+            from json import loads
+
+            my_path = normpath(abspath(dirname(__file__)))
+            project_path = dirname(my_path)  # Project Directory
+            app = listener.application
+            client = app.test_client()
+            hook_headers = None
+
+            response = client.post('/', headers=hook_headers)
+            data = loads(response.data)
+            expected_data = {
+                'msg': 'pong'
+            }
+            expect(expected_data).to(equal(data))
+
+
 with description('Listener Methods'):
     with context("With Workers' init and close methods"):
         with it('Must not close the worker and return SIGQUIT signal'):
