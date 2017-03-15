@@ -2,9 +2,11 @@ from __future__ import print_function
 from multiprocessing import Pool
 
 import logging
+import signal
 
 from json import loads, dumps
 from tempfile import mkstemp
+from sys import argv
 from os import remove, fdopen
 from os.path import abspath, normpath, dirname, join
 
@@ -44,7 +46,6 @@ def init_worker():
     Basically this makes SIGINT to be 'ignored' so it can be catched in the
     parent process.
     '''
-    import signal
     signal.signal(signal.SIGTERM, close_worker)
     signal.signal(signal.SIGINT, close_worker)
     signal.signal(signal.SIGQUIT, close_worker)
