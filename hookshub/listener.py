@@ -14,6 +14,11 @@ from flask import Flask, request, abort, jsonify
 from hookshub.parser import HookParser
 
 
+DEFAULT_IP = '0.0.0.0'
+DEFAULT_PORT = 5000
+DEFAULT_PROCS = 4
+
+
 class AbortException(Exception):
     def __init__(self, msg):
         '''
@@ -60,10 +65,9 @@ def get_args():
     --help                  -   Show Usage and close
     :return: Useful params always as a tuple (ip, port number, process number)
     '''
-    from sys import argv
-    host_ip = '0.0.0.0'
-    host_port = 5000
-    proc_num = 4
+    host_ip = DEFAULT_IP
+    host_port = DEFAULT_PORT
+    proc_num = DEFAULT_PROCS
     if len(argv) > 1:
         log = logging.getLogger(__name__)
         for arg in argv:
