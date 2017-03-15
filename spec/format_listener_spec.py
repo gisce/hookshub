@@ -13,6 +13,7 @@ with description('Application Requests'):
             my_path = normpath(abspath(dirname(__file__)))
             project_path = dirname(my_path)  # Project Directory
             app = listener.application
+            global client
             client = app.test_client()
             hook_headers = None
 
