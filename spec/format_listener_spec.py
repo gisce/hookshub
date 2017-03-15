@@ -59,6 +59,20 @@ with patch('hookshub.listener.Pool') as pool:
                             int(given_procs)
                         )))
 
+                with it('Must log usage and quit with --help'):
+                    args = [
+                        'listener.py',
+                        '--ports=1234,2341',
+                        '--help'
+                    ]
+                    with patch.object(listener, 'argv', args) as argv:
+                        exited = False
+                        try:
+                            listener.get_args()
+                        except SystemExit:
+                            exited = True
+                        expect(exited).to(equal(True))
+
         flask.stop()
     pool.stop()
 
