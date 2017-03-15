@@ -6,16 +6,47 @@ with patch('hookshub.listener.Pool') as pool:
     proc_pool = Mock()
     proc_pool.terminate.return_value = True
     pool.return_value = proc_pool
+    from hookshub import listener
+
+        # app_mock = Mock()
+        # app_mock.run.return_value = True
+        #
+        # listener.application = app_mock
+
+    # with context('Start listening (must not fail)'):
+    #     with it('Must start the listening with the specified args'):
+    #         errors = False
+    #         try:
+    #             listener.start_listening('1.2.3.4', 1234, 12)
+    #         except:
+    #             errors = True
+    #         expect(errors).to(equal(False))
+    #     with it('Must start the listening without args'):
+    #         errors = False
+    #         try:
+    #             listener.start_listening()
+    #         except:
+    #             errors = True
+    #         expect(errors).to(equal(False))
 
     with description('Listener Methods'):
         with context("With Workers' init and close methods"):
             with it('Must not close the worker and return SIGQUIT signal'):
                 import signal
-                signal_given = signal.SIGINT
-                signal_returned = listener.close_worker(
-                    signum=signal_given, frame=None
-                )
-                expect(signal_returned).to(equal(signal.SIGQUIT))
+                with patch('hookshub.listener.logging') as logging:
+                    logging.start()
+                    logging.basicConfig.return_value = True
+                    logging.info = True
+                    logger = Mock()
+                    logger.info.return_value = True
+                    logger.error.return_value = True
+                    logging.getLogger.return_value = logger
+                    signal_given = signal.SIGINT
+                    signal_returned = listener.close_worker(
+                        signum=signal_given, frame=None
+                    )
+                    expect(signal_returned).to(equal(signal.SIGQUIT))
+                    logging.stop()
 
             with it('Must replace killing signals with close method'):
                 with patch('hookshub.listener.signal') as signal_mock:
@@ -48,11 +79,22 @@ with patch('hookshub.listener.Pool') as pool:
                     '--procs={}'.format(given_procs)
                 ]
                 with patch.object(listener, 'argv', args) as argv:
-                    expect(listener.get_args()).to(equal((
-                        given_ip,
-                        int(given_port),
-                        int(given_procs)
-                    )))
+                    with patch('hookshub.listener.logging') as logging:
+                        logging.start()
+                        logging.basicConfig.return_value = True
+                        logging.info = True
+                        logger = Mock()
+                        logger.info.return_value = True
+                        logger.error.return_value = True
+                        logging.getLogger.return_value = logger
+
+                        expect(listener.get_args()).to(equal((
+                            given_ip,
+                            int(given_port),
+                            int(given_procs)
+                        )))
+
+                        logging.stop()
 
             with it('Must log usage and quit with --help'):
                 args = [
@@ -61,12 +103,23 @@ with patch('hookshub.listener.Pool') as pool:
                     '--help'
                 ]
                 with patch.object(listener, 'argv', args) as argv:
-                    exited = False
-                    try:
-                        listener.get_args()
-                    except SystemExit:
-                        exited = True
-                    expect(exited).to(equal(True))
+                    with patch('hookshub.listener.logging') as logging:
+                        logging.start()
+                        logging.basicConfig.return_value = True
+                        logging.info = True
+                        logger = Mock()
+                        logger.info.return_value = True
+                        logger.error.return_value = True
+                        logging.getLogger.return_value = logger
+
+                        exited = False
+                        try:
+                            listener.get_args()
+                        except SystemExit:
+                            exited = True
+                        expect(exited).to(equal(True))
+
+                        logging.stop()
 
     pool.stop()
 
