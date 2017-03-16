@@ -1,3 +1,5 @@
 requests
 osconf
 flask
+raven
+blinker
