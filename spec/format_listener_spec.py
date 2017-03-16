@@ -230,11 +230,16 @@ with description('Listener Methods'):
                     logger.error.return_value = True
                     logging.getLogger.return_value = logger
 
-                    app_mock = Mock()
-                    app_mock.run.return_value = True
-                    listener.application = app_mock
-                    listener.start_listening('1.2.3.4', 1234, 2)
+                    with patch('hookshub.listener.Sentry') as sentry:
+                        sentry.start()
+                        sentry.return_value = True
 
+                        app_mock = Mock()
+                        app_mock.run.return_value = True
+                        listener.application = app_mock
+                        listener.start_listening('1.2.3.4', 1234, 2)
+
+                        sentry.stop()
                     logging.stop()
                 pool.stop()
 
@@ -252,11 +257,15 @@ with description('Listener Methods'):
                     logger.info.return_value = True
                     logger.error.return_value = True
                     logging.getLogger.return_value = logger
+                    with patch('hookshub.listener.Sentry') as sentry:
+                        sentry.start()
+                        sentry.return_value = True
 
-                    app_mock = Mock()
-                    app_mock.run.return_value = True
-                    listener.application = app_mock
-                    listener.start_listening()
+                        app_mock = Mock()
+                        app_mock.run.return_value = True
+                        listener.application = app_mock
+                        listener.start_listening()
 
+                        sentry.stop()
                     logging.stop()
                 pool.stop()

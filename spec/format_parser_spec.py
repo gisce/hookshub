@@ -23,9 +23,9 @@ with description('Hook Listener'):
                 webhook_data_path = join(
                     data_path, join('webhook', 'default_event')
                 )
-                config = join(
-                    data_path, join('webhook', 'conf.json')
-                )
+                config_file = join(data_path, 'webhook', 'conf.json')
+                with open(config_file, 'r') as conf:
+                    config = loads(conf.read())
                 with patch("hookshub.parser.Pool") as pool:
                     pool.start()
                     apply_async = Mock()
@@ -56,9 +56,9 @@ with description('Hook Listener'):
                 webhook_data_path = join(
                     data_path, join('webhook', 'default_event')
                 )
-                config = join(
-                    data_path, join('webhook', 'conf.json')
-                )
+                config_file = join(data_path, 'webhook', 'conf.json')
+                with open(config_file, 'r') as conf:
+                    config = loads(conf.read())
                 with patch("hookshub.parser.Pool") as pool:
                     with patch('hookshub.parser.logging') as logging:
                         logging.start()
@@ -90,9 +90,9 @@ with description('Hook Listener'):
                 webhook_data_path = join(
                     data_path, join('webhook', 'default_event')
                 )
-                config = join(
-                    data_path, join('webhook', 'conf.json')
-                )
+                config_file = join(data_path, 'webhook', 'conf.json')
+                with open(config_file, 'r') as conf:
+                    config = loads(conf.read())
                 with patch("hookshub.parser.Pool") as pool:
                     with patch('hookshub.parser.logging') as logging:
                         logging.start()
