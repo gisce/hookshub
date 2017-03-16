@@ -85,11 +85,8 @@ class HookParser(object):
         else:
             return github(payload)
 
-    def run_event_actions(self, config_file):
+    def run_event_actions(self, def_conf):
         log = ''
-        
-        with open(config_file, 'r') as config:
-            def_conf = json.loads(config.read())
 
         if not 'nginx_port' in def_conf.keys():
             def_conf.update({'nginx_port': '80'})
