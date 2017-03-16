@@ -99,7 +99,7 @@ class HookParser(object):
             'action_timeout'
         ], **def_conf)
 
-        timeout = conf.get('action_timeout')
+        timeout = int(conf.get('action_timeout'))
 
         hook = self.instancer(self.payload)
         i = 0
