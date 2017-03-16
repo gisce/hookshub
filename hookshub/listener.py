@@ -172,9 +172,9 @@ def start_listening(host_ip=DEFAULT_IP,
                     host_port=DEFAULT_PORT,
                     proc_num=DEFAULT_PROCS):
     global config
+    path = normpath(abspath(dirname(__file__)))
     with open(join(path, 'config.json'), 'r') as cfg:
         config = loads(cfg.read())
-    application.config['SENTRY_DSN'] = config.get('SENTRY_DSN', False)
     sentry = Sentry(application)
     logging.getLogger(__name__).info(
         'Start Listening on {}:{} with {} procs'.format(
