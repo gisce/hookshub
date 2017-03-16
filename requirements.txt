@@ -1,5 +1,5 @@
 requests
 osconf
 flask
-raven
+raven==5.0.0
 blinker
