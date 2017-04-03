@@ -36,7 +36,7 @@ def virtualenv(venv=''):
     if not venv:
         venv = 'foo'
 
-    os.system('/usr/bin/virtualenv %s' % venv)
+    os.system('virtualenv %s' % venv)
 
     activate = join(venv, 'bin', 'activate_this.py')
     execfile(activate, dict(__file__=activate))
