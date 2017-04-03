@@ -45,7 +45,6 @@ def virtualenv(venv=''):
     activate = join(venv, 'bin', 'activate_this.py')
     execfile(activate, dict(__file__=activate))
     os.system('pip install -r requirements.txt')
-    os.system('pip freeze')
 
 
 payload, event = arguments()
