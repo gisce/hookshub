@@ -30,6 +30,20 @@ def arguments():
     return payload, event
 
 
+# Creació i activació del virtalenv temporal
+def virtualenv(venv=''):
+    import os
+    if not venv:
+        venv = 'foo'
+
+    os.system('/usr/bin/virtualenv %s' % venv)
+
+    activate = join(venv, 'bin', 'activate_this.py')
+    execfile(activate, dict(__file__=activate))
+    os.system('pip install -r requirements.txt')
+    os.system('pip freeze')
+
+
 payload, event = arguments()
 
 output = ''
@@ -99,6 +113,7 @@ with TempDir() as temp:
 
     # Instalem dependencies
 
+    virtualenv(branch_name)
     output += '{} OK |'.format(Util.pip_requirements(clone_dir))
 
     # Exportem PYTHONPATH
