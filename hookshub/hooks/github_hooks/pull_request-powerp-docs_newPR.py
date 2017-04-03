@@ -126,11 +126,7 @@ with TempDir() as temp:
     # Instalem dependencies
 
     virtualenv(branch_name)
-    output += '{} OK |'.format(Util.pip_requirements(clone_dir))
-
-    # Exportem PYTHONPATH
-
-    output += '{} OK |'.format(Util.export_pythonpath(clone_dir))
+    output += '{} |'.format(Util.pip_requirements(clone_dir) or 'OK')
 
     # Fem build al directori on tenim la pagina des del directori del clone
     #   Build en català
