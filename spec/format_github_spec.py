@@ -557,6 +557,18 @@ with description('GitHub Hook'):
             hook = github(json_data)
             expect(hook.number).to(equal(1))
 
+    with context('Pull Request Review event'):
+        with it('must have pull_request_review as event'):
+            event = 'pull_request_review'
+            file = 'pull_request_review.json'
+            data = open(join(data_path, file)).read()
+            hook = github(loads(data))
+            expect(
+                hook.event
+            ).to(equal(
+                util.events['EVENT_PULL_REQUEST_REVIEW']
+            ))
+
     with context('Review Comment on Pull Request event'):
         with it('must have pull_request_review_comment as event'):
             event = 'pull_request_review_comment'
