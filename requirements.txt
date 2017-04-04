@@ -3,3 +3,4 @@ osconf
 flask
 raven==5.0.0
 blinker
+virtualenv

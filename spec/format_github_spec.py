@@ -557,6 +557,18 @@ with description('GitHub Hook'):
             hook = github(json_data)
             expect(hook.number).to(equal(1))
 
+    with context('Pull Request Review event'):
+        with it('must have pull_request_review as event'):
+            event = 'pull_request_review'
+            file = 'pull_request_review.json'
+            data = open(join(data_path, file)).read()
+            hook = github(loads(data))
+            expect(
+                hook.event
+            ).to(equal(
+                util.events['EVENT_PULL_REQUEST_REVIEW']
+            ))
+
     with context('Review Comment on Pull Request event'):
         with it('must have pull_request_review_comment as event'):
             event = 'pull_request_review_comment'
@@ -1175,6 +1187,7 @@ with description('GitHub Utils'):
                 'EVENT_PAGE_BUILD': 'page_build',
                 'EVENT_PUBLIC_EVENT': 'public',
                 'EVENT_PULL_REQUEST': 'pull_request',
+                'EVENT_PULL_REQUEST_REVIEW': 'pull_request_review_comment',
                 'EVENT_REVIEW_PR_COMMENT': 'pull_request_review_comment',
                 'EVENT_PUSH': 'push',
                 'EVENT_RELEASE': 'release',
@@ -1186,7 +1199,7 @@ with description('GitHub Utils'):
             for key in events.keys():
                 name = util.events.get(key, False)
                 expect(name).to(equal(events[key]))
-            for key  in util.events.keys():
+            for key in util.events.keys():
                 name = events.get(key, False)
                 expect(name).to(equal(util.events[key]))
 

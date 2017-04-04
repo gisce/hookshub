@@ -64,8 +64,11 @@ class GitHubWebhook(webhook):
                     branch = self.json['ref']
             # Case 2: a pull_request object is involved.
             # This is pull_request and pull_request_review_comment events.
-            elif self.event in [GitHubUtil.events['EVENT_PULL_REQUEST'],
-                                GitHubUtil.events['EVENT_REVIEW_PR_COMMENT']]:
+            elif self.event in [
+                GitHubUtil.events['EVENT_PULL_REQUEST'],
+                GitHubUtil.events['EVENT_PULL_REQUEST_REVIEW'],
+                GitHubUtil.events['EVENT_REVIEW_PR_COMMENT']
+            ]:
                 # This is the SOURCE branch for the pull-request,
                 #  not the source branch
                 branch = self.json['pull_request']['head']['ref']
@@ -121,7 +124,10 @@ class GitHubWebhook(webhook):
         """
         if self.event == GitHubUtil.events['EVENT_PULL_REQUEST']:
             return self.json['number']
-        elif self.event == GitHubUtil.events['EVENT_REVIEW_PR_COMMENT']:
+        elif self.event in [
+            GitHubUtil.events['EVENT_REVIEW_PR_COMMENT'],
+            GitHubUtil.events['EVENT_PULL_REQUEST_REVIEW']
+        ]:
             return self.json['pull_request']['number']
         elif self.event in [GitHubUtil.events['EVENT_ISSUE'],
                             GitHubUtil.events['EVENT_ISSUE_COMMENT']]:
@@ -269,6 +275,8 @@ class GitHubWebhook(webhook):
                     )
 
         elif 'pull_request' in self.json.keys():
+            if 'review' in self.json.keys():
+                return GitHubUtil.events['EVENT_PULL_REQUEST_REVIEW']
             return GitHubUtil.events['EVENT_PULL_REQUEST']
 
         elif 'release' in self.json.keys():
@@ -579,6 +587,7 @@ class GitHubUtil:
         'EVENT_PAGE_BUILD': 'page_build',
         'EVENT_PUBLIC_EVENT': 'public',
         'EVENT_PULL_REQUEST': 'pull_request',
+        'EVENT_PULL_REQUEST_REVIEW': 'pull_request_review_comment',
         'EVENT_REVIEW_PR_COMMENT': 'pull_request_review_comment',
         'EVENT_PUSH': 'push',
         'EVENT_RELEASE': 'release',
