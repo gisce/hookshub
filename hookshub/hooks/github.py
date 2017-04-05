@@ -382,8 +382,8 @@ class GitHubUtil:
         """
         output = 'Instal.lant dependencies...'
         command = 'pip install -r {}'.format(join(dir, 'requirements.txt'))
-        out_file = "build.out"
-        err_file = "build.err"
+        out_file = "pip.out"
+        err_file = "pip.err"
         command += " > {} 2> {}".format(out_file, err_file)
         dependencies = os.system(command)
         with open(out_file, 'r') as stout:
