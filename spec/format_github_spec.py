@@ -882,8 +882,11 @@ with description('GitHub Utils'):
     with context('Install pip requirements'):
         with it('Must try to pip install on a dir. If can\'t it\'ll print'
                 ' another line with the error'):
-            log = util.pip_requirements(data_path)
-            expect(len(log) > 0).to(equal(True))
+            with patch("hookshub.hooks.github.os.system") as syscall:
+                syscall.start()
+                syscall.retruncode = 0
+                log = util.pip_requirements(data_path)
+                expect(len(log) > 0).to(equal(True))
 
     # export PYTHONPATH
     with context('Export PYTHONPATH with sitecustomize'):
