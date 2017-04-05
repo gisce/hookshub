@@ -943,35 +943,22 @@ with description('GitHub Utils'):
 
     # docs_build
     with context('Build docs'):
-        with it('Must return two strings (log + build dir -> Mocked)'):
-            with patch("hookshub.hooks.github.Popen") as popen:
-                popen.start()
-                popen_mock = Mock()
-                popen_mock.communicate.return_value = ['All Ok\n', 'Mocked!']
-                popen_mock.returncode = 0
-                popen.return_value = popen_mock
-                from_path = 'From docs'
-                to_path = 'To build'
-                log, dir = util.docs_build(from_path, to_path)
-                expect(len(log) > 0).to(equal(True))
-                expect(dir).to(equal(to_path))
-                popen.stop()
-
-        with it('Must return two strings (log + build dir -> Mocked) '
-                'when calling with file and clean'):
-            with patch("hookshub.hooks.github.Popen") as popen:
-                popen.start()
-                popen_mock = Mock()
-                popen_mock.communicate.return_value = ['All Ok\n', 'Mocked!']
-                popen_mock.returncode = 0
-                popen.return_value = popen_mock
+        with it('Must return log + build dir with correct docs build'):
+            with patch("hookshub.hooks.github.os") as os:
+                os.start()
+                import pudb;pu.db
+                os.system = lambda x: 0
                 from_path = 'From docs'
                 to_path = 'To build'
                 file = 'Config File'
-                log, dir = util.docs_build(from_path, to_path, file, True)
-                expect(len(log) > 0).to(equal(True))
+                log, dir = util.docs_build(from_path, to_path, file)
+                with open(join(
+                        project_path, 'test_data', 'utils', 'build_ok'
+                ), 'r') as out:
+                    output = out.read()
+                expect(log).to(equal(output))
                 expect(dir).to(equal(to_path))
-                popen.stop()
+                os.stop()
 
         with it('Must return the log String and a False directory (Mocked)'):
             with patch("hookshub.hooks.github.Popen") as popen:
