@@ -114,7 +114,7 @@ with TempDir() as temp:
             )
             print(output)
             exit(-1)
-    output += 'OK |'
+    output += ' OK |'
 
     # Pendent de solucionar: No es pot entrar al virtualenv si amb el binari
     # especificat a dalt... A més l'interpret no pot canviar amb subprocess
@@ -136,10 +136,10 @@ with TempDir() as temp:
 
     # If build fails we can't continue
     if not target_build_path:
-        output += '{} FAILED |'.format(out)
+        output = '{} FAILED!\n{} |'.format(output, out)
         print(output)
         exit(1)
-    output += '{} OK |'.format(out)
+    output += '{} |'.format(out)
 
     #   Build en castellà
     out, target_build_path = (
@@ -148,10 +148,10 @@ with TempDir() as temp:
 
     # If build fails we can't continue
     if not target_build_path:
-        output += '{} FAILED |'.format(out)
+        output = '{} FAILED!\n{} |'.format(output, out)
         print(output)
         exit(1)
-    output += '{} OK |'.format(out)
+    output += '{} |'.format(out)
 
     # CP landing page (if exists)
     from os.path import isdir

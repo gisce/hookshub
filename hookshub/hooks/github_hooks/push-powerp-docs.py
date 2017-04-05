@@ -100,7 +100,7 @@ with TempDir() as temp:
             )
             print(output)
             exit(-1)
-    output += 'OK |'
+    output += ' OK |'
 
     # Pendent de solucionar: No es pot entrar al virtualenv si amb el binari
     # especificat a dalt... A més l'interpret no pot canviar amb subprocess
