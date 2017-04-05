@@ -426,10 +426,8 @@ class GitHubUtil:
         command = 'cd {} && mkdocs build'.format(dir)
         if target:
             build_path = target
-            output += 'to {}...'.format(target)
             command += ' -d {}'.format(target)
         if file:
-            output += ' using file config file "{}"...'.format(file)
             command += ' -f {}'.format(file)
         if clean:
             command += ' --clean'
