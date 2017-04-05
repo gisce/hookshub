@@ -386,8 +386,8 @@ class GitHubUtil:
         err_file = "build.err"
         command += " > {} 2> {}".format(out_file, err_file)
         dependencies = os.system(command)
-        with open(out_file, 'r') as output:
-            out = output.read()
+        with open(out_file, 'r') as stout:
+            out = stout.read()
         os.system('rm {}'.format(out_file))
         with open(err_file, 'r') as error:
             err = error.read()
