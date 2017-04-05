@@ -112,19 +112,33 @@ with TempDir() as temp:
     # Instalem dependencies
 
     virtualenv(branch_name)
-    command = Util.pip_requirements(clone_dir)
-    os.system(command)
+    output += Util.pip_requirements(clone_dir)
 
     # Fem build al directori on tenim la pàgina des del directori del clone
 
     #   Build en català
-    command = Util.docs_build(clone_dir, ca_docs_path, None, True)
-    os.system(command)
+
+    out, target_build_path = (
+        Util.docs_build(clone_dir, ca_docs_path, None, True)
+    )
+    # If build fails we can't continue
+    if not target_build_path:
+        output = '{} FAILED!\n{} |'.format(output, out)
+        print (output)
+        exit(1)
+    output += '{} |'.format(out)
 
     #   Build en castellà
 
-    command = Util.docs_build(clone_dir, es_docs_path, 'mkdocs_es.yml', True)
-    os.system(command)
+    out, target_build_path = (
+        Util.docs_build(clone_dir, es_docs_path, 'mkdocs_es.yml', True)
+    )
+    # If build fails we can't continue
+    if not target_build_path:
+        output = '{} FAILED!\n{} |'.format(output, out)
+        print(output)
+        exit(1)
+    output += '{} |'.format(out)
 
     # CP landing page (if exists)
 
