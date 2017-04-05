@@ -943,7 +943,7 @@ with description('GitHub Utils'):
 
     # docs_build
     with context('Build docs'):
-        with it('Must return log + build dir with correct docs build'):
+        with it('Must return $log + $build_dir with correct docs build'):
             with patch("hookshub.hooks.github.os") as os:
                 os.start()
                 os.system = lambda x: 0
@@ -959,7 +959,7 @@ with description('GitHub Utils'):
                 expect(dir).to(equal(to_path))
                 os.stop()
 
-        with it('Must return log + False with bad docs build'):
+        with it('Must return $log + "False" with bad docs build'):
             with patch("hookshub.hooks.github.os") as os:
                 os.start()
                 os.system = lambda x: -1
@@ -972,7 +972,7 @@ with description('GitHub Utils'):
                 ), 'r') as out:
                     output = out.read()
                 expect(log).to(equal(output))
-                expect(dir).to(equal(to_path))
+                expect(dir).to(equal(False))
                 os.stop()
 
     # get_pr
