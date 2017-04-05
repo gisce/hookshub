@@ -382,13 +382,7 @@ class GitHubUtil:
         """
         output = 'Instal.lant dependencies...'
         command = 'pip install -r requirements.txt'
-        dependencies = Popen(
-            command.split(), cwd=dir, stdout=PIPE, stderr=PIPE
-        )
-        out, err = dependencies.communicate()
-        if dependencies.returncode != 0:
-            output += ' Couldn\'t install all dependencies '
-        return output
+        return command
 
     @staticmethod
     def export_pythonpath(docs_path):
