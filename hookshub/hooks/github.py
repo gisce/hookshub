@@ -381,7 +381,7 @@ class GitHubUtil:
         :rtype: String
         """
         output = 'Instal.lant dependencies...'
-        command = 'pip install -r requirements.txt'
+        command = 'cd {} && pip install -r requirements.txt'.format(dir)
         return command
 
     @staticmethod
@@ -423,9 +423,7 @@ class GitHubUtil:
         :return: The command to all with the specified params, thus not all
             environments support processes (or are not desired)
         """
-        build_path = dir
-        output = 'Building mkdocs from {} '.format(dir)
-        command = 'mkdocs build'
+        command = 'cd {} && mkdocs build'.format(dir)
         if target:
             build_path = target
             output += 'to {}...'.format(target)
@@ -435,7 +433,7 @@ class GitHubUtil:
             command += ' -f {}'.format(file)
         if clean:
             command += ' --clean'
-        return output
+        return command
 
     @staticmethod
     def get_pr(token, repository, branch):
