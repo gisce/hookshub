@@ -9,6 +9,7 @@ from hookshub.hooks.github import GitHubUtil as Util
 import sys
 import tempfile
 import shutil
+import os
 
 
 class TempDir(object):
@@ -32,7 +33,6 @@ def arguments():
 
 # Creació i activació del virtalenv temporal
 def virtualenv(venv=''):
-    import os
     if not venv:
         venv = 'foo'
 
@@ -112,33 +112,19 @@ with TempDir() as temp:
     # Instalem dependencies
 
     virtualenv(branch_name)
-    output += '{} |'.format(Util.pip_requirements(clone_dir) or 'OK')
+    command = Util.pip_requirements(clone_dir)
+    os.system(command)
 
     # Fem build al directori on tenim la pàgina des del directori del clone
 
     #   Build en català
-
-    out, target_build_path = (
-        Util.docs_build(clone_dir, ca_docs_path, None, True)
-    )
-    # If build fails we can't continue
-    if not target_build_path:
-        output += '{} FAILED |'.format(out)
-        print (output)
-        exit(1)
-    output += '{} OK |'.format(out)
+    command = Util.docs_build(clone_dir, ca_docs_path, None, True)
+    os.system(command)
 
     #   Build en castellà
 
-    out, target_build_path = (
-        Util.docs_build(clone_dir, es_docs_path, 'mkdocs_es.yml', True)
-    )
-    # If build fails we can't continue
-    if not target_build_path:
-        output += '{} FAILED |'.format(out)
-        print(output)
-        exit(1)
-    output += '{} OK |'.format(out)
+    command = Util.docs_build(clone_dir, es_docs_path, 'mkdocs_es.yml', True)
+    os.system(command)
 
     # CP landing page (if exists)
 
