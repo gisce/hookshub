@@ -381,8 +381,24 @@ class GitHubUtil:
         :rtype: String
         """
         output = 'Instal.lant dependencies...'
-        command = 'cd {} && pip install -r requirements.txt'.format(dir)
-        return command
+        command = 'pip install -r {}'.format(join(dir, 'requirements.txt'))
+        out_file = "build.out"
+        err_file = "build.err"
+        command += " > {} 2> {}".format(out_file, err_file)
+        dependencies = os.system(command)
+        with open(out_file, 'r') as output:
+            out = output.read()
+        os.system('rm {}'.format(out_file))
+        with open(err_file, 'r') as error:
+            err = error.read()
+        os.system('rm  {}'.format(err_file))
+        if dependencies != 0:
+            output += ' Couldn\'t install all dependencies!\n{}\n{}'.format(
+                out, err
+            )
+        else:
+            output += " OK"
+        return output
 
     @staticmethod
     def export_pythonpath(docs_path):
