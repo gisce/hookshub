@@ -5,7 +5,7 @@ from subprocess import Popen, PIPE
 from hookshub.hooks.webhook import webhook
 
 import requests
-import sys
+import os
 
 # GitHub Events
 # For more info, see: https://developer.github.com/v3/activity/events/types/
@@ -423,15 +423,37 @@ class GitHubUtil:
         :return: The command to all with the specified params, thus not all
             environments support processes (or are not desired)
         """
+        build_path = dir
+        output = 'Building mkdocs from {} '.format(dir)
         command = 'cd {} && mkdocs build'.format(dir)
         if target:
             build_path = target
+            output += 'to {}...'.format(target)
             command += ' -d {}'.format(target)
         if file:
+            output += ' using file config file "{}"...'.format(file)
             command += ' -f {}'.format(file)
         if clean:
             command += ' --clean'
-        return command
+        try:
+            out_file = "build.out"
+            err_file = "build.err"
+            command += " > {} 2> {}".format(out_file, err_file)
+            new_build = os.system(command)
+            with open(out_file, 'r') as output:
+                out = output.read()
+            os.system('rm {}'.format(out_file))
+            with open(err_file, 'r') as error:
+                err = error.read()
+            os.system('rm  {}'.format(err_file))
+            if new_build != 0:
+                output += 'FAILED TO BUILD: {0}::{1}'.format(out, err)
+                return output, False
+        except Exception as err:
+            output += 'Build Failed with exception from os.system... {}'.format(err)
+            return output, False
+        output += " OK"
+        return output, build_path
 
     @staticmethod
     def get_pr(token, repository, branch):
