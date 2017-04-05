@@ -465,9 +465,6 @@ class GitHubUtil:
             if new_build != 0:
                 output += 'FAILED TO BUILD: {0}::{1}'.format(out, err)
                 return output, False
-        except Exception as err:
-            output += 'Build Failed with exception from os.system... {}'.format(err)
-            return output, False
         output += " OK"
         return output, build_path
 
