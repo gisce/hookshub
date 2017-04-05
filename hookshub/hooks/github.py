@@ -426,10 +426,8 @@ class GitHubUtil:
         :param clean: Defines if the '--clean' tag is used or not. If true,
             this cleans the directory before the build.
             :type:  Bool
-        :return: An output log with some annotations and the output and error
-            log from the mkdocs build call. And a String containing the path
-            where the docs have been built
-            :type:  Tuple<String, String>
+        :return: The command to all with the specified params, thus not all
+            environments support processes (or are not desired)
         """
         build_path = dir
         output = 'Building mkdocs from {} '.format(dir)
@@ -443,19 +441,7 @@ class GitHubUtil:
             command += ' -f {}'.format(file)
         if clean:
             command += ' --clean'
-        try:
-            new_build = Popen(
-                command.split(), cwd=dir, stdout=PIPE, stderr=PIPE
-            )
-            out, err = new_build.communicate()
-            if new_build.returncode != 0:
-                output += 'FAILED TO BUILD: {0}::{1}'.format(out, err)
-                return output, False
-        except Exception as err:
-            output += 'Build Failed with exception from Popen... {}'.format(err)
-            return output, False
-
-        return output, build_path
+        return output
 
     @staticmethod
     def get_pr(token, repository, branch):
