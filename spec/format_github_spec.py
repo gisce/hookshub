@@ -880,14 +880,24 @@ with description('GitHub Utils'):
 
     # pip_requirements
     with context('Install pip requirements'):
-        with it('Must try to pip install on a dir. If can\'t it\'ll print'
-                ' another line with the error'):
+        with it('Must try to pip install on a dir and log it correctly'):
             with patch("hookshub.hooks.github.os") as os:
                 os.start()
                 os.system = lambda x: 0
                 log = util.pip_requirements(data_path)
                 with open(join(
                         project_path, 'test_data', 'utils', 'pip_install_ok'
+                ), 'r') as out:
+                    output = out.read()
+                expect(log).to(equal(output))
+
+        with it('Must try to pip install on a dir. Failing must log correctly'):
+            with patch("hookshub.hooks.github.os") as os:
+                os.start()
+                os.system = lambda x: -1
+                log = util.pip_requirements(data_path)
+                with open(join(
+                        project_path, 'test_data', 'utils', 'pip_install_bad'
                 ), 'r') as out:
                     output = out.read()
                 expect(log).to(equal(output))
