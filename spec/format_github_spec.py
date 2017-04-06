@@ -1,4 +1,4 @@
-from os.path import abspath, normpath, dirname, join, isfile
+from os.path import abspath, normpath, dirname, join, isfile, isdir
 from os import listdir
 from json import loads, dumps
 
@@ -901,6 +901,26 @@ with description('GitHub Utils'):
                 ), 'r') as out:
                     output = out.read()
                 expect(log).to(equal(output))
+
+    # create_virtualenv
+    with context('Create a Virtualenv'):
+        with it('Must create a virtualenv in the default directory (/tmp/foo)'):
+            dest = util.create_virtualenv()
+            expect(isdir(dest)).to(equal(True))
+            expect(dest).to(equal('/tmp/venv/foo'))
+            import os
+            os.system('rm -r {}'.format(dest))
+
+        with it('Must create a virtualenv in the specified directory and name'):
+            directory = '/tmp/venv'
+            name = 'test'
+            exp_dest = join(directory, name)
+            dest = util.create_virtualenv(name=name, dir=directory)
+            expect(isdir(dest)).to(equal(True))
+            expect(dest).to(equal(exp_dest))
+            import os
+            os.system('rm -r {}'.format(directory))
+
 
     # export PYTHONPATH
     with context('Export PYTHONPATH with sitecustomize'):
