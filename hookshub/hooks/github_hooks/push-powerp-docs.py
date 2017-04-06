@@ -9,7 +9,6 @@ from hookshub.hooks.github import GitHubUtil as Util
 import sys
 import tempfile
 import shutil
-import os
 
 
 class TempDir(object):
@@ -175,5 +174,5 @@ with TempDir() as temp:
             output += 'Failed to write comment. ' \
                       'Server responded with {} |'.format(post_code)
             output += dumps(loads(post_text))
-    
+
 print(output)
