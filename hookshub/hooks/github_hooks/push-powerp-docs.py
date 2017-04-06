@@ -9,7 +9,6 @@ from hookshub.hooks.github import GitHubUtil as Util
 import sys
 import tempfile
 import shutil
-import os
 
 
 class TempDir(object):
@@ -139,53 +138,41 @@ with TempDir() as temp:
         from distutils.dir_util import copy_tree as copy
         copy(landing_dir, util_docs_path)
 
-    output += ' Writting comment on PR ...'
+    if docs_dir != 'master':
+        output += ' Writting comment on PR ...'
 
-    # Construim el comentari:
-    #   Docs path te /var/www/domain/URI
-    base_url = util_docs_path.split('/', 3)[3]   # Kick out /var/www/
-    if port in ['80', '443']:
-        res_url = '{0}/'.format(base_url)
-    else:
-        res_url = '{0}:{1}/'.format(base_url, port)
-    comment = 'Documentation build URL:\nhttp://{}\n'.format(res_url)
+        # Construim el comentari:
+        #   Docs path te /var/www/domain/URI
+        base_url = util_docs_path.split('/', 3)[3]   # Kick out /var/www/
+        if port in ['80', '443']:
+            res_url = '{0}/'.format(base_url)
+        else:
+            res_url = '{0}:{1}/'.format(base_url, port)
+        comment = 'Documentation build URL:\nhttp://{}\n'.format(res_url)
 
-    # Necessitem agafar totes les pull request per trobar la nostra
+        # Necessitem agafar totes les pull request per trobar la nostra
 
-    my_pr, out = Util.get_pr(token, repo_full_name, branch_name)
-    output += out
+        my_pr, out = Util.get_pr(token, repo_full_name, branch_name)
+        output += out
 
-    # If getting pr fails, we ommit comment post
-    if my_pr <= 0:
-        print(output)
-        exit(0)
+        # If getting pr fails, we ommit comment post
+        if my_pr <= 0:
+            print(output)
+            exit(0)
 
-    # Postejem el comentari
+        # Postejem el comentari
 
-    post_code, post_text = Util.post_comment_pr(
-        token, repo_full_name, my_pr['number'], comment
-    )
+        post_code, post_text = Util.post_comment_pr(
+            token, repo_full_name, my_pr['number'], comment
+        )
 
-    if post_code == 201:
-        output += ' OK|'
-    elif post_code == 0:
-        output += ' Something went wrong |'
-    else:
-        output += 'Failed to write comment. ' \
-                  'Server responded with {} |'.format(post_code)
-        output += dumps(loads(post_text))
-
-    # if virtenv:
-    #     output += 'Deactivate virtualenv ...'
-    #     command = 'deactivate'
-    #     deact = Popen(
-    #         command, cwd=clone_dir, stdout=PIPE, stderr=PIPE
-    #     )
-    #     out, err = deact.communicate()
-    #     if deact.returncode != 0:
-    #         output += 'FAILED TO DEACTIVATE: {0}::{1}'.format(out, err)
-    #         print(output)
-    #         exit(-1)
-    #     output += 'OK |'
+        if post_code == 201:
+            output += ' OK|'
+        elif post_code == 0:
+            output += ' Something went wrong |'
+        else:
+            output += 'Failed to write comment. ' \
+                      'Server responded with {} |'.format(post_code)
+            output += dumps(loads(post_text))
 
 print(output)
