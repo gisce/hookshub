@@ -34,18 +34,6 @@ def arguments():
     return payload, event
 
 
-# Creació i activació del virtalenv temporal
-def virtualenv(venv=''):
-    import os
-    if not venv:
-        venv = 'foo'
-
-    os.system('virtualenv %s' % venv)
-
-    activate = join(venv, 'bin', 'activate_this.py')
-    execfile(activate, dict(__file__=activate))
-
-
 payload, event = arguments()
 
 output = ''
@@ -114,7 +102,7 @@ with TempDir() as temp:
             )
             print(output)
             exit(-1)
-    output += 'OK |'
+    output += ' OK |'
 
     # Pendent de solucionar: No es pot entrar al virtualenv si amb el binari
     # especificat a dalt... A més l'interpret no pot canviar amb subprocess
@@ -123,9 +111,11 @@ with TempDir() as temp:
 
     clone_dir = join(temp.dir, repo_name)
 
+    # Crear Virtualenv en el directori temporal
+    Util.create_virtualenv(temp.dir, branch_name)
+
     # Instalem dependencies
 
-    virtualenv(branch_name)
     output += '{} |'.format(Util.pip_requirements(clone_dir) or 'OK')
 
     # Fem build al directori on tenim la pagina des del directori del clone
@@ -136,10 +126,10 @@ with TempDir() as temp:
 
     # If build fails we can't continue
     if not target_build_path:
-        output += '{} FAILED |'.format(out)
+        output = '{} FAILED!\n{} |'.format(output, out)
         print(output)
         exit(1)
-    output += '{} OK |'.format(out)
+    output += '{} |'.format(out)
 
     #   Build en castellà
     out, target_build_path = (
@@ -148,10 +138,10 @@ with TempDir() as temp:
 
     # If build fails we can't continue
     if not target_build_path:
-        output += '{} FAILED |'.format(out)
+        output = '{} FAILED!\n{} |'.format(output, out)
         print(output)
         exit(1)
-    output += '{} OK |'.format(out)
+    output += '{} |'.format(out)
 
     # CP landing page (if exists)
     from os.path import isdir

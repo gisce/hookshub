@@ -35,18 +35,6 @@ def arguments():
     return payload, event
 
 
-# Creació i activació del virtalenv temporal
-def virtualenv(venv=''):
-    import os
-    if not venv:
-        venv = 'foo'
-
-    os.system('virtualenv %s' % venv)
-
-    activate = join(venv, 'bin', 'activate_this.py')
-    execfile(activate, dict(__file__=activate))
-
-
 payload, event = arguments()
 
 output = ''
@@ -136,15 +124,17 @@ if not closed:
                 )
                 print(output)
                 exit(-1)
-        output += 'OK |'
+        output += ' OK |'
         # Accedim al directori del clone utilitzant el nom del repositori
 
         clone_dir = join(temp.dir, repo_name)
 
+        # Crear Virtualenv en el directori temporal
+        Util.create_virtualenv(temp.dir, branch_name)
+
         # Instalem dependencies
 
-        virtualenv(branch_name)
-        output += '{} |'.format(Util.pip_requirements(clone_dir) or 'OK')
+        output += Util.pip_requirements(clone_dir)
 
         # Fem build al directori on tenim la pagina des del directori del clone
         #   Build en català
@@ -152,15 +142,15 @@ if not closed:
             Util.docs_build(clone_dir, ca_docs_path, None, True)
         )
         if not target_build_path:
-            output += '{} FAILED |'.format(out)
-        output += '{} OK |'.format(out)
+            output = '{} FAILED!\n{} |'.format(output, out)
+        output += '{} |'.format(out)
 
         #   Build en castellà
         out, target_build_path = (
             Util.docs_build(clone_dir, es_docs_path, 'mkdocs_es.yml', True)
         )
         if not target_build_path:
-            output += '{} FAILED |'.format(out)
-        output += '{} OK |'.format(out)
+            output = '{} FAILED!\n{} |'.format(output, out)
+        output += '{} |'.format(out)
 
 print(output)

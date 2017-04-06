@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from json import dumps, loads
-from os.path import join, isfile
+from os.path import join, isfile, isdir
 from subprocess import Popen, PIPE
 from hookshub.hooks.webhook import webhook
 
 import requests
-import sys
+import os
 
 # GitHub Events
 # For more info, see: https://developer.github.com/v3/activity/events/types/
@@ -381,13 +381,19 @@ class GitHubUtil:
         :rtype: String
         """
         output = 'Instal.lant dependencies...'
-        command = 'pip install -r requirements.txt'
-        dependencies = Popen(
-            command.split(), cwd=dir, stdout=PIPE, stderr=PIPE
-        )
-        out, err = dependencies.communicate()
-        if dependencies.returncode != 0:
-            output += ' Couldn\'t install all dependencies '
+        command = 'pip install -r {}'.format(join(dir, 'requirements.txt'))
+        log_file = join(dir, "pip.log")
+        command += " > {0} 2> {0}".format(log_file)
+        dependencies = os.system(command)
+        with open(log_file, 'r') as stout:
+            out = stout.read()
+        os.system('rm {}'.format(log_file))
+        if dependencies != 0:
+            output += ' Couldn\'t install all dependencies!\n{}'.format(
+                out
+            )
+        else:
+            output += " OK"
         return output
 
     @staticmethod
@@ -426,14 +432,12 @@ class GitHubUtil:
         :param clean: Defines if the '--clean' tag is used or not. If true,
             this cleans the directory before the build.
             :type:  Bool
-        :return: An output log with some annotations and the output and error
-            log from the mkdocs build call. And a String containing the path
-            where the docs have been built
-            :type:  Tuple<String, String>
+        :return: The command to all with the specified params, thus not all
+            environments support processes (or are not desired)
         """
         build_path = dir
         output = 'Building mkdocs from {} '.format(dir)
-        command = 'mkdocs build'
+        command = 'cd {} && mkdocs build'.format(dir)
         if target:
             build_path = target
             output += 'to {}...'.format(target)
@@ -443,19 +447,29 @@ class GitHubUtil:
             command += ' -f {}'.format(file)
         if clean:
             command += ' --clean'
-        try:
-            new_build = Popen(
-                command.split(), cwd=dir, stdout=PIPE, stderr=PIPE
-            )
-            out, err = new_build.communicate()
-            if new_build.returncode != 0:
-                output += 'FAILED TO BUILD: {0}::{1}'.format(out, err)
-                return output, False
-        except Exception as err:
-            output += 'Build Failed with exception from Popen... {}'.format(err)
+        log_file = join(dir, 'build.log')
+        command += " > {0} 2> {0}".format(log_file)
+        new_build = os.system(command)
+        with open(log_file, 'r') as stout:
+            out = stout.read()
+        os.system('rm {}'.format(log_file))
+        if new_build != 0:
+            output += 'FAILED TO BUILD: {}'.format(out)
             return output, False
-
+        output += " OK"
         return output, build_path
+
+    @staticmethod
+    def create_virtualenv(name='foo', dir='/tmp/venv'):
+        if not isdir(dir):
+            os.system('mkdir -p {}'.format(dir))
+        dest = join(dir, name)
+        log = '{}.log'.format(name)
+        logs = join(dir, log)
+        os.system('virtualenv {0} > {1} 2> {1}'.format(dest, logs))
+        activate = join(dest, 'bin', 'activate_this.py')
+        execfile(activate, dict(__file__=activate))
+        return dest
 
     @staticmethod
     def get_pr(token, repository, branch):
