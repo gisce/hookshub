@@ -967,14 +967,15 @@ with description('GitHub Utils'):
             with patch("hookshub.hooks.github.os") as os:
                 os.start()
                 os.system = lambda x: 0
-                from_path = 'From docs'
+                from_path = join(project_path, 'test_data', 'utils')
                 to_path = 'To build'
                 file = 'Config File'
                 log, dir = util.docs_build(from_path, to_path, file, True)
                 with open(join(
-                        project_path, 'test_data', 'utils', 'build_ok'
+                        from_path, 'build_ok'
                 ), 'r') as out:
                     output = out.read()
+                output = output.replace('PPATHH', from_path)
                 expect(log).to(equal(output))
                 expect(dir).to(equal(to_path))
                 os.stop()
@@ -983,14 +984,15 @@ with description('GitHub Utils'):
             with patch("hookshub.hooks.github.os") as os:
                 os.start()
                 os.system = lambda x: -1
-                from_path = 'From docs'
+                from_path = join(project_path, 'test_data', 'utils')
                 to_path = 'To build'
                 file = 'Config File'
                 log, dir = util.docs_build(from_path, to_path, file)
                 with open(join(
-                        project_path, 'test_data', 'utils', 'build_bad'
+                        from_path, 'build_bad'
                 ), 'r') as out:
                     output = out.read()
+                output = output.replace('PPATHH', from_path)
                 expect(log).to(equal(output))
                 expect(dir).to(equal(False))
                 os.stop()
