@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from json import dumps, loads
-from os.path import join, isfile
+from os.path import join, isfile, isdir
 from subprocess import Popen, PIPE
 from hookshub.hooks.webhook import webhook
 
@@ -466,6 +466,18 @@ class GitHubUtil:
             return output, False
         output += " OK"
         return output, build_path
+
+    @staticmethod
+    def create_virtualenv(name='foo', dir='/tmp/venv'):
+        if not isdir(dir):
+            os.system('mkdir -p {}'.format(dir))
+        dest = join(dir, name)
+        log = '{}.log'.format(name)
+        logs = join(dir, log)
+        os.system('virtualenv {0} > {1} 2> {1}'.format(dest, logs))
+        activate = join(dest, 'bin', 'activate_this.py')
+        execfile(activate, dict(__file__=activate))
+        return dest
 
     @staticmethod
     def get_pr(token, repository, branch):
