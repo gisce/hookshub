@@ -382,19 +382,15 @@ class GitHubUtil:
         """
         output = 'Instal.lant dependencies...'
         command = 'pip install -r {}'.format(join(dir, 'requirements.txt'))
-        out_file = "pip.out"
-        err_file = "pip.err"
-        command += " > {} 2> {}".format(out_file, err_file)
+        log_file = join(dir, "pip.log")
+        command += " > {0} 2> {0}".format(log_file)
         dependencies = os.system(command)
-        with open(out_file, 'r') as stout:
+        with open(log_file, 'r') as stout:
             out = stout.read()
-        os.system('rm {}'.format(out_file))
-        with open(err_file, 'r') as error:
-            err = error.read()
-        os.system('rm  {}'.format(err_file))
+        os.system('rm {}'.format(log_file))
         if dependencies != 0:
-            output += ' Couldn\'t install all dependencies!\n{}\n{}'.format(
-                out, err
+            output += ' Couldn\'t install all dependencies!\n{}'.format(
+                out
             )
         else:
             output += " OK"
