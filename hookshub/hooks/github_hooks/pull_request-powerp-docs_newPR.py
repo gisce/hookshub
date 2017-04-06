@@ -34,18 +34,6 @@ def arguments():
     return payload, event
 
 
-# Creació i activació del virtalenv temporal
-def virtualenv(venv=''):
-    import os
-    if not venv:
-        venv = 'foo'
-
-    os.system('virtualenv %s' % venv)
-
-    activate = join(venv, 'bin', 'activate_this.py')
-    execfile(activate, dict(__file__=activate))
-
-
 payload, event = arguments()
 
 output = ''
@@ -123,9 +111,11 @@ with TempDir() as temp:
 
     clone_dir = join(temp.dir, repo_name)
 
+    # Crear Virtualenv en el directori temporal
+    Util.create_virtualenv(temp.dir, branch_name)
+
     # Instalem dependencies
 
-    virtualenv(branch_name)
     output += '{} |'.format(Util.pip_requirements(clone_dir) or 'OK')
 
     # Fem build al directori on tenim la pagina des del directori del clone
