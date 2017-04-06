@@ -884,23 +884,27 @@ with description('GitHub Utils'):
             with patch("hookshub.hooks.github.os") as os:
                 os.start()
                 os.system = lambda x: 0
-                log = util.pip_requirements(data_path)
+                util_path = join(project_path, 'test_data', 'utils')
+                log = util.pip_requirements(util_path)
                 with open(join(
-                        project_path, 'test_data', 'utils', 'pip_install_ok'
+                        util_path, 'pip_install_ok'
                 ), 'r') as out:
                     output = out.read()
                 expect(log).to(equal(output))
+                os.stop()
 
         with it('Must try to pip install on a dir. Failing must log correctly'):
             with patch("hookshub.hooks.github.os") as os:
                 os.start()
                 os.system = lambda x: -1
-                log = util.pip_requirements(data_path)
+                util_path = join(project_path, 'test_data', 'utils')
+                log = util.pip_requirements(util_path)
                 with open(join(
-                        project_path, 'test_data', 'utils', 'pip_install_bad'
+                        util_path, 'pip_install_bad'
                 ), 'r') as out:
                     output = out.read()
                 expect(log).to(equal(output))
+                os.stop()
 
     # create_virtualenv
     with context('Create a Virtualenv'):
