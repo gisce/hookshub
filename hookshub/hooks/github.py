@@ -451,18 +451,14 @@ class GitHubUtil:
             command += ' -f {}'.format(file)
         if clean:
             command += ' --clean'
-        out_file = "build.out"
-        err_file = "build.err"
-        command += " > {} 2> {}".format(out_file, err_file)
+        log_file = join(dir, 'build.log')
+        command += " > {0} 2> {0}".format(log_file)
         new_build = os.system(command)
-        with open(out_file, 'r') as stout:
+        with open(log_file, 'r') as stout:
             out = stout.read()
-        os.system('rm {}'.format(out_file))
-        with open(err_file, 'r') as error:
-            err = error.read()
-        os.system('rm  {}'.format(err_file))
+        os.system('rm {}'.format(log_file))
         if new_build != 0:
-            output += 'FAILED TO BUILD: {0}::{1}'.format(out, err)
+            output += 'FAILED TO BUILD: {}'.format(out)
             return output, False
         output += " OK"
         return output, build_path
