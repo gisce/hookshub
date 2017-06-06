@@ -40,7 +40,10 @@ def export_pythonpath(docs_path):
     """
     sc_path = join(docs_path, 'sitecustomize')
     command = 'export PYTHONPATH={}'.format(sc_path)
-    os.system(command)
+    export = os.system(command)
+    if export:
+        return 'Failed to export sitecustomize path'
+    return 'Success to export sitecustomize path'
 
 
 def create_virtualenv(name='foo', dir='/tmp/venv'):
