@@ -960,7 +960,7 @@ with description('GitHub Utils'):
                 file = 'Config File'
                 log, dir = utils.mkdocs_build(from_path, to_path, file, True)
                 with open(join(
-                        from_path, 'build_ok'
+                        from_path, 'mkdocs_build_ok'
                 ), 'r') as out:
                     output = out.read()
                 output = output.replace('PPATHH', from_path)
@@ -977,7 +977,7 @@ with description('GitHub Utils'):
                 file = 'Config File'
                 log, dir = utils.mkdocs_build(from_path, to_path, file)
                 with open(join(
-                        from_path, 'build_bad'
+                        from_path, 'mkdocs_build_bad'
                 ), 'r') as out:
                     output = out.read()
                 output = output.replace('PPATHH', from_path)
