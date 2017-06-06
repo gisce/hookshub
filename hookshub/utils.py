@@ -96,13 +96,40 @@ def mkdocs_build(dir, target=None, file=None, clean=True):
     return output, build_path
 
 
-def create_virtualenv(name='foo', dir='/tmp/venv'):
-    if not isdir(dir):
-        system('mkdir -p {}'.format(dir))
-    dest = join(dir, name)
-    log = '{}.log'.format(name)
-    logs = join(dir, log)
-    system('virtualenv {0} > {1} 2> {1}'.format(dest, logs))
-    activate = join(dest, 'bin', 'activate_this.py')
-    execfile(activate, dict(__file__=activate))
-    return dest
+def lektor_build(dir, target=None, project=None):
+    """
+    :param dir: Directory used to call the build. This MUST exist.
+        :type:  String
+    :param target: Directory to build to. If not set or None, the target
+        build is the default one, that is the same as 'dir'
+        :type:  String
+    :param project: Project to find in the directory, used by lektor command
+        May be None, and is not used if in the right directory.
+        :type:  String
+    :return: An output log with some annotations and the output and error
+        log from the lektor build call. And a String containing the path
+        where the docs have been built
+        :type: Tuple<String, String>
+    """
+    build_path = dir
+    output = 'Building lector from {} '.format(dir)
+    command = 'lektor'
+    if project:
+        output += 'for the project {} '.format(project)
+        command += ' --project {}'.format(project)
+    command += ' build'
+    if target:
+        build_path = target
+        output += 'to {}...'.format(target)
+        command += ' -O {}'.format(target)
+    log_file = join(dir, 'build.log')
+    command += " > {0} 2> {0}".format(log_file)
+    new_build = system(command)
+    with open(log_file, 'r') as stout:
+        out = stout.read()
+    system('rm {}'.format(log_file))
+    if new_build != 0:
+        output += 'FAILED TO BUILD: {}'.format(out)
+        return output, False
+    output += " OK"
+    return output, build_path
