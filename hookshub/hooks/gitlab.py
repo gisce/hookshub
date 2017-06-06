@@ -171,7 +171,9 @@ class GitLabWebhook(webhook):
             args = [args[0], dumps(json)]
         return args
 
+
 class GitLabUtil:
+
     @staticmethod
     def clone_on_dir(dir, branch, repository, url):
         """
@@ -204,70 +206,6 @@ class GitLabUtil:
                       'Try cloning from https ...'.format(err)
             err = ':clone_repository_fail::{}'.format(err)
         return output, new_clone.returncode, err
-
-    @staticmethod
-    def pip_requirements(dir):
-        """
-        Installs all the requirements from the requirements.txt in the specified
-        directory. If no virtualenv is set previously for the Popen, they will
-        be installed in the user's python directory
-        :param dir: Directory where the requirements.txt is found. Used to call
-            Popen with the pip install.
-            :type: String
-        :return: Output with the log. Does not include any of the pip install
-            output or error prints.
-        :rtype: String
-        """
-        output = 'Instal.lant dependencies...'
-        command = 'pip install -r requirements.txt'
-        dependencies = Popen(
-            command.split(), cwd=dir, stdout=PIPE, stderr=PIPE
-        )
-        out, err = dependencies.communicate()
-        if dependencies.returncode != 0:
-            output += ' Couldn\'t install all dependencies '
-        return output
-
-    @staticmethod
-    def lektor_build(dir, target=None, project=None):
-        """
-        :param dir: Directory used to call the build. This MUST exist.
-            :type:  String
-        :param target: Directory to build to. If not set or None, the target
-            build is the default one, that is the same as 'dir'
-            :type:  String
-        :param project: Project to find in the directory, used by lektor command
-            May be None, and is not used if in the right directory.
-            :type:  String
-        :return: An output log with some annotations and the output and error
-            log from the lektor build call. And a String containing the path
-            where the docs have been built
-            :type: Tuple<String, String>
-        """
-        build_path = dir
-        output = 'Building lector from {} '.format(dir)
-        command = 'lektor '
-        if project:
-            output += 'for the project {} '.format(project)
-            command += '--project {}'.format(project)
-        command += ' build'
-        if target:
-            build_path = target
-            output += 'to {}...'.format(target)
-            command += ' -O {}'.format(target)
-        try:
-            new_build = Popen(
-                command.split(), cwd=dir, stdout=PIPE, stderr=PIPE
-            )
-            out, err = new_build.communicate()
-            if new_build.returncode != 0:
-                output += 'FAILED TO BUILD: {0}::{1}'.format(out, err)
-                return output, False
-        except Exception as err:
-            output += 'Build Failed with exception from Popen... {}'.format(err)
-            return output, False
-
-        return output, build_path
 
     @staticmethod
     def post_comment_mr(http_url, token, project, merge_num, message):
