@@ -882,7 +882,7 @@ with description('GitHub Utils'):
     # pip_requirements
     with context('Install pip requirements'):
         with it('Must try to pip install on a dir and log it correctly'):
-            with patch("hookshub.hooks.github.os") as os:
+            with patch("hookshub.utils.os") as os:
                 os.start()
                 os.system = lambda x: 0
                 util_path = join(project_path, 'test_data', 'utils')
@@ -895,7 +895,7 @@ with description('GitHub Utils'):
                 os.stop()
 
         with it('Must try to pip install on a dir. Failing must log correctly'):
-            with patch("hookshub.hooks.github.os") as os:
+            with patch("hookshub.utils.os") as os:
                 os.start()
                 os.system = lambda x: -1
                 util_path = join(project_path, 'test_data', 'utils')
@@ -930,46 +930,29 @@ with description('GitHub Utils'):
     # export PYTHONPATH
     with context('Export PYTHONPATH with sitecustomize'):
         with it('Must return a log with a success message when seting the var'):
-            with patch("hookshub.hooks.github.Popen") as popen:
-                popen.start()
-                popen_mock = Mock()
-                popen_mock.communicate.return_value = ['All Ok\n']
-                popen_mock.returncode = 0
-                popen.return_value = popen_mock
-                log = util.export_pythonpath('Path')
+            with patch("hookshub.utils.os") as os:
+                os.start()
+                os.system = lambda x: 0
+                log = utils.export_pythonpath('Path')
                 expect(len(log) > 0).to(equal(True))
                 expect(log).to(equal('Success to export sitecustomize path'))
-                popen.stop()
+                os.stop()
 
-        with it('Must return a log with a failure message when seting the var'):
-            with patch("hookshub.hooks.github.Popen") as popen:
-                popen.start()
-                popen_mock = Mock()
-                popen_mock.communicate.return_value = ['All Bad\n']
-                popen_mock.returncode = -1
-                popen.return_value = popen_mock
-                log = util.export_pythonpath('Path')
-                expect(len(log) > 0).to(equal(True))
-                expect(log).to(equal('Failed to export sitecustomize path'))
-                popen.stop()
-
-        with it('Must return a log with a failure message when seting the var'
-                'and an exception is thrown'):
-            with patch("hookshub.hooks.github.Popen") as popen:
-                popen.start()
-                popen.side_effect = Exception('Mocked exception')
-                popen.return_value = 0
-                log = util.export_pythonpath('Path')
+        with it('Must return an error from os.system if it cannot be exported'):
+            with patch("hookshub.utils.os") as os:
+                os.start()
+                os.system = lambda x: 1
+                log = utils.export_pythonpath('Path')
                 expect(len(log) > 0).to(equal(True))
                 expect(log).to(equal(
                     'Failed to export sitecustomize path'
                 ))
-                popen.stop()
+                os.stop()
 
     # docs_build
     with context('Build docs'):
         with it('Must return $log + $build_dir with correct docs build'):
-            with patch("hookshub.hooks.github.os") as os:
+            with patch("hookshub.utils.os") as os:
                 os.start()
                 os.system = lambda x: 0
                 from_path = join(project_path, 'test_data', 'utils')
@@ -986,7 +969,7 @@ with description('GitHub Utils'):
                 os.stop()
 
         with it('Must return $log + "False" with bad docs build'):
-            with patch("hookshub.hooks.github.os") as os:
+            with patch("hookshub.utils.os") as os:
                 os.start()
                 os.system = lambda x: -1
                 from_path = join(project_path, 'test_data', 'utils')
