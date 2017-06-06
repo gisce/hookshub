@@ -5,6 +5,7 @@ from __future__ import print_function
 from json import loads, dumps
 from os.path import join
 from hookshub.hooks.github import GitHubUtil as Util
+from hookshub import utils
 
 import sys
 import tempfile
@@ -40,7 +41,7 @@ output = ''
 http_url = "https://api.github.com"
 
 action = payload['action']
-if action != Util.actions['ACT_REOPENED'] and\
+if action != Util.actions['ACT_REOPENED'] and \
                 action != Util.actions['ACT_OPENED']:
     output = 'PR is "{}", not "{}" or "{}".\nAborting ...'.format(
         action, Util.actions['ACT_OPENED'], Util.actions['ACT_REOPENED']
@@ -112,16 +113,16 @@ with TempDir() as temp:
     clone_dir = join(temp.dir, repo_name)
 
     # Crear Virtualenv en el directori temporal
-    Util.create_virtualenv(temp.dir, branch_name)
+    utils.create_virtualenv(temp.dir, branch_name)
 
     # Instalem dependencies
 
-    output += '{} |'.format(Util.pip_requirements(clone_dir) or 'OK')
+    output += '{} |'.format(utils.pip_requirements(clone_dir) or 'OK')
 
     # Fem build al directori on tenim la pagina des del directori del clone
     #   Build en català
     out, target_build_path = (
-        Util.docs_build(clone_dir, ca_docs_path, None, True)
+        utils.mkdocs_build(clone_dir, ca_docs_path, None, True)
     )
 
     # If build fails we can't continue
@@ -133,7 +134,7 @@ with TempDir() as temp:
 
     #   Build en castellà
     out, target_build_path = (
-        Util.docs_build(clone_dir, es_docs_path, 'mkdocs_es.yml', True)
+        utils.mkdocs_build(clone_dir, es_docs_path, 'mkdocs_es.yml', True)
     )
 
     # If build fails we can't continue
