@@ -1,5 +1,5 @@
 from os.path import join
-from os import system
+import os
 
 
 def pip_requirements(dir):
@@ -18,10 +18,10 @@ def pip_requirements(dir):
     command = 'pip install -r {}'.format(join(dir, 'requirements.txt'))
     log_file = join(dir, "pip.log")
     command += " > {0} 2> {0}".format(log_file)
-    dependencies = system(command)
+    dependencies = os.system(command)
     with open(log_file, 'r') as stout:
         out = stout.read()
-    system('rm {}'.format(log_file))
+    os.system('rm {}'.format(log_file))
     if dependencies != 0:
         output += ' Couldn\'t install all dependencies!\n{}'.format(
             out
@@ -40,16 +40,16 @@ def export_pythonpath(docs_path):
     """
     sc_path = join(docs_path, 'sitecustomize')
     command = 'export PYTHONPATH={}'.format(sc_path)
-    system(command)
+    os.system(command)
 
 
 def create_virtualenv(name='foo', dir='/tmp/venv'):
     if not isdir(dir):
-        system('mkdir -p {}'.format(dir))
+        os.system('mkdir -p {}'.format(dir))
     dest = join(dir, name)
     log = '{}.log'.format(name)
     logs = join(dir, log)
-    system('virtualenv {0} > {1} 2> {1}'.format(dest, logs))
+    os.system('virtualenv {0} > {1} 2> {1}'.format(dest, logs))
     activate = join(dest, 'bin', 'activate_this.py')
     execfile(activate, dict(__file__=activate))
     return dest
@@ -85,10 +85,10 @@ def mkdocs_build(dir, target=None, file=None, clean=True):
         command += ' --clean'
     log_file = join(dir, 'build.log')
     command += " > {0} 2> {0}".format(log_file)
-    new_build = system(command)
+    new_build = os.system(command)
     with open(log_file, 'r') as stout:
         out = stout.read()
-    system('rm {}'.format(log_file))
+    os.system('rm {}'.format(log_file))
     if new_build != 0:
         output += 'FAILED TO BUILD: {}'.format(out)
         return output, False
@@ -124,10 +124,10 @@ def lektor_build(dir, target=None, project=None):
         command += ' -O {}'.format(target)
     log_file = join(dir, 'build.log')
     command += " > {0} 2> {0}".format(log_file)
-    new_build = system(command)
+    new_build = os.system(command)
     with open(log_file, 'r') as stout:
         out = stout.read()
-    system('rm {}'.format(log_file))
+    os.system('rm {}'.format(log_file))
     if new_build != 0:
         output += 'FAILED TO BUILD: {}'.format(out)
         return output, False
