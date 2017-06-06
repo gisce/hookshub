@@ -5,6 +5,7 @@ from __future__ import print_function
 from json import loads, dumps
 from os.path import join
 from hookshub.hooks.github import GitHubUtil as Util
+from hookshub import utils
 
 import sys
 import tempfile
@@ -98,18 +99,18 @@ with TempDir() as temp:
     clone_dir = join(temp.dir, repo_name)
 
     # Crear Virtualenv en el directori temporal
-    Util.create_virtualenv(temp.dir, branch_name)
+    utils.create_virtualenv(temp.dir, branch_name)
 
     # Instalem dependencies
 
-    output += Util.pip_requirements(clone_dir)
+    output += utils.pip_requirements(clone_dir)
 
     # Fem build al directori on tenim la pàgina des del directori del clone
 
     #   Build en català
 
     out, target_build_path = (
-        Util.docs_build(clone_dir, ca_docs_path, None, True)
+        utils.docs_build(clone_dir, ca_docs_path, None, True)
     )
     # If build fails we can't continue
     if not target_build_path:
@@ -121,7 +122,7 @@ with TempDir() as temp:
     #   Build en castellà
 
     out, target_build_path = (
-        Util.docs_build(clone_dir, es_docs_path, 'mkdocs_es.yml', True)
+        utils.docs_build(clone_dir, es_docs_path, 'mkdocs_es.yml', True)
     )
     # If build fails we can't continue
     if not target_build_path:
