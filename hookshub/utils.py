@@ -86,7 +86,7 @@ def mkdocs_build(dir, target=None, file=None, clean=True):
         command += ' -f {}'.format(file)
     if clean:
         command += ' --clean'
-    log_file = join(dir, 'build.log')
+    log_file = join(dir, 'mkdocs_build.log')
     command += " > {0} 2> {0}".format(log_file)
     new_build = os.system(command)
     with open(log_file, 'r') as stout:
@@ -125,7 +125,7 @@ def lektor_build(dir, target=None, project=None):
         build_path = target
         output += 'to {}...'.format(target)
         command += ' -O {}'.format(target)
-    log_file = join(dir, 'build.log')
+    log_file = join(dir, 'lektor_build.log')
     command += " > {0} 2> {0}".format(log_file)
     new_build = os.system(command)
     with open(log_file, 'r') as stout:
