@@ -43,7 +43,19 @@ def export_pythonpath(docs_path):
     system(command)
 
 
-def docs_build(dir, target=None, file=None, clean=True):
+def create_virtualenv(name='foo', dir='/tmp/venv'):
+    if not isdir(dir):
+        system('mkdir -p {}'.format(dir))
+    dest = join(dir, name)
+    log = '{}.log'.format(name)
+    logs = join(dir, log)
+    system('virtualenv {0} > {1} 2> {1}'.format(dest, logs))
+    activate = join(dest, 'bin', 'activate_this.py')
+    execfile(activate, dict(__file__=activate))
+    return dest
+
+
+def mkdocs_build(dir, target=None, file=None, clean=True):
     """
     :param dir: Directory used to call the build. This MUST exist.
         :type:  String
