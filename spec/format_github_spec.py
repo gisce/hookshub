@@ -4,6 +4,7 @@ from json import loads, dumps
 
 from hookshub.hooks.github import GitHubWebhook as github
 from hookshub.hooks.github import GitHubUtil as util
+from hookshub import utils
 
 from expects import *
 from mock import patch, Mock
@@ -885,7 +886,7 @@ with description('GitHub Utils'):
                 os.start()
                 os.system = lambda x: 0
                 util_path = join(project_path, 'test_data', 'utils')
-                log = util.pip_requirements(util_path)
+                log = utils.pip_requirements(util_path)
                 with open(join(
                         util_path, 'pip_install_ok'
                 ), 'r') as out:
@@ -898,7 +899,7 @@ with description('GitHub Utils'):
                 os.start()
                 os.system = lambda x: -1
                 util_path = join(project_path, 'test_data', 'utils')
-                log = util.pip_requirements(util_path)
+                log = utils.pip_requirements(util_path)
                 with open(join(
                         util_path, 'pip_install_bad'
                 ), 'r') as out:
@@ -909,7 +910,7 @@ with description('GitHub Utils'):
     # create_virtualenv
     with context('Create a Virtualenv'):
         with it('Must create a virtualenv in the default directory (/tmp/foo)'):
-            dest = util.create_virtualenv()
+            dest = utils.create_virtualenv()
             expect(isdir(dest)).to(equal(True))
             expect(dest).to(equal('/tmp/venv/foo'))
             import os
@@ -919,7 +920,7 @@ with description('GitHub Utils'):
             directory = '/tmp/venv'
             name = 'test'
             exp_dest = join(directory, name)
-            dest = util.create_virtualenv(name=name, dir=directory)
+            dest = utils.create_virtualenv(name=name, dir=directory)
             expect(isdir(dest)).to(equal(True))
             expect(dest).to(equal(exp_dest))
             import os
@@ -974,7 +975,7 @@ with description('GitHub Utils'):
                 from_path = join(project_path, 'test_data', 'utils')
                 to_path = 'To build'
                 file = 'Config File'
-                log, dir = util.docs_build(from_path, to_path, file, True)
+                log, dir = utils.mkdocs_build(from_path, to_path, file, True)
                 with open(join(
                         from_path, 'build_ok'
                 ), 'r') as out:
@@ -991,7 +992,7 @@ with description('GitHub Utils'):
                 from_path = join(project_path, 'test_data', 'utils')
                 to_path = 'To build'
                 file = 'Config File'
-                log, dir = util.docs_build(from_path, to_path, file)
+                log, dir = utils.mkdocs_build(from_path, to_path, file)
                 with open(join(
                         from_path, 'build_bad'
                 ), 'r') as out:
