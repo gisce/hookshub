@@ -8,6 +8,7 @@ from json import loads
 from tempfile import mkdtemp
 from shutil import rmtree
 from hookshub.hooks.gitlab import GitLabUtil as Util
+from hookshub import utils
 import sys
 
 
@@ -98,15 +99,14 @@ with TempDir() as tmp:
 
     clone_dir = join(tmp_dir, repo_name)
 
-    # Pendent de solucionar: No es pot entrar al virtualenv si amb el binari
-    # especificat a dalt... A més l'interpret no pot canviar amb subprocess
+    utils.create_virtualenv(name='lektor', dir=tmp_dir)
 
     output += 'Instal.lant dependencies...'
-    output += '{} DONE |'.format(Util.pip_requirements(clone_dir))
+    output += '{} DONE |'.format(utils.pip_requirements(clone_dir))
 
     # Fem build al directori on tenim la pagina des del directori del clone
     path = master_path if merged else branch_path
-    out, ret_path = Util.lektor_build(
+    out, ret_path = utils.lektor_build(
         clone_dir, path, 'gisce.net-lektor'
     )
     output += out
