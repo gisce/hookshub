@@ -3,6 +3,7 @@ from os import listdir
 from json import loads, dumps
 from hookshub.hooks.gitlab import GitLabWebhook as gitlab
 from hookshub.hooks.gitlab import GitLabUtil as util
+from hookshub import utils
 from expects import *
 from mock import patch, Mock
 
@@ -466,7 +467,7 @@ with description('GitLab Utils'):
     with context('Install pip requirements'):
         with it('Must try to pip install on a dir. If can\'t it\'ll print'
                 ' another line with the error'):
-            log = util.pip_requirements(data_path)
+            log = utils.pip_requirements(data_path)
             expect(len(log) > 0).to(equal(True))
 
     # docs_build
@@ -482,7 +483,7 @@ with description('GitLab Utils'):
                 from_path = 'From folder'
                 to_path = 'To build'
                 proj = 'Project in folder'
-                log, dir = util.lektor_build(from_path, to_path, proj)
+                log, dir = utils.lektor_build(from_path, to_path, proj)
                 expect(len(log) > 0).to(equal(True))
                 expect(dir).to(equal(to_path))
                 popen.stop()
@@ -498,7 +499,7 @@ with description('GitLab Utils'):
                 from_path = 'From docs'
                 to_path = 'To build'
                 proj = 'Project in folder'
-                log, dir = util.lektor_build(from_path, to_path, proj)
+                log, dir = utils.lektor_build(from_path, to_path, proj)
                 expect(len(log) > 0).to(equal(True))
                 expect(dir).to(equal(False))
                 popen.stop()
@@ -511,7 +512,7 @@ with description('GitLab Utils'):
                 from_path = 'From docs'
                 to_path = 'To build'
                 proj = 'Project in folder'
-                log, dir = util.lektor_build(from_path, to_path, proj)
+                log, dir = utils.lektor_build(from_path, to_path, proj)
                 expect(len(log) > 0).to(equal(True))
                 expect(dir).to(equal(False))
                 popen.stop()
