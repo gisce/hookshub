@@ -1,4 +1,4 @@
-from os.path import join
+from os.path import join, isdir
 import os
 
 
