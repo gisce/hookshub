@@ -3,6 +3,14 @@ import logging
 
 
 class Hook(object):
+    """
+    This class is used as a template for hook import as a plugin.
+    All the methods can be overwritten but the super's __init__ must run inside
+    __init__
+
+    Enable may configure alternative parameters for the hook to run, that's why
+    initiates at False and runs enable() on __init__
+    """
     def __init__(self, method, event=False, repository=False, branch=False):
         self._name = str(self.__class__)
         self._hook = method
@@ -10,6 +18,7 @@ class Hook(object):
         self._repository = repository
         self._branch = branch
         self._enabled = False
+        self.enable()
 
     def is_enabled(self):
         return self._enabled
@@ -45,6 +54,16 @@ class Hook(object):
     @property
     def enabled(self):
         return self._enabled
+
+
+#
+# Using Hooks Manager (hookshub.plugins) a hook may be disabled or enabled
+#
+# With "reload_hooks()" the hooks are reloaded with no need to
+# restart the service
+#
+# "get_hooks()" must return all hooks loaded
+#
 
 
 def get_hooks(event=False, repository=False, branch=False):
