@@ -69,7 +69,7 @@ class Hook(object):
 def get_hooks(event=False, repository=False, branch=False):
     from hookshub.plugins import hooks
     results = []
-    for hook, ev, repo, br in hooks:
+    for name, hook, ev, repo, br in hooks:
         if event:
             event = ev == event
         if repository:
@@ -77,7 +77,7 @@ def get_hooks(event=False, repository=False, branch=False):
         if branch:
             branch = br == branch
         if event and repository and branch:
-            results.append(hook)
+            results.append((name, hook))
     return results
 
 
