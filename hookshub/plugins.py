@@ -119,8 +119,9 @@ class PluginManager(InstanceManager):
         hook_name = cls_name.replace('.', '_')
         hook_data = namedtuple(
             hook_name,
-            'hook, event, repository, branch'
+            'name, hook, event, repository, branch'
         )
+        hook_data.name = hook_name
         hook_data.hook = inst.hook
         hook_data.event = inst.event
         hook_data.repository = inst.repository
@@ -135,9 +136,10 @@ class PluginManager(InstanceManager):
             return False
         hook_data = namedtuple(
             hook_name,
-            'hook, event, repository, branch'
+            'name, hook, event, repository, branch'
         )
         inst = self.get(cls_name)
+        hook_data.name = hook_name
         hook_data.hook = inst.hook
         hook_data.event = inst.event
         hook_data.repository = inst.repository
