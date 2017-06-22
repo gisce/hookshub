@@ -151,4 +151,58 @@ class HookParser(object):
 
         return 0, log
 
+    def run_event_hooks(self, def_conf):
+        log = ''
+        if not 'nginx_port' in def_conf.keys():
+            def_conf.update({'nginx_port': '80'})
+        if not 'action_timeout' in def_conf.keys():
+            def_conf.update({'action_timeout': '30'})
+        conf = config_from_environment('HOOKSHUB', [
+            'github_token', 'gitlab_token', 'vhost_path', 'nginx_port',
+            'action_timeout'
+        ], **def_conf)
+        timeout = int(conf.get('action_timeout'))
+        i = 0
+        hooks = self.load_hooks(
+            self.hook.event, self.hook.repo_name, self.hook.branch_name
+        )
+        if self.logger:
+            self.logger.error('Executing {} hooks for event: {}\n'.format(
+                len(hooks), self.hook.event
+            ))
+        for action_name, action in hooks:
+            i += 1
+            if self.logger:
+                self.logger.error('[Running: <{0}/{1}> - {2}]\n'.format(
+                    i, len(hooks), action_name)
+                )
+            proc = self.pool.apply_async(
+                action, args=(self.payload,),
+                callback=log_result
+            )
+            proc.wait(timeout=timeout)
+            if proc.ready():
+                stdout, stderr, returncode, pid = proc.get()
+            else:
+                stdout = stderr = 'Still running async, but answering.' \
+                                  ' Check log for detailed result...'
+                self.logger.error('[{}]:{}'.format(action, stderr))
+                returncode = 0
 
+            output = ''
+            output += ('[{0}]:ProcOut:\n{1}'.format(
+                action, stdout
+            ))
+            output += ('[{0}]:ProcErr:\n{1}'.format(
+                action, stderr
+            ))
+            if returncode and returncode != 0:
+                log += ('[{0}]:{1}\n[{0}]:Failed!\n'.format(
+                    action, output
+                ))
+                return -1, log
+            log += ('[{0}]:{1}\n[{0}]:Success!\n'.format(
+                action, output
+            ))
+
+        return 0, log
