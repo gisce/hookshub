@@ -100,35 +100,28 @@ class HookParser(object):
 
     def run_event_actions(self, def_conf):
         log = ''
-
         if not 'nginx_port' in def_conf.keys():
             def_conf.update({'nginx_port': '80'})
-
         if not 'action_timeout' in def_conf.keys():
             def_conf.update({'action_timeout': '30'})
-            
         conf = config_from_environment('HOOKSHUB', [
             'github_token', 'gitlab_token', 'vhost_path', 'nginx_port',
             'action_timeout'
         ], **def_conf)
-
         timeout = int(conf.get('action_timeout'))
-
-        hook = self.instancer(self.payload)
         i = 0
-
         if self.logger:
             self.logger.error('Executing {} actions for event: {}\n'.format(
-                len(hook.event_actions), hook.event
+                len(self.hook.event_actions), self.hook.event
             ))
-        for action in hook.event_actions:
+        for action in self.hook.event_actions:
             i += 1
             if self.logger:
                 self.logger.error('[Running: <{0}/{1}> - {2}]\n'.format(
-                    i, len(hook.event_actions), action)
+                    i, len(self.hook.event_actions), action)
                 )
             proc = self.pool.apply_async(
-                run_action, args=(action, hook, conf),
+                run_action, args=(action, self.hook, conf),
                 callback=log_result
             )
             proc.wait(timeout=timeout)
@@ -157,3 +150,5 @@ class HookParser(object):
             ))
 
         return 0, log
+
+
