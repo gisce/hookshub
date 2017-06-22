@@ -24,8 +24,8 @@ class TempDir(object):
 
 
 def run_action(action, hook, conf):
-    logger = logging.getLogger('__main__')
     import os
+    logger = logging.getLogger('__main__')
     pid = os.getpid()
     logger.error('[ASYNC({})]Running: {} - {}'.format(pid, action, hook.event))
     args = hook.get_exe_action(action, conf)
@@ -75,6 +75,19 @@ class HookParser(object):
         import logging
         self.logger = logging.getLogger('__main__')
         self.pool = pool
+        self.hook = self.instancer(self.payload)
+
+    @staticmethod
+    def load_hooks(event=False, repository=False, branch=False):
+        from hookshub.hook import reload_hooks, get_hooks
+        reload_hooks()
+        if event == 'None':
+            event = False
+        if repository == 'None':
+            repository = False
+        if branch == 'None':
+            branch = False
+        return get_hooks(event, repository, branch)
 
     @staticmethod
     def instancer(payload):
