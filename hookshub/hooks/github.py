@@ -334,6 +334,47 @@ class GitHubWebhook(webhook):
 
 
 class GitHubUtil:
+
+    api_url = 'https://api.github.com'
+
+    actions = {
+        'ACT_ASSIGNED': 'assigned',
+        'ACT_UNASSIGN': 'unassigned',
+        'ACT_LABELED': 'labeled',
+        'ACT_UNLABELED': 'unlabeled',
+        'ACT_OPENED': 'opened',
+        'ACT_EDITED': 'edited',
+        'ACT_CLOSED': 'closed',
+        'ACT_REOPENED': 'reopened',
+        'ACT_SYNC': 'synchronize',
+        'ACT_CREATED': 'created'
+    }
+
+    events = {
+        'EVENT_COMMIT_COMMENT': 'commit_comment',
+        'EVENT_CREATE': 'create',
+        'EVENT_DELETE': 'delete',
+        'EVENT_DEPLOYMENT': 'deployment',
+        'EVENT_DEPLOYMENT_STATUS': 'deployment_status',
+        'EVENT_FORK': 'fork',
+        'EVENT_WIKI': 'gollum',
+        'EVENT_ISSUE_COMMENT': 'issue_comment',
+        'EVENT_ISSUE': 'issues',
+        'EVENT_MEMBER': 'member',
+        'EVENT_MEMBERSHIP': 'membership',
+        'EVENT_PAGE_BUILD': 'page_build',
+        'EVENT_PUBLIC_EVENT': 'public',
+        'EVENT_PULL_REQUEST': 'pull_request',
+        'EVENT_PULL_REQUEST_REVIEW': 'pull_request_review_comment',
+        'EVENT_REVIEW_PR_COMMENT': 'pull_request_review_comment',
+        'EVENT_PUSH': 'push',
+        'EVENT_RELEASE': 'release',
+        'EVENT_REPOSITORY': 'repository',
+        'EVENT_STATUS': 'status',
+        'EVENT_TEAM_ADD': 'team_add',
+        'EVENT_WATCH': 'watch'
+    }
+
     @staticmethod
     def clone_on_dir(dir, repository, url, branch=None):
         """
@@ -436,7 +477,7 @@ class GitHubUtil:
             return the code 0 along with a text with the error found.
         :rtype: Tuple<Int,String>
         """
-        github_api_url = "https://api.github.com"
+        github_api_url = GitHubUtil.api_url
         # POST /repos/{:owner /:repo}/issues/{:pr_id}/comments
         req_url = '{0}/repos/{1}/issues/{2}/comments'.format(
             github_api_url, repository, pr_num
@@ -468,41 +509,3 @@ class GitHubUtil:
             text = 'Failed to send comment to pull request, ' \
                              'INTERNAL ERROR [{}]'.format(err)
         return code, text
-
-    actions = {
-        'ACT_ASSIGNED': 'assigned',
-        'ACT_UNASSIGN': 'unassigned',
-        'ACT_LABELED': 'labeled',
-        'ACT_UNLABELED': 'unlabeled',
-        'ACT_OPENED': 'opened',
-        'ACT_EDITED': 'edited',
-        'ACT_CLOSED': 'closed',
-        'ACT_REOPENED': 'reopened',
-        'ACT_SYNC': 'synchronize',
-        'ACT_CREATED': 'created'
-    }
-
-    events = {
-        'EVENT_COMMIT_COMMENT': 'commit_comment',
-        'EVENT_CREATE': 'create',
-        'EVENT_DELETE': 'delete',
-        'EVENT_DEPLOYMENT': 'deployment',
-        'EVENT_DEPLOYMENT_STATUS': 'deployment_status',
-        'EVENT_FORK': 'fork',
-        'EVENT_WIKI': 'gollum',
-        'EVENT_ISSUE_COMMENT': 'issue_comment',
-        'EVENT_ISSUE': 'issues',
-        'EVENT_MEMBER': 'member',
-        'EVENT_MEMBERSHIP': 'membership',
-        'EVENT_PAGE_BUILD': 'page_build',
-        'EVENT_PUBLIC_EVENT': 'public',
-        'EVENT_PULL_REQUEST': 'pull_request',
-        'EVENT_PULL_REQUEST_REVIEW': 'pull_request_review_comment',
-        'EVENT_REVIEW_PR_COMMENT': 'pull_request_review_comment',
-        'EVENT_PUSH': 'push',
-        'EVENT_RELEASE': 'release',
-        'EVENT_REPOSITORY': 'repository',
-        'EVENT_STATUS': 'status',
-        'EVENT_TEAM_ADD': 'team_add',
-        'EVENT_WATCH': 'watch'
-    }
