@@ -84,17 +84,24 @@ class Hook(object):
 
 
 def get_hooks(event=False, repository=False, branch=False):
-    from hookshub.plugins import hooks
+    from hookshub.plugins import plugins
     results = []
-    for name, hook, ev, repo, br in hooks:
-        if event:
-            event = ev == event
-        if repository:
-            repository = repo == repository
-        if branch:
-            branch = br == branch
-        if event and repository and branch:
-            results.append((name, hook))
+    hooks = plugins.get_hooks()
+    for hook in hooks:
+        if event and hook.event:
+            ev = hook.event == event
+        else:
+            ev = True
+        if repository and hook.repository:
+            repo = hook.repository == repository
+        else:
+            repo = True
+        if branch and hook.branch:
+            br = hook.branch == branch
+        else:
+            br = True
+        if ev and repo and br:
+            results.append((hook.name, hook.hook))
     return results
 
 
