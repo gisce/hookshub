@@ -167,7 +167,7 @@ class HookParser(object):
         if not 'nginx_port' in def_conf.keys():
             def_conf.update({'nginx_port': '80'})
         if not 'action_timeout' in def_conf.keys():
-            def_conf.update({'action_timeout': '30'})
+            def_conf.update({'action_timeout': '10'})
         conf = config_from_environment('HOOKSHUB', [
             'github_token', 'gitlab_token', 'vhost_path', 'nginx_port',
             'action_timeout'
