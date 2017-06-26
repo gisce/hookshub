@@ -113,7 +113,7 @@ class PluginManager(InstanceManager):
     def register(self, cls):
         cls_name = '%s.%s' % (cls.__module__, cls.__name__)
         if self.exists(cls_name):
-            self.remove(cls_name)
+            cls = self.unregister(cls)
         self.add(cls_name)
         inst = self.get(cls_name)
         hook_name = cls_name.replace('.', '_')
@@ -122,7 +122,7 @@ class PluginManager(InstanceManager):
             'name, hook, event, repository, branch'
         )
         hook_data.name = hook_name
-        hook_data.hook = inst.hook
+        hook_data.hook = inst
         hook_data.event = inst.event
         hook_data.repository = inst.repository
         hook_data.branch = inst.branch
@@ -134,19 +134,14 @@ class PluginManager(InstanceManager):
         hook_name = cls_name.replace('.', '_')
         if not self.exists(cls_name):
             return False
-        hook_data = namedtuple(
-            hook_name,
-            'name, hook, event, repository, branch'
-        )
         inst = self.get(cls_name)
-        hook_data.name = hook_name
-        hook_data.hook = inst.hook
-        hook_data.event = inst.event
-        hook_data.repository = inst.repository
-        hook_data.branch = inst.branch
-        self._hooks_list.remove(hook_data)
+        for hook in self._hooks_list:
+            if hook.name == hook_name and\
+                            hook.event == inst.event and\
+                            hook.repository == inst.repository and\
+                            hook.branch == inst.branch:
+                self._hooks_list.remove(hook)
         self.remove(cls_name)
         return cls
 
 plugins = PluginManager()
-hooks = plugins.get_hooks()
