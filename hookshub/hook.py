@@ -39,6 +39,15 @@ class Hook(object):
         self._enabled = False
         return self.is_enabled()
 
+    def run_hook(self, args=False):
+        if not args:
+            raise EnvironmentError(
+                'Args for hook {} were not set before running'.format(
+                    self.title
+                )
+            )
+        return self._hook(args), self.title
+
     @property
     def title(self):
         return self._name
