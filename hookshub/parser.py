@@ -187,33 +187,27 @@ class HookParser(object):
                 self.logger.error('[Running: <{0}/{1}> - {2}]\n'.format(
                     i, len(hooks), action_name)
                 )
+            args = action.get_args(self.hook, conf)
             proc = self.pool.apply_async(
-                action, args=(self.payload,),
-                callback=log_result
+                action.run_hook, args=(args,),
+                callback=log_hook_result
             )
             proc.wait(timeout=timeout)
             if proc.ready():
-                stdout, stderr, returncode, pid = proc.get()
+                returncode, hook_name = proc.get()
             else:
-                stdout = stderr = 'Still running async, but answering.' \
+                strerr = 'Still running async, but answering.' \
                                   ' Check log for detailed result...'
-                self.logger.error('[{}]:{}'.format(action, stderr))
+                self.logger.error('[{}]:{}'.format(action.title, strerr))
                 returncode = 0
 
-            output = ''
-            output += ('[{0}]:ProcOut:\n{1}'.format(
-                action, stdout
-            ))
-            output += ('[{0}]:ProcErr:\n{1}'.format(
-                action, stderr
-            ))
             if returncode and returncode != 0:
-                log += ('[{0}]:{1}\n[{0}]:Failed!\n'.format(
-                    action, output
+                log += ('[{0}]:Failed!\n'.format(
+                    action_name
                 ))
                 return -1, log
-            log += ('[{0}]:{1}\n[{0}]:Success!\n'.format(
-                action, output
+            log += ('[{0}]:Success!\n'.format(
+                action_name
             ))
 
         return 0, log
