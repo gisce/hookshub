@@ -182,9 +182,14 @@ def start_listening(host_ip=DEFAULT_IP,
                     host_port=DEFAULT_PORT,
                     proc_num=DEFAULT_PROCS):
     global config
+    from os.path import isfile
     path = normpath(abspath(dirname(__file__)))
-    with open(join(path, 'config.json'), 'r') as cfg:
-        config = loads(cfg.read())
+    config_path = join(path, 'config.json')
+    if isfile(config_path):
+        with open(config_path, 'r') as cfg:
+            config = loads(cfg.read())
+    else:
+        config = {}
     sentry = Sentry(application)
     logging.getLogger(__name__).info(
         'Start Listening on {}:{} with {} procs'.format(
