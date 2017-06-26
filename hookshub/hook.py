@@ -108,7 +108,7 @@ def get_hooks(event=False, repository=False, branch=False):
 def reload_hooks():
     from hookshub.plugins import plugins
     logger = logging.getLogger()
-    for entrypoint in iter_entry_points('hookshub.plugins'):
+    for entrypoint in set(iter_entry_points('hookshub.plugins')):
         try:
             plugin = entrypoint.load()
         except Exception as e:
