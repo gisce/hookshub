@@ -8,7 +8,6 @@ setup(name='hookshub',
       author_email='jflorez@gisce.net',
       license='MIT',
       packages=[
-          'hookshub', 'hookshub/hooks', 'hookshub/hooks/github_hooks/',
-          'hookshub/hooks/gitlab_hooks/', 'hookshub/hooks/webhook_hooks/',
+          'hookshub', 'hookshub/hooks', 'hookshub/hooks/webhook_hooks/',
       ],
       zip_safe=False)
