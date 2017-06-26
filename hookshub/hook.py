@@ -23,6 +23,14 @@ class Hook(object):
     def is_enabled(self):
         return self._enabled
 
+    def get_args(self, webhook, conf):
+        """
+        :param webhook: WebHook with origin's payload
+        :param conf: environment conf to be used
+        :return: Args to call "run_hook" method
+        """
+        return {}
+
     def enable(self):
         self._enabled = True
         return self.is_enabled()
