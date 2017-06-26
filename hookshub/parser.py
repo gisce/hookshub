@@ -66,6 +66,17 @@ def log_result(res):
     ))
 
 
+def log_hook_result(res):
+    res_code, hook_name = res
+    logger = logging.getLogger('__main__')
+    if res_code == 0:
+        result = 'Success!'
+    else:
+        result = 'Failure!'
+    logger.error('[ASYNC({})] Result: {}'.format(
+        hook_name, result
+    ))
+
 class HookParser(object):
     def __init__(self, payload_file, event, pool=Pool(1)):
         self.event = event
