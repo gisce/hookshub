@@ -164,6 +164,7 @@ def index():
     log_out = ('Processing: {}...'.format(parser.event))
 
     code, output = parser.run_event_actions(config)
+    code, output = parser.run_event_hooks(config)
 
     output = '{0}|{1}'.format(log_out, output)
     # Remove temporal file
