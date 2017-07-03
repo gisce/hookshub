@@ -182,47 +182,6 @@ class GitHubWebhook(webhook):
                 return not self.merged
         return False
 
-    def get_exe_action(self, action, conf):
-        """
-        :param action: event to get the scripts
-            :type: String
-        :param conf: Dictionary with the environment configurations
-            :type: Dictionary
-        :return: A list with the path to the scripts, the params they need
-            and the event used
-        """
-        exe_path = join(self.actions_path, action)
-        json = {}
-        # Action for 'push', 'pull_request' event
-        #       on repository 'powerp-docs'
-        if action.startswith('{}-powerp-docs'.format(
-                GitHubUtil.events['EVENT_PUSH'])
-        ) or action.startswith('{}-powerp-docs'.format(
-            GitHubUtil.events['EVENT_PULL_REQUEST']
-        )):
-            json.update({'token': conf['github_token']})
-            json.update({'vhost_path': conf['vhost_path']})
-            json.update({'port': conf['nginx_port']})
-            json.update({'ssh_url': self.ssh_url})
-            json.update({'http_url': self.http_url})
-            json.update({'repo_name': self.repo_name})
-            json.update({'repo_full_name': self.repo_full_name})
-            json.update({'branch_name': self.branch_name})
-
-            # If 'pull_request' event, we may add more params
-            if action.startswith('{}-powerp-docs'.format(
-                    GitHubUtil.events['EVENT_PULL_REQUEST'])
-            ):
-                json.update({'action': self.action})
-                json.update({'number': self.number})
-                json.update({'merged': self.merged})
-                json.update({'closed': self.closed})
-
-            # Return the params
-            return [exe_path, dumps(json), self.event]
-        else:
-            return super(GitHubWebhook, self).get_exe_action(action, conf)
-
     @property
     def event(self):
         """
