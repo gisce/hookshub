@@ -45,35 +45,6 @@ with description('GitHub Hook'):
                 ]
             expect(hook.actions).to(equal(actions))
 
-        with it('must have all actions of the situation (more details'
-                ' in the readme, event-actions)'):
-            file = 'status.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            actions = listdir(hook.actions_path)
-            actions = [
-                action for action in actions
-                if isfile(join(hook.actions_path, action))
-                ]
-            actions = [
-                action
-                for action in actions
-                # If they start with {event}-{repository}-{branch}
-                if action.startswith('{0}-{1}-{2}'.format(
-                    hook.event, hook.repo_name, hook.branch_name
-                )) or
-                # If they start with {event}-{repository}_{name}
-                action.startswith(
-                    '{0}-{1}_'.format(hook.event, hook.repo_name)) or
-                # If they are named after {event}-{repository}
-                action == '{0}-{1}'.format(hook.event, hook.repo_name) or
-                # If they start with {event}_{name}
-                action.startswith('{0}_'.format(hook.event)) or
-                # If they are named after {event}
-                action == '{0}'.format(hook.event)
-                ]
-            expect(hook.event_actions).to(equal(actions))
-
         with it('must return the ssh url of the repository'
                     ' (json/repository/ssh_url)'):
             file = 'status.json'
@@ -776,73 +747,6 @@ with description('GitHub Hook'):
             json_data = loads(data)
             hook = github(json_data)
             expect(hook.branch_name).to(equal('None'))
-
-    with context('With powerp-docs repository events'):
-        with it('must return token, port, vhost path, ssh and http urls, '
-                'repository and branch names, full repository name;'
-                ' with "push-powerp-docs.py" action arguments from hook'):
-            action = 'push-powerp-docs.py'
-            file = 'push.json'
-            data = open(join(data_path, file)).read()
-            json_data = loads(data)
-            config = loads(open(join(data_path, 'conf.json'), 'r').read())
-            # Set required data from default data:
-            json_data['repository']['name'] = 'powerp-docs'
-            hook = github(json_data)
-            json = {}
-            json.update({'token': config['github_token']})
-            json.update({'port': config['nginx_port']})
-            json.update({'vhost_path': config['vhost_path']})
-            json.update({'ssh_url': hook.ssh_url})
-            json.update({'http_url': hook.http_url})
-            json.update({'repo_name': hook.repo_name})
-            json.update({'repo_full_name': hook.repo_full_name})
-            json.update({'branch_name': hook.branch_name})
-            args_json = loads(hook.get_exe_action(action, config)[1])
-            checked = []
-            for key in args_json.keys():
-                checked.append(key)
-                expect(args_json[key]).to(
-                    equal(json.get(key, '{} Not found'.format(key)))
-                )
-            for key in json.keys():
-                expect(checked).to(contain(key))
-
-        with it('must return [exe_path, payload, event] when getting'
-                ' the execution params for the pull_request event.'
-                ' Payload must include: vhost_path, ssh and http url,'
-                ' repo_name, the pr_number and the action'):
-            event = 'pull_request-powerp-docs'
-            file = 'pull_request.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            exe_path = join(hook.actions_path, event)
-
-            config = loads(open(join(data_path, 'conf.json'), 'r').read())
-            json = {}
-            json.update({'token': config['github_token']})
-            json.update({'vhost_path': config['vhost_path']})
-            json.update({'port': config['nginx_port']})
-            json.update({'ssh_url': hook.ssh_url})
-            json.update({'http_url': hook.http_url})
-            json.update({'repo_name': hook.repo_name})
-            json.update({'repo_full_name': hook.repo_full_name})
-            json.update({'branch_name': hook.branch_name})
-            json.update({'action': hook.action})
-            json.update({'number': hook.number})
-            json.update({'merged': hook.merged})
-            json.update({'closed': hook.closed})
-
-            json_data = dumps(json)
-            args_json = loads(hook.get_exe_action(event, config)[1])
-            checked = []
-            for key in args_json.keys():
-                checked.append(key)
-                expect(args_json[key]).to(
-                    equal(json.get(key, '{} Not found'.format(key)))
-                )
-            for key in json.keys():
-                expect(checked).to(contain(key))
 
 with description('GitHub Utils'):
     # clone_on_dir
