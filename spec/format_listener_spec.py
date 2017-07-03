@@ -46,6 +46,7 @@ with description('Application Requests'):
                 parser = Mock()
                 parser.event.return_value = 'Mocked Event'
                 parser.run_event_actions.return_value = (0, 'All OK')
+                parser.run_event_hooks.return_value = (0, 'All OK')
                 HookParser.return_value = parser
 
                 response = client.post(
@@ -81,6 +82,7 @@ with description('Application Requests'):
                 parser = Mock()
                 parser.event.return_value = 'Mocked Event'
                 parser.run_event_actions.return_value = (-1, 'All Bad')
+                parser.run_event_hooks.return_value = (-1, 'All Bad')
                 HookParser.return_value = parser
 
                 response = client.post('/', data=hook_data,
