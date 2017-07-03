@@ -38,11 +38,14 @@ with description('GitHub Hook'):
             file = 'status.json'
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
-            actions = listdir(hook.actions_path)
-            actions = [
-                action for action in actions
-                if isfile(join(hook.actions_path, action))
-                ]
+            if not isdir(hook.actions_path):
+                actions = []
+            else:
+                actions = listdir(hook.actions_path)
+                actions = [
+                    action for action in actions
+                    if isfile(join(hook.actions_path, action))
+                    ]
             expect(hook.actions).to(equal(actions))
 
         with it('must return the ssh url of the repository'
