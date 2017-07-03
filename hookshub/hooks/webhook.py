@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from os.path import abspath, normpath, dirname, join, isfile
+from os.path import abspath, normpath, dirname, join, isfile, isdir
 from os import listdir
 from json import dumps
 
@@ -22,7 +22,7 @@ class webhook(object):
 
     @property
     def actions(self):
-        return [
+        return [] if not isdir(self.actions_path) else [
             action
             for action in listdir(self.actions_path)
             if(
