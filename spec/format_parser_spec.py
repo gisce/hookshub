@@ -197,7 +197,7 @@ with description('Hook Listener'):
                 popen.stop()
 
     with context('Log Result (mocked), called async after timeout.'):
-        with it('must log result'):
+        with it('must log result for event action'):
             with patch('hookshub.parser.logging') as logging:
                 logging.start()
                 logging.basicConfig.return_value = True
@@ -213,6 +213,28 @@ with description('Hook Listener'):
                 res_pid = res_code = 0
                 res = (res_out, res_err, res_code, res_pid)
                 log_result(res)
+                res_code = -1
+                res = (res_out, res_err, res_code, res_pid)
+                log_result(res)
+
+                logging.stop
+
+        with it('must log result for hook action'):
+            with patch('hookshub.parser.logging') as logging:
+                logging.start()
+                logging.basicConfig.return_value = True
+                logging.info = True
+                logger = Mock()
+                logger.info.return_value = True
+                logger.error.return_value = True
+                logging.getLogger.return_value = logger
+                from hookshub.parser import log_hook_result
+
+                res_out = 'All Ok\n'
+                res_err = ''
+                res_pid = res_code = 0
+                res = (res_out, res_err, res_code, res_pid)
+                log_hook_result(res)
                 res_code = -1
                 res = (res_out, res_err, res_code, res_pid)
                 log_result(res)
