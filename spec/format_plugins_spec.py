@@ -59,8 +59,6 @@ with description('PluginManager'):
 
         with it('Must update existing hook on PluginManager'):
             from collections import namedtuple
-            import pudb
-            pu.db
             with patch("hookshub.plugins.InstanceManager.get") as pm_get:
                 pm_get.start()
                 hook_inst = TestHook()
