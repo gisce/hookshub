@@ -39,13 +39,43 @@ class webhook(object):
 
     @property
     def event_actions(self):
-        return [
-               action
-               for action in listdir(self.actions_path)
-               if (
-                    action.startswith(self.event) and
-                    isfile(join(self.actions_path, action))
-               )]
+        """
+        Find for the scripts in the hook's directory:
+            hookshub/hooks/webhook_hooks
+        For all actions (scripts) that are named after:
+            <event>-<repository>-<branch>
+            <event>-<repository>_<comment>
+            <event>-<repository>
+            <event>_<comment>
+            <event>
+        :return: All the scripts that match with the event decoded
+        :rtype: List<String>
+        """
+        events = [
+            action
+            for action in listdir(self.actions_path)
+            if (
+                action.startswith(self.event) and
+                isfile(join(self.actions_path, action))
+            )
+        ]
+        events = [
+            event
+            for event in events
+            # If they start with {event}-{repository}-{branch}
+            if event.startswith('{0}-{1}-{2}'.format(
+                self.event, self.repo_name, self.branch_name
+            )) or
+            # If they start with {event}-{repository}_{name}
+            event.startswith('{0}-{1}_'.format(self.event, self.repo_name)) or
+            # If they are named after {event}-{repository}
+            event == '{0}-{1}.py'.format(self.event, self.repo_name) or
+            # If they start with {event}_{name}
+            event.startswith('{0}_'.format(self.event)) or
+            # If they are named after {event}
+            event == '{0}.py'.format(self.event)
+        ]
+        return events
 
     def get_exe_action(self, action, conf):
         exe_path = join(self.actions_path, action)
