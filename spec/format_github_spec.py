@@ -78,6 +78,16 @@ with description('GitHub Hook'):
                 json_data['repository']['name']
             ))
 
+        with it('must return the full name of the repository'
+                ' (json/repository/full_name)'):
+            file = 'status.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = github(json_data)
+            expect(hook.repo_full_name).to(equal(
+                json_data['repository']['full_name']
+            ))
+
         with it('may return "None" when trying to get branch name for a '
                 'non-branch event'):
             file = 'status.json'
