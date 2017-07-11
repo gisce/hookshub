@@ -261,36 +261,6 @@ class GitHubWebhook(webhook):
             # As it has no specific payload, this one may be the last one
             return GitHubUtil.events['EVENT_PUBLIC_EVENT']
 
-    @property
-    def event_actions(self):
-        """
-        :return: All the scripts that match with the event decoded
-        :rtype: List<String>
-        """
-        # We start with all actions that start with {event}
-        # Then we filter them to not execute the actions for the same event
-        #  with different repository.
-        # Finally we filter what's left to not execute actions with the same
-        #  repository but different branches
-        events = super(GitHubWebhook, self).event_actions
-        events = [
-            event
-            for event in events
-            # If they start with {event}-{repository}-{branch}
-            if event.startswith('{0}-{1}-{2}'.format(
-                self.event, self.repo_name, self.branch_name
-            )) or
-            # If they start with {event}-{repository}_{name}
-            event.startswith('{0}-{1}_'.format(self.event, self.repo_name)) or
-            # If they are named after {event}-{repository}
-            event == '{0}-{1}.py'.format(self.event, self.repo_name) or
-            # If they start with {event}_{name}
-            event.startswith('{0}_'.format(self.event)) or
-            # If they are named after {event}
-            event == '{0}.py'.format(self.event)
-        ]
-        return events
-
 
 class GitHubUtil:
 
