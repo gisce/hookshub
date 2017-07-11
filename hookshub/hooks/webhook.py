@@ -17,6 +17,14 @@ class webhook(object):
         )
 
     @property
+    def repo_name(self):
+        return ''
+
+    @property
+    def branch_name(self):
+        return ''
+
+    @property
     def event(self):
         return 'default_event'
 
