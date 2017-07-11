@@ -13,7 +13,7 @@ file = 'default_event'
 data_path = join(project_path, join('test_data', hook_testing))
 data = open(join(data_path, file), 'r').read()
 
-with description('Generic hook (webhook) - Default Event'):
+with description('Generic hook (webhook) - '):
     with it('must have webhook as origin'):
         hook = webhook(loads(data))
         expect(hook.origin).to(equal('webhook'))
@@ -21,6 +21,14 @@ with description('Generic hook (webhook) - Default Event'):
     with it('must have default_event as event'):
         hook = webhook(loads(data))
         expect(hook.event).to(equal(event))
+
+    with it('must return "default_repository" when getting repository name'):
+        hook = webhook(loads(data))
+        expect(hook.repo_name).to(equal("default_repository"))
+
+    with it('must return "default_branch" when getting branch name'):
+        hook = webhook(loads(data))
+        expect(hook.branch_name).to(equal("default_branch"))
 
     with it('must have project_path/hooks/webhook as actions_path'):
         hook = webhook(loads(data))
