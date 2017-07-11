@@ -144,6 +144,14 @@ with description('GitHub Hook'):
             hook = github(loads(data))
             expect(hook.merged).to(equal(False))
 
+        with it('Must return "False" when getting "closed" property and event'
+                'is not "pull_request" or action is not "closed"'):
+            event = 'status'
+            file = 'status.json'
+            data = open(join(data_path, file)).read()
+            hook = github(loads(data))
+            expect(hook.closed).to(equal(False))
+
     with context('Commit Comment event'):
         with it('must have commit_comment as event'):
             event = 'commit_comment'
@@ -673,6 +681,7 @@ with description('GitHub Hook'):
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event, config)).to(equal(exe_data))
+
     with context('Status event'):
         with it('must have status as event'):
             event = 'status'
