@@ -159,7 +159,7 @@ with description('PluginManager'):
                         method=ok, event=GitHubUtil.events['EVENT_PULL_REQUEST']
                     )
                     
-                    
+            # Clean cache to test all the paths of method
             plugins.cache = None
             gen_hooks = plugins.all(version=_TEST_HOOK_VERSION)
             hooks = [h for h in gen_hooks]
@@ -234,5 +234,8 @@ with description('PluginManager'):
                 hooks = [h for h in gen_hooks]
                 expect(len(hooks)).to(equal(1))
                 expect(hooks[0]).to(equal(hook_inst))
-
+                # After first getting, result should be in cache
+                gen_hooks = plugins.all(version=_TEST_HOOK_VERSION)
+                hooks_cache = [h for h in gen_hooks]
+                expect(hooks_cache).to(equal(hooks))
                 import_method.stop()
