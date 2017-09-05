@@ -230,16 +230,15 @@ with description('Hook Parser'):
                 logging.getLogger.return_value = logger
                 from hookshub.parser import log_hook_result
 
-                res_out = 'All Ok\n'
-                res_err = ''
-                res_pid = res_code = 0
-                res = (res_out, res_err, res_code, res_pid)
+                hook_name = 'MOCK'
+                res_code = 0
+                res = (res_code, hook_name)
                 log_hook_result(res)
                 res_code = -1
-                res = (res_out, res_err, res_code, res_pid)
-                log_result(res)
+                res = (res_code, hook_name)
+                log_hook_result(res)
 
-                logging.stop
+                logging.stop()
 
     with context('GitLab test data'):
         with it('must return a hook with "GitLab" origin on instancer method'):
