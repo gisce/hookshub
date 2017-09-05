@@ -2,6 +2,7 @@ from os.path import abspath, normpath, dirname, join
 from json import loads
 from hookshub.hooks.webhook import webhook
 from expects import *
+from mock import patch
 
 my_path = normpath(abspath(dirname(__file__)))
 project_path = dirname(my_path)  # project dir
@@ -42,6 +43,14 @@ with description('Generic hook (webhook) - '):
         hook = webhook(loads(data))
         expect(len(hook.actions)).to(equal(1))
         expect(hook.actions[0]).to(equal('{}.py'.format(event)))
+
+    with it('must return empty list if actions_path does not exist'):
+        with patch('hookshub.hooks.webhook.isdir') as dir_check:
+            dir_check.start()
+            dir_check.return_value = False
+            hook = webhook(loads(data))
+            expect(hook.actions).to(equal([]))
+            dir_check.stop()
 
     with it('must have the same list on both, actions and event_actions'):
         hook = webhook(loads(data))
