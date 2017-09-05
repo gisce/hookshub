@@ -242,9 +242,7 @@ with description('Hook Parser'):
 
     with context('Load Hooks (Plugins):'):
         with it('must get a list of hooks from HooksManager'):
-            from hookshub import hook
             with patch('hookshub.hook.get_hooks') as get_hook_mock:
-                import pudb; pu.db
                 get_hook_mock.start()
                 get_hook_list = ['hook_name', 'hook_used']
                 get_hook_mock.return_value = get_hook_list
