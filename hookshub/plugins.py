@@ -9,6 +9,10 @@ from copy import deepcopy
 import logging
 
 
+def import_module(module_name, class_name):
+    return __import__(module_name, {}, {}, class_name)
+
+
 class InstanceManager(object):
     def __init__(self, class_list=None, instances=True):
         if class_list is None:
@@ -31,7 +35,7 @@ class InstanceManager(object):
             return None
         module_name, class_name = class_path.rsplit('.', 1)
         try:
-            module = __import__(module_name, {}, {}, class_name)
+            module = import_module(module_name, class_name)
             cls = getattr(module, class_name)
             if self.instances:
                 return cls()
@@ -69,7 +73,7 @@ class InstanceManager(object):
         for cls_path in class_list:
             module_name, class_name = cls_path.rsplit('.', 1)
             try:
-                module = __import__(module_name, {}, {}, class_name)
+                module = import_module(module_name, class_name)
                 cls = getattr(module, class_name)
                 if self.instances:
                     results.append(cls())
@@ -139,6 +143,7 @@ class PluginManager(InstanceManager):
         inst = self.get(cls_name)
         for hook in self._hooks_list:
             if hook.name == hook_name and\
+                            hook.name == inst.name and\
                             hook.event == inst.event and\
                             hook.repository == inst.repository and\
                             hook.branch == inst.branch:
