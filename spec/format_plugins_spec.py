@@ -91,3 +91,11 @@ with description('PluginManager'):
             expect(plugin.repository).to(equal(hook_data.repository))
             expect(plugin.branch).to(equal(hook_data.branch))
 
+    with context('Unregister plugins'):
+        with it('must return "False" if hook does not exist'):
+
+            class TotallyNotExistingHook(Hook):
+                __module__ = 'spec.format_plugins_spec'
+
+            res = plugins.unregister(TotallyNotExistingHook)
+            expect(res).to(equal(False))
