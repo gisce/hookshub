@@ -240,7 +240,7 @@ with description('Hook Parser'):
 
                 logging.stop()
 
-    with context('Hooks (plugins):'):
+    with context('Load Hooks (Plugins):'):
         with it('must get a list of hooks from HooksManager'):
             from hookshub import hook
             with patch('hookshub.hook.get_hooks') as get_hook_mock:
@@ -251,7 +251,6 @@ with description('Hook Parser'):
                 hook_list = HookParser.load_hooks()
                 expect(hook_list).to(equal(get_hook_list))
                 get_hook_mock.stop()
-
 
     with context('GitLab test data'):
         with it('must return a hook with "GitLab" origin on instancer method'):
