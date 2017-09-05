@@ -99,3 +99,10 @@ with description('PluginManager'):
 
             res = plugins.unregister(TotallyNotExistingHook)
             expect(res).to(equal(False))
+
+    with context('method __iter__ and __len__'):
+        with it('must return an iterable with the same len as __len__ with'
+                'all hooks in plugin manager'):
+            expect(sum(1 for i in iter(plugins))).to(equal(len(plugins)))
+
+
