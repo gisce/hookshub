@@ -96,7 +96,9 @@ class PluginManager(InstanceManager):
     def __len__(self):
         return sum(1 for i in self.all())
 
-    def all(self, version=1):
+    def all(self, version=0):
+        if version == 0:
+            yield self.get_hooks()
         for plugin in sorted(
                 super(PluginManager, self).all(),
                 key=lambda x: x.title
