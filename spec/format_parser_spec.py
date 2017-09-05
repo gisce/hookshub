@@ -240,6 +240,19 @@ with description('Hook Parser'):
 
                 logging.stop()
 
+    with context('Hooks (plugins):'):
+        with it('must get a list of hooks from HooksManager'):
+            from hookshub import hook
+            with patch('hookshub.hook.get_hooks') as get_hook_mock:
+                import pudb; pu.db
+                get_hook_mock.start()
+                get_hook_list = ['hook_name', 'hook_used']
+                get_hook_mock.return_value = get_hook_list
+                hook_list = HookParser.load_hooks()
+                expect(hook_list).to(equal(get_hook_list))
+                get_hook_mock.stop()
+
+
     with context('GitLab test data'):
         with it('must return a hook with "GitLab" origin on instancer method'):
             webhook_data_path = join(data_path, join('gitlab', 'issue.json'))
