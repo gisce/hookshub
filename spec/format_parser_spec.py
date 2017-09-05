@@ -156,7 +156,6 @@ with description('Hook Parser'):
                     logging.stop()
                 popen.stop()
 
-    with context('Run Actions (mocked), called from subprocess in production.'):
         with it('must fail running the action'):
             from hookshub.parser import run_action
 
@@ -244,11 +243,60 @@ with description('Hook Parser'):
         with it('must get a list of hooks from HooksManager'):
             with patch('hookshub.hook.get_hooks') as get_hook_mock:
                 get_hook_mock.start()
-                get_hook_list = ['hook_name', 'hook_used']
+                get_hook_list = [('hook_name', 'hook_used')]
                 get_hook_mock.return_value = get_hook_list
-                hook_list = HookParser.load_hooks()
+                hook_list = HookParser.load_hooks(event='None',
+                                                  repository='None',
+                                                  branch='None')
                 expect(hook_list).to(equal(get_hook_list))
                 get_hook_mock.stop()
+
+    with context('Run Hooks (mocked), called from subprocess in production.'):
+        with it('must run successfully all hooks'):
+            with patch('hookshub.hook.get_hooks') as get_hook_mock:
+                with patch('hookshub.parser.logging') as logging:
+                    with patch('hookshub.parser.Pool') as pooler:
+                        webhook_data_path = join(
+                            data_path, join('webhook', 'default_event')
+                        )
+                        default_conf = {
+                            'github_token': 'GHT',
+                            'gitlab_token': 'GLT',
+                            'vhost_path': 'VHP'
+                        }
+                        proc = Mock()
+                        proc.wait.return_value = True
+                        proc.ready.return_value = True
+                        proc.get.return_value = (0, 'success_hook')
+
+                        pool = Mock()
+                        pool.apply_async.return_value = proc
+
+                        pooler.start()
+                        pooler.return_value = pool
+
+                        logging.start()
+                        logging.basicConfig.return_value = True
+                        logging.info = True
+                        logger = Mock()
+                        logger.info.return_value = True
+                        logger.error.return_value = True
+                        logging.getLogger.return_value = logger
+
+                        hook_used = Mock()
+                        hook_used.get_args.return_value = {}
+                        hook_used.run_hook = lambda *a: True
+
+                        get_hook_mock.start()
+                        get_hook_list = [('hook_name', hook_used)]
+                        get_hook_mock.return_value = get_hook_list
+
+                        parser = HookParser(webhook_data_path, 'default_event',
+                                            pool=pooler())
+                        res = parser.run_event_hooks(def_conf=default_conf)
+                        expected_code = 0
+                        expected_log = '[hook_name]:Success!\n'
+                        expect(res).to(equal((expected_code, expected_log)))
 
     with context('GitLab test data'):
         with it('must return a hook with "GitLab" origin on instancer method'):
