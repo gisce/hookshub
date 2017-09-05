@@ -77,13 +77,13 @@ def log_hook_result(res):
         hook_name, result
     ))
 
+
 class HookParser(object):
     def __init__(self, payload_file, event, pool=Pool(1)):
         self.event = event
         self.payload = {}
         with open(payload_file, 'r') as jsf:
             self.payload = json.loads(jsf.read())
-        import logging
         self.logger = logging.getLogger('__main__')
         self.pool = pool
         self.hook = self.instancer(self.payload)
@@ -110,9 +110,9 @@ class HookParser(object):
 
     def run_event_actions(self, def_conf):
         log = ''
-        if not 'nginx_port' in def_conf.keys():
+        if 'nginx_port' not in def_conf.keys():
             def_conf.update({'nginx_port': '80'})
-        if not 'action_timeout' in def_conf.keys():
+        if 'action_timeout' not in def_conf.keys():
             def_conf.update({'action_timeout': '30'})
         conf = config_from_environment('HOOKSHUB', [
             'github_token', 'gitlab_token', 'vhost_path', 'nginx_port',
@@ -163,9 +163,9 @@ class HookParser(object):
 
     def run_event_hooks(self, def_conf):
         log = ''
-        if not 'nginx_port' in def_conf.keys():
+        if 'nginx_port' not in def_conf.keys():
             def_conf.update({'nginx_port': '80'})
-        if not 'action_timeout' in def_conf.keys():
+        if 'action_timeout' not in def_conf.keys():
             def_conf.update({'action_timeout': '10'})
         conf = config_from_environment('HOOKSHUB', [
             'github_token', 'gitlab_token', 'vhost_path', 'nginx_port',
