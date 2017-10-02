@@ -78,8 +78,7 @@ with description('HooksHub/Hook'):
         with it(' must return an empty list without Hooks loaded'):
             expect(get_hooks()).to(equal([]))
 
-        with it('Must return TestHook when no context specified and TestHook'
-                ' in hooks'):
+        with it('Must return TestHook when no context specified'):
             with patch('hookshub.plugins.PluginManager.get_hooks') as hooks_get:
                 hook_data = namedtuple(
                     'TestHookNamedTuple',
@@ -93,3 +92,29 @@ with description('HooksHub/Hook'):
                 hooks_get.return_value = [hook_data]
                 expect(get_hooks()).to(equal(
                     [(hook_data.name, hook_data.hook)]))
+
+        with it(' must return TestHook2 when context specified'):
+            class TestHook2(Hook):
+                __module__ = 'hookshub.spec.format_plugins_spec'
+                __version__ = _TEST_HOOK_VERSION
+
+                def __init__(self):
+                    super(TestHook2, self).__init__(
+                        method=ok, repository='test_repo', branch='test',
+                        event=GitHubUtil.events['EVENT_PULL_REQUEST']
+                    )
+            test_hook2 = TestHook2()
+            with patch('hookshub.plugins.PluginManager.get_hooks') as hooks_get:
+                hook_data = namedtuple(
+                    'TestHookNamedTuple',
+                    'name, hook, event, repository, branch'
+                )
+                hook_data.name = test_hook2.title
+                hook_data.hook = test_hook2
+                hook_data.event = test_hook2.event
+                hook_data.repository = test_hook2.repository
+                hook_data.branch = test_hook2.branch
+                hooks_get.return_value = [hook_data]
+                expect(get_hooks(event=GitHubUtil.events['EVENT_PULL_REQUEST'],
+                                 repository='test_repo', branch='test')).to(
+                    equal([(hook_data.name, hook_data.hook)]))
