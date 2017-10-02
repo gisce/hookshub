@@ -1,6 +1,9 @@
 from hookshub.plugins import PluginManager
 from hookshub.hook import Hook
+from hookshub.hook import get_hooks
+from hookshub.hook import reload_hooks
 from hookshub.hooks.github import GitHubUtil
+from collections import namedtuple
 
 from expects import *
 from mock import patch, Mock
@@ -71,3 +74,22 @@ with description('HooksHub/Hook'):
             expect(test_hook.run_hook(True)).to(equal(
                 (True, test_hook.title)
             ))
+    with context('Getting context-specific Hooks'):
+        with it(' must return an empty list without Hooks loaded'):
+            expect(get_hooks()).to(equal([]))
+
+        with it('Must return TestHook when no context specified and TestHook'
+                ' in hooks'):
+            with patch('hookshub.plugins.PluginManager.get_hooks') as hooks_get:
+                hook_data = namedtuple(
+                    'TestHookNamedTuple',
+                    'name, hook, event, repository, branch'
+                )
+                hook_data.name = test_hook.title
+                hook_data.hook = test_hook
+                hook_data.event = test_hook.event
+                hook_data.repository = test_hook.repository
+                hook_data.branch = test_hook.branch
+                hooks_get.return_value = [hook_data]
+                expect(get_hooks()).to(equal(
+                    [(hook_data.name, hook_data.hook)]))
