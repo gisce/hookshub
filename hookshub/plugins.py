@@ -106,10 +106,11 @@ class PluginManager(InstanceManager):
     def all(self, version=0):
         if version == 0:
             yield self.get_hooks()
-        for plugin in sorted(
+        for h in sorted(
                 super(PluginManager, self).all(),
-                key=lambda x: x.title
+                key=lambda x: x.name
         ):
+            plugin = h.hook
             if not plugin.enabled:
                 continue
             if version is not None and plugin.__version__ != version:
