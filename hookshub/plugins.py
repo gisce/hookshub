@@ -40,10 +40,7 @@ class InstanceManager(object):
         try:
             module = import_module(module_name, class_name)
             cls = getattr(module, class_name)
-            if self.instances:
-                return cls()
-            else:
-                return cls
+            return cls()
         except Exception:
             logger = logging.getLogger('hookshub.errors')
             logger.exception('Unable to import %s', class_path)
@@ -78,10 +75,7 @@ class InstanceManager(object):
             try:
                 module = import_module(module_name, class_name)
                 cls = getattr(module, class_name)
-                if self.instances:
-                    results.append(cls())
-                else:
-                    results.append(cls)
+                results.append(cls())
             except Exception:
                 logger = logging.getLogger('hookshub.errors')
                 logger.exception('Unable to import %s', cls_path)
