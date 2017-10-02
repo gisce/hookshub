@@ -262,12 +262,15 @@ with description('Listener Methods'):
                     with patch('hookshub.listener.Sentry') as sentry:
                         sentry.start()
                         sentry.return_value = True
+                        with patch('os.path.isfile') as isfile:
+                            isfile.start()
+                            isfile.return_value = False
 
-                        app_mock = Mock()
-                        app_mock.run.return_value = True
-                        listener.application = app_mock
-                        listener.start_listening()
-
+                            app_mock = Mock()
+                            app_mock.run.return_value = True
+                            listener.application = app_mock
+                            listener.start_listening()
+                            isfile.stop()
                         sentry.stop()
                     logging.stop()
                 pool.stop()
