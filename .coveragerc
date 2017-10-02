@@ -5,3 +5,4 @@ source = ./hookshub
 exclude_lines =
     if __name__ == .__main__.:
     def reload_hooks
+    def _pickle_method
