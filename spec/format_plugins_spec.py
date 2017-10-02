@@ -110,7 +110,6 @@ with description('PluginManager'):
         with it('Must return None when trying to import unimportable hook'):
             with patch("hookshub.plugins.import_module",
                        side_effect=Exception('Fail Import')) as import_method:
-                import pudb;pu.db
                 expect(plugins.get(TestHook)).to(be_none)
 
     with context('Unregister plugins'):
