@@ -7,6 +7,7 @@ from mock import patch, Mock
 
 _TEST_HOOK_VERSION = 123
 
+
 def ok():
     return True
 
@@ -97,6 +98,20 @@ with description('PluginManager'):
             expect(plugin.event).to(equal(hook_data.event))
             expect(plugin.repository).to(equal(hook_data.repository))
             expect(plugin.branch).to(equal(hook_data.branch))
+
+    with context('method get'):
+        with it('Must return None when getting an unexisting hook'):
+            class TotallyNotExistingHook(Hook):
+                __module__ = 'spec.format_plugins_spec'
+
+
+            expect(plugins.get(TotallyNotExistingHook)).to(be_none)
+
+        with it('Must return None when trying to import unimportable hook'):
+            with patch("hookshub.plugins.import_module",
+                       side_effect=Exception('Fail Import')) as import_method:
+                import pudb;pu.db
+                expect(plugins.get(TestHook)).to(be_none)
 
     with context('Unregister plugins'):
         with it('must return "False" if hook does not exist'):
