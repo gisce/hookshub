@@ -22,13 +22,26 @@ class Hook(object):
     def is_enabled(self):
         return self._enabled
 
-    def get_args(self, webhook, conf):
+    def get_args(self, webhook=False, conf=False):
         """
         :param webhook: WebHook with origin's payload
         :param conf: environment conf to be used
         :return: Args to call "run_hook" method
         """
-        return {}
+        dict = {}
+        if conf:
+            dict.update({
+                'conf': True
+            })
+        if webhook:
+            dict.update({
+                'webhook': True
+            })
+        if not dict:
+            dict = {
+                'Default': True
+            }
+        return dict
 
     def enable(self):
         self._enabled = True
