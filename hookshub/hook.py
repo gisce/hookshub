@@ -1,4 +1,3 @@
-from pkg_resources import iter_entry_points
 import logging
 
 
@@ -107,8 +106,9 @@ def get_hooks(event=False, repository=False, branch=False):
 
 def reload_hooks():
     from hookshub.plugins import plugins
+    from pkg_resources import working_set
     logger = logging.getLogger()
-    for entrypoint in set(iter_entry_points('hookshub.plugins')):
+    for entrypoint in working_set.iter_entry_points('hookshub.plugins'):
         try:
             plugin = entrypoint.load()
         except Exception as e:
