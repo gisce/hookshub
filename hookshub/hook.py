@@ -117,6 +117,8 @@ def get_hooks(event=False, repository=False, branch=False):
     return results
 
 
+# Reload Hooks cannot be tested truthfully without working environment, se we
+#   don't test it.
 def reload_hooks():
     # Update working set before using it
     import imp
