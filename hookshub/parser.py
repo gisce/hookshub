@@ -90,7 +90,8 @@ class HookParser(object):
 
     @staticmethod
     def load_hooks(event=False, repository=False, branch=False):
-        from hookshub.hook import get_hooks
+        from hookshub.hook import get_hooks, reload_hooks
+        reload_hooks()
         if event == 'None':
             event = False
         if repository == 'None':
