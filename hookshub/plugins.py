@@ -31,8 +31,11 @@ class InstanceManager(object):
         return class_path in list(self.get_class_list())
 
     def get(self, class_path):
-        if not self.exists(class_path):
+        if not self.exists(class_path) and not self.exists(
+                        '%s.%s' % (class_path.__module__, class_path.__name__)):
             return None
+        if not isinstance(class_path, str):
+            class_path = '%s.%s' % (class_path.__module__, class_path.__name__)
         module_name, class_name = class_path.rsplit('.', 1)
         try:
             module = import_module(module_name, class_name)
