@@ -8,7 +8,7 @@ from mock import patch, Mock
 _TEST_HOOK_VERSION = 123
 
 
-def ok():
+def ok(args):
     return True
 
 
@@ -63,3 +63,11 @@ with description('HooksHub/Hook'):
                 'conf': True,
                 'webhook': True
             }))
+
+        with it(' must throw an exception when running the hook without args'):
+            expect(test_hook.run_hook).to(raise_error(EnvironmentError))
+
+        with it(' must return TRUE and HookName when running the hook with args'):
+            expect(test_hook.run_hook(True)).to(equal(
+                (True, test_hook.title)
+            ))
