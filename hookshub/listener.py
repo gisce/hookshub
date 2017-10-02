@@ -164,17 +164,26 @@ def index():
     log_out = ('Processing: {}...'.format(parser.event))
 
     code, output = parser.run_event_actions(config)
-    code, output = parser.run_event_hooks(config)
-
     output = '{0}|{1}'.format(log_out, output)
+    if code:  # Error executing actions
+        output = 'Fail with {}\n{}'.format(event, output)
+    else:  # All ok
+        output = 'Success with {}\n{}'.format(event, output)
+
+    code_hooks, output_hooks = parser.run_event_hooks(config)
+
     # Remove temporal file
     remove(tmpfile)
 
-    if code != 0:  # Error executing actions
-        output = 'Fail with {}\n{}'.format(event, output)
-        raise AbortException(output)
+    output_hooks = '{0}|{1}'.format(log_out, output_hooks)
+    if code_hooks:  # Error executing actions
+        output = '{}\nFail with {}\n{}'.format(
+            output, event, output_hooks)
     else:  # All ok
-        output = 'Success with {}\n{}'.format(event, output)
+        output = '{}\nSuccess with {}\n{}'.format(
+            output, event, output_hooks)
+    if code or code_hooks:
+        raise AbortException(output)
     return dumps({'msg': output})
 
 
