@@ -105,6 +105,11 @@ def get_hooks(event=False, repository=False, branch=False):
 
 
 def reload_hooks():
+    # Update working set before using it
+    import imp
+    import pkg_resources
+    imp.reload(pkg_resources)
+    # Import plugin managers after reloading pkg_resources
     from hookshub.plugins import plugins
     from pkg_resources import working_set
     logger = logging.getLogger()
