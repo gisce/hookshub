@@ -8,12 +8,6 @@ import requests
 #   For more information about GitLab events, check the official docs:
 # https://gitlab.com/gitlab-org/gitlab-ce/blob/master/doc/web_hooks/web_hooks.md
 
-EVENT_COMMENT = 'note'
-EVENT_ISSUE = 'issue'
-EVENT_MERGE_REQ = 'merge_request'
-EVENT_PUSH_TAG = 'tag_push'
-EVENT_PUSH = 'push'
-
 
 class GitLabWebhook(webhook):
 
@@ -147,6 +141,14 @@ class GitLabWebhook(webhook):
 
 
 class GitLabUtil:
+
+    events = {
+        'EVENT_COMMENT': 'note',
+        'EVENT_ISSUE': 'issue',
+        'EVENT_MERGE_REQ': 'merge_request',
+        'EVENT_PUSH_TAG': 'tag_push',
+        'EVENT_PUSH': 'push',
+    }
 
     @staticmethod
     def clone_on_dir(dir, branch, repository, url):
