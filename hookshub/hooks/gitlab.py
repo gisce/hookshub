@@ -126,25 +126,7 @@ class GitLabWebhook(webhook):
                         'issue' in self.json.keys():
             return self.json['issue']['state']
         return 'None'
-
-    def get_exe_action(self, action, conf):
-        json = {}
-        json.update({'token': conf['gitlab_token']})
-        args = super(GitLabWebhook, self).get_exe_action(action, conf)
-        if action.startswith(GitLabUtil['EVENT_MERGE_REQ)']):
-            json.update({'vhost_path': conf['vhost_path']})
-            json.update({'port': conf['nginx_port']})
-            json.update({'ssh_url': self.ssh_url})
-            json.update({'http_url': self.http_url})
-            json.update({'repo_name': self.repo_name})
-            json.update({'branch_name': self.branch_name})
-            json.update({'index_id': self.index_id})
-            json.update({'object_id': self.object_id})
-            json.update({'project_id': self.project_id})
-            json.update({'state': self.state})
-            args = [args[0], dumps(json)]
-        return args
-
+    
 
 class GitLabUtil:
 
