@@ -43,7 +43,7 @@ class InstanceManager(object):
             return cls()
         except Exception:
             logger = logging.getLogger('hookshub.errors')
-            logger.exception('Unable to import %s', class_path)
+            logger.error('Unable to import %s', class_path)
             return None
 
     def remove(self, class_path):
