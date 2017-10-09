@@ -400,37 +400,26 @@ with description('GitLab Hook'):
             hook = gitlab(json_data)
             expect(hook.branch_name).to(equal('None'))
 
-    with context('Lektor repository events'):
-        with it('must return token, port, vhost path, ssh and http url,'
-                ' repository name and source branch name, object and index id'
-                ' of the merge request when getting action arguments with '
-                '"merge request" action'):
+    with context('GitLab repository events'):
+        with it('must return the action path for the actions, the JSON Payload'
+                'and the event to run'):
             file = 'merge_request.json'
             action = 'merge_request_lektor.py'
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             config = loads(open(join(data_path, 'conf.json'), 'r').read())
             hook = gitlab(json_data)
-            json = {}
-            json.update({'token': config['gitlab_token']})
-            json.update({'port': config['nginx_port']})
-            json.update({'vhost_path': config['vhost_path']})
-            json.update({'ssh_url': hook.ssh_url})
-            json.update({'http_url': hook.http_url})
-            json.update({'repo_name': hook.repo_name})
-            json.update({'branch_name': hook.branch_name})
-            json.update({'index_id': hook.index_id})
-            json.update({'object_id': hook.object_id})
-            json.update({'project_id': hook.project_id})
-            json.update({'state': hook.state})
-            args_json = loads(hook.get_exe_action(action, config)[1])
+            args = hook.get_exe_action(action, config)
+            expect(args[0]).to(equal(join(hook.actions_path, action)))
+            args_json = loads(args[1])
+            expect(args[2]).to(equal(util.events['EVENT_MERGE_REQ']))
             checked = []
             for key in args_json.keys():
                 checked.append(key)
                 expect(args_json[key]).to(
-                    equal(json.get(key, '{} Not found'.format(key)))
+                    equal(json_data.get(key, '{} Not found'.format(key)))
                 )
-            for key in json.keys():
+            for key in json_data.keys():
                 expect(checked).to(contain(key))
 
 with description('GitLab Utils'):
