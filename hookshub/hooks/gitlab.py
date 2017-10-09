@@ -81,8 +81,8 @@ class GitLabWebhook(webhook):
             return None
         if self.event == GitLabUtil.events['EVENT_COMMENT'] and\
                         'merge_request' in self.json.keys():
-            return self.json['merge_request']['id']
-        return self.json['object_attributes']['id']
+            return self.json['merge_request']['iid']
+        return self.json['object_attributes']['iid']
 
     @property
     def object_id(self):
