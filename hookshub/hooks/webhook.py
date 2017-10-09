@@ -51,7 +51,7 @@ class webhook(object):
         :return: All the scripts that match with the event decoded
         :rtype: List<String>
         """
-        events = [
+        events = [] if not isdir(self.actions_path) else [
             action
             for action in listdir(self.actions_path)
             if (
