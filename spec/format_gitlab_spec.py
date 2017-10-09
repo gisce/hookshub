@@ -3,7 +3,6 @@ from os import listdir
 from json import loads, dumps
 from hookshub.hooks.gitlab import GitLabWebhook as gitlab
 from hookshub.hooks.gitlab import GitLabUtil as util
-from hookshub import utils
 from expects import *
 from mock import patch, Mock
 
@@ -462,52 +461,6 @@ with description('GitLab Utils'):
                 expect(len(err) > 0).to(equal(True))
                 expect(result).to(equal(1))
                 popen.stop()
-
-    # pip_requirements
-    with context('Install pip requirements'):
-        with it('Must try to pip install on a dir. If can\'t it\'ll print'
-                ' another line with the error'):
-            log = utils.pip_requirements(data_path)
-            expect(len(log) > 0).to(equal(True))
-
-    # docs_build
-    with context('Build Lektor'):
-        with it('Must return two strings (log + build dir -> Mocked)'):
-            # All ok
-            with patch("hookshub.utils.os") as os:
-                os.start()
-                os.system = lambda x: 0
-                from_path = join(project_path, 'test_data', 'utils')
-                to_path = 'To build'
-                proj = 'Project in folder'
-                log, dir = utils.lektor_build(from_path, to_path, proj)
-                with open(join(
-                        from_path, 'lektor_build_ok'
-                ), 'r') as out:
-                    output = out.read()
-                output = output.replace('PPATHH', from_path)
-                expect(log).to(equal(output))
-                expect(dir).to(equal(to_path))
-                os.stop()
-
-        with it('Must return the log String and a False directory (Mocked)'):
-            # Simulate can't build
-            with patch("hookshub.utils.os") as os:
-                os.start()
-                os.system = lambda x: -1
-                from_path = join(project_path, 'test_data', 'utils')
-                to_path = 'To build'
-                file = 'Config File'
-                proj = 'Project in folder'
-                log, dir = utils.lektor_build(from_path, to_path, proj)
-                with open(join(
-                        from_path, 'lektor_build_bad'
-                ), 'r') as out:
-                    output = out.read()
-                output = output.replace('PPATHH', from_path)
-                expect(log).to(equal(output))
-                expect(dir).to(equal(False))
-                os.stop()
 
     # post_comment_pr
     with context('Post Comment On PR'):

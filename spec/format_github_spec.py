@@ -4,7 +4,6 @@ from json import loads, dumps
 
 from hookshub.hooks.github import GitHubWebhook as github
 from hookshub.hooks.github import GitHubUtil as util
-from hookshub import utils
 
 from expects import *
 from mock import patch, Mock
@@ -804,112 +803,6 @@ with description('GitHub Utils'):
                 expect(len(err) > 0).to(equal(True))
                 expect(result).to(equal(1))
                 popen.stop()
-
-    # pip_requirements
-    with context('Install pip requirements'):
-        with it('Must try to pip install on a dir and log it correctly'):
-            with patch("hookshub.utils.os") as os:
-                os.start()
-                os.system = lambda x: 0
-                util_path = join(project_path, 'test_data', 'utils')
-                log = utils.pip_requirements(util_path)
-                with open(join(
-                        util_path, 'pip_install_ok'
-                ), 'r') as out:
-                    output = out.read()
-                expect(log).to(equal(output))
-                os.stop()
-
-        with it('Must try to pip install on a dir. Failing must log correctly'):
-            with patch("hookshub.utils.os") as os:
-                os.start()
-                os.system = lambda x: -1
-                util_path = join(project_path, 'test_data', 'utils')
-                log = utils.pip_requirements(util_path)
-                with open(join(
-                        util_path, 'pip_install_bad'
-                ), 'r') as out:
-                    output = out.read()
-                expect(log).to(equal(output))
-                os.stop()
-
-    # create_virtualenv
-    with context('Create a Virtualenv'):
-        with it('Must create a virtualenv in the default directory (/tmp/foo)'):
-            dest = utils.create_virtualenv()
-            expect(isdir(dest)).to(equal(True))
-            expect(dest).to(equal('/tmp/venv/foo'))
-            import os
-            os.system('rm -r {}'.format(dest))
-
-        with it('Must create a virtualenv in the specified directory and name'):
-            directory = '/tmp/venv'
-            name = 'test'
-            exp_dest = join(directory, name)
-            dest = utils.create_virtualenv(name=name, dir=directory)
-            expect(isdir(dest)).to(equal(True))
-            expect(dest).to(equal(exp_dest))
-            import os
-            os.system('rm -r {}'.format(directory))
-
-
-    # export PYTHONPATH
-    with context('Export PYTHONPATH with sitecustomize'):
-        with it('Must return a log with a success message when seting the var'):
-            with patch("hookshub.utils.os") as os:
-                os.start()
-                os.system = lambda x: 0
-                log = utils.export_pythonpath('Path')
-                expect(len(log) > 0).to(equal(True))
-                expect(log).to(equal('Success to export sitecustomize path'))
-                os.stop()
-
-        with it('Must return an error from os.system if it cannot be exported'):
-            with patch("hookshub.utils.os") as os:
-                os.start()
-                os.system = lambda x: 1
-                log = utils.export_pythonpath('Path')
-                expect(len(log) > 0).to(equal(True))
-                expect(log).to(equal(
-                    'Failed to export sitecustomize path'
-                ))
-                os.stop()
-
-    # docs_build
-    with context('Build docs'):
-        with it('Must return $log + $build_dir with correct docs build'):
-            with patch("hookshub.utils.os") as os:
-                os.start()
-                os.system = lambda x: 0
-                from_path = join(project_path, 'test_data', 'utils')
-                to_path = 'To build'
-                file = 'Config File'
-                log, dir = utils.mkdocs_build(from_path, to_path, file, True)
-                with open(join(
-                        from_path, 'mkdocs_build_ok'
-                ), 'r') as out:
-                    output = out.read()
-                output = output.replace('PPATHH', from_path)
-                expect(log).to(equal(output))
-                expect(dir).to(equal(to_path))
-                os.stop()
-
-        with it('Must return $log + "False" with bad docs build'):
-            with patch("hookshub.utils.os") as os:
-                os.start()
-                os.system = lambda x: -1
-                from_path = join(project_path, 'test_data', 'utils')
-                to_path = 'To build'
-                file = 'Config File'
-                log, dir = utils.mkdocs_build(from_path, to_path, file)
-                with open(join(
-                        from_path, 'mkdocs_build_bad'
-                ), 'r') as out:
-                    output = out.read()
-                output = output.replace('PPATHH', from_path)
-                expect(log).to(equal(output))
-                expect(dir).to(equal(False))
-                os.stop()
 
     # get_pr
     with context('Get Pull Request'):

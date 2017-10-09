@@ -1,7 +1,6 @@
 from hookshub.plugins import PluginManager
 from hookshub.hook import Hook
 from hookshub.hook import get_hooks
-from hookshub.hook import reload_hooks
 from hookshub.hooks.github import GitHubUtil
 from collections import namedtuple
 
