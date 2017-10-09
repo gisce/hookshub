@@ -320,6 +320,24 @@ with description('GitLab Hook'):
             hook = gitlab(json_data)
             expect(hook.project_id).to(equal(None))
 
+        with it('must return the index id of the issue '
+                '(/object_attributes/iid on issue.json)'):
+            file = 'issue.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            issue_state = json_data['object_attributes']['iid']
+            expect(hook.index_id).to(equal(issue_state))
+
+        with it('must return the object id of the issue '
+                '(/object_attributes/id on issue.json)'):
+            file = 'issue.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            issue_state = json_data['object_attributes']['id']
+            expect(hook.object_id).to(equal(issue_state))
+
         with it('must return the right state of the issue '
                 '(/object_attributes/state on issue.json)'):
             file = 'issue.json'
@@ -352,6 +370,45 @@ with description('GitLab Hook'):
             json_data = loads(data)
             hook = gitlab(json_data)
             expect(hook.target_branch_name).to(equal('master'))
+
+        with it('must return the ssh url of the repository'
+                    ' (json/repository/git_ssh_url)'):
+            file = 'merge_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.ssh_url).to(equal(
+                json_data['object_attributes']['source']['git_ssh_url']
+            ))
+
+        with it('must return the http url of the repository'
+                    ' (json/repository/git_http_url)'):
+            file = 'merge_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.http_url).to(equal(
+                json_data['object_attributes']['source']['git_http_url']
+            ))
+
+        with it('must return the name of the repository'
+                    ' (json/repository/repo_name)'):
+            file = 'merge_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.repo_name).to(equal(
+                json_data['object_attributes']['source']['name']
+            ))
+
+        with it('must return source project id of the merge request '
+                '(object_attributes>source_project_id on merge_request.json)'):
+            file = 'merge_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            project_id = json_data['object_attributes']['source_project_id']
+            expect(hook.project_id).to(equal(project_id))
 
         with it('must return target project id of the merge request '
                 '(object_attributes>target_project_id on merge_request.json)'):
