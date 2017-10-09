@@ -1,4 +1,4 @@
-from os.path import abspath, normpath, dirname, join, isfile
+from os.path import abspath, normpath, dirname, join, isfile, isdir
 from os import listdir
 from json import loads, dumps
 from hookshub.hooks.gitlab import GitLabWebhook as gitlab
@@ -37,11 +37,14 @@ with description('GitLab Hook'):
             file = 'push.json'
             data = open(join(data_path, file)).read()
             hook = gitlab(loads(data))
-            actions = listdir(hook.actions_path)
-            actions = [
-                action for action in actions
-                if isfile(join(hook.actions_path, action))
-                ]
+            if not isdir(hook.actions_path):
+                actions = []
+            else:
+                actions = listdir(hook.actions_path)
+                actions = [
+                    action for action in actions
+                    if isfile(join(hook.actions_path, action))
+                    ]
             expect(hook.actions).to(equal(actions))
 
         with it('must have all actions of the situation (more details'
@@ -50,27 +53,30 @@ with description('GitLab Hook'):
             data = open(join(data_path, file)).read()
             hook = gitlab(loads(data))
             actions = listdir(hook.actions_path)
-            actions = [
-                action for action in actions
-                if isfile(join(hook.actions_path, action))
-                ]
-            actions = [
-                action
-                for action in actions
-                # If they start with {event}-{repository}-{branch}
-                if action.startswith('{0}-{1}-{2}'.format(
-                    hook.event, hook.repo_name, hook.branch_name
-                )) or
-                # If they start with {event}-{repository}_{name}
-                action.startswith(
-                    '{0}-{1}_'.format(hook.event, hook.repo_name)) or
-                # If they are named after {event}-{repository}
-                action == '{0}-{1}'.format(hook.event, hook.repo_name) or
-                # If they start with {event}_{name}
-                action.startswith('{0}_'.format(hook.event)) or
-                # If they are named after {event}
-                action == '{0}'.format(hook.event)
-                ]
+            if not isdir(hook.actions_path):
+                actions = []
+            else:
+                actions = [
+                    action for action in actions
+                    if isfile(join(hook.actions_path, action))
+                    ]
+                actions = [
+                    action
+                    for action in actions
+                    # If they start with {event}-{repository}-{branch}
+                    if action.startswith('{0}-{1}-{2}'.format(
+                        hook.event, hook.repo_name, hook.branch_name
+                    )) or
+                    # If they start with {event}-{repository}_{name}
+                    action.startswith(
+                        '{0}-{1}_'.format(hook.event, hook.repo_name)) or
+                    # If they are named after {event}-{repository}
+                    action == '{0}-{1}'.format(hook.event, hook.repo_name) or
+                    # If they start with {event}_{name}
+                    action.startswith('{0}_'.format(hook.event)) or
+                    # If they are named after {event}
+                    action == '{0}'.format(hook.event)
+                    ]
             expect(hook.event_actions).to(equal(actions))
 
         with it('must return the ssh url of the repository'
