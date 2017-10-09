@@ -102,8 +102,7 @@ with description('PluginManager'):
     with context('method get'):
         with it('Must return None when getting an unexisting hook'):
             class TotallyNotExistingHook(Hook):
-                __module__ = 'spec.format_plugins_spec'
-
+                __module__ = 'hookshub.spec.format_plugins_spec'
 
             expect(plugins.get(TotallyNotExistingHook)).to(be_none)
 
@@ -115,7 +114,7 @@ with description('PluginManager'):
     with context('Unregister plugins'):
         with it('must return "False" if hook does not exist'):
             class TotallyNotExistingHook(Hook):
-                __module__ = 'spec.format_plugins_spec'
+                __module__ = 'hookshub.spec.format_plugins_spec'
 
             res = plugins.unregister(TotallyNotExistingHook)
             expect(res).to(equal(False))
