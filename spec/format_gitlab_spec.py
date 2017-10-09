@@ -52,10 +52,10 @@ with description('GitLab Hook'):
             file = 'push.json'
             data = open(join(data_path, file)).read()
             hook = gitlab(loads(data))
-            actions = listdir(hook.actions_path)
             if not isdir(hook.actions_path):
                 actions = []
             else:
+                actions = listdir(hook.actions_path)
                 actions = [
                     action for action in actions
                     if isfile(join(hook.actions_path, action))
