@@ -109,7 +109,11 @@ with description('PluginManager'):
         with it('Must return None when trying to import unimportable hook'):
             with patch("hookshub.plugins.import_module",
                        side_effect=Exception('Fail Import')) as import_method:
-                expect(plugins.get(TestHook)).to(be_none)
+                with patch('hookshub.plugins.logging') as logging:
+                    logger = Mock()
+                    logger.error.return_value = True
+                    logging.getLogger.return_value = logger
+                    expect(plugins.get(TestHook)).to(be_none)
 
     with context('Unregister plugins'):
         with it('must return "False" if hook does not exist'):
