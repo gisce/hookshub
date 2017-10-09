@@ -17,18 +17,18 @@ class GitLabWebhook(webhook):
 
     @property
     def ssh_url(self):
-        if self.event == GitLabUtil['EVENT_MERGE_REQ']:
+        if self.event == GitLabUtil.events['EVENT_MERGE_REQ']:
             return self.json['object_attributes']['source']['git_ssh_url']
-        elif self.event == GitLabUtil['EVENT_COMMENT']\
+        elif self.event == GitLabUtil.events['EVENT_COMMENT']\
                 and 'merge_request' in self.json.keys():
                     return self.json['merge_request']['source']['git_ssh_url']
         return self.json['repository']['git_ssh_url']
 
     @property
     def http_url(self):
-        if self.event == GitLabUtil['EVENT_MERGE_REQ']:
+        if self.event == GitLabUtil.events['EVENT_MERGE_REQ']:
             return self.json['object_attributes']['source']['git_http_url']
-        elif self.event == GitLabUtil['EVENT_COMMENT']\
+        elif self.event == GitLabUtil.events['EVENT_COMMENT']\
                 and 'merge_request' in self.json.keys():
                     return self.json['merge_request']['source']['git_http_url']
         return self.json['repository']['git_http_url']
@@ -39,9 +39,9 @@ class GitLabWebhook(webhook):
 
     @property
     def repo_name(self):
-        if self.event == GitLabUtil['EVENT_MERGE_REQ']:
+        if self.event == GitLabUtil.events['EVENT_MERGE_REQ']:
             return self.json['object_attributes']['source']['name']
-        elif self.event == GitLabUtil['EVENT_COMMENT']\
+        elif self.event == GitLabUtil.events['EVENT_COMMENT']\
                 and 'merge_request' in self.json.keys():
                     return self.json['merge_request']['source']['name']
         return self.json['repository']['name']
@@ -50,13 +50,13 @@ class GitLabWebhook(webhook):
     def branch_name(self):
         branch = 'None'
         try:
-            if self.event == GitLabUtil['EVENT_PUSH']:
+            if self.event == GitLabUtil.events['EVENT_PUSH']:
                 branch = self.json['ref'].split('/', 2)[-1]
-            elif self.event == GitLabUtil['EVENT_MERGE_REQ']:
+            elif self.event == GitLabUtil.events['EVENT_MERGE_REQ']:
                 branch = self.json['object_attributes']['source_branch']
-            elif self.event == GitLabUtil['EVENT_ISSUE']:
+            elif self.event == GitLabUtil.events['EVENT_ISSUE']:
                 branch = self.json['object_attributes']['branch_name'] or 'None'
-            elif self.event == GitLabUtil['EVENT_COMMENT']:
+            elif self.event == GitLabUtil.events['EVENT_COMMENT']:
                 if 'issue' in self.json.keys():
                     branch = self.json['issue']['branch_name'] or 'None'
                 elif 'merge_request' in self.json.keys():
@@ -67,62 +67,62 @@ class GitLabWebhook(webhook):
 
     @property
     def target_branch_name(self):
-        if self.event == GitLabUtil['EVENT_MERGE_REQ']:
+        if self.event == GitLabUtil.events['EVENT_MERGE_REQ']:
             return self.json['object_attributes']['target_branch']
-        elif self.event == GitLabUtil['EVENT_COMMENT']\
+        elif self.event == GitLabUtil.events['EVENT_COMMENT']\
                 and 'merge_request' in self.json.keys():
             return self.json['merge_request']['target_branch']
         return 'None'
 
     @property
     def index_id(self):
-        if self.event == GitLabUtil['EVENT_PUSH'] or\
-                        self.event == GitLabUtil['EVENT_PUSH_TAG']:
+        if self.event == GitLabUtil.events['EVENT_PUSH'] or\
+                        self.event == GitLabUtil.events['EVENT_PUSH_TAG']:
             return None
-        if self.event == GitLabUtil['EVENT_COMMENT'] and\
+        if self.event == GitLabUtil.events['EVENT_COMMENT'] and\
                         'merge_request' in self.json.keys():
             return self.json['merge_request']['id']
         return self.json['object_attributes']['id']
 
     @property
     def object_id(self):
-        if self.event == GitLabUtil['EVENT_PUSH'] or\
-                        self.event == GitLabUtil['EVENT_PUSH_TAG']:
+        if self.event == GitLabUtil.events['EVENT_PUSH'] or\
+                        self.event == GitLabUtil.events['EVENT_PUSH_TAG']:
             return None
-        if self.event == GitLabUtil['EVENT_COMMENT'] and\
+        if self.event == GitLabUtil.events['EVENT_COMMENT'] and\
                         'merge_request' in self.json.keys():
             return self.json['merge_request']['id']
         return self.json['object_attributes']['id']
 
     @property
     def project_id(self):
-        if self.event == GitLabUtil['EVENT_ISSUE']:
+        if self.event == GitLabUtil.events['EVENT_ISSUE']:
             return None
-        elif self.event == GitLabUtil['EVENT_MERGE_REQ']:
+        elif self.event == GitLabUtil.events['EVENT_MERGE_REQ']:
             return self.json['object_attributes']['source_project_id']
-        elif self.event == GitLabUtil['EVENT_COMMENT']\
+        elif self.event == GitLabUtil.events['EVENT_COMMENT']\
                 and 'merge_request' in self.json.keys():
             return self.json['merge_request']['source_project_id']
         return self.json['project_id']
 
     @property
     def target_project_id(self):
-        if self.event == GitLabUtil['EVENT_MERGE_REQ']:
+        if self.event == GitLabUtil.events['EVENT_MERGE_REQ']:
             return self.json['object_attributes']['target_project_id']
-        elif self.event == GitLabUtil['EVENT_COMMENT']\
+        elif self.event == GitLabUtil.events['EVENT_COMMENT']\
                 and 'merge_request' in self.json.keys():
             return self.json['merge_request']['target_project_id']
         return None
 
     @property
     def state(self):
-        if self.event == GitLabUtil['EVENT_MERGE_REQ'] or\
-                        self.event == GitLabUtil['EVENT_ISSUE']:
+        if self.event == GitLabUtil.events['EVENT_MERGE_REQ'] or\
+                        self.event == GitLabUtil.events['EVENT_ISSUE']:
             return self.json['object_attributes']['state']
-        elif self.event == GitLabUtil['EVENT_COMMENT']\
+        elif self.event == GitLabUtil.events['EVENT_COMMENT']\
                 and 'merge_request' in self.json.keys():
             return self.json['merge_request']['state']
-        elif self.event == GitLabUtil['EVENT_COMMENT'] and\
+        elif self.event == GitLabUtil.events['EVENT_COMMENT'] and\
                         'issue' in self.json.keys():
             return self.json['issue']['state']
         return 'None'
