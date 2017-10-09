@@ -139,7 +139,7 @@ class GitLabUtil:
     }
 
     @staticmethod
-    def clone_on_dir(dir, branch, repository, url):
+    def clone_on_dir(dir, repository, url, branch=None):
         """
         :param dir: Directory where the clone will be applied. This may exist
             or it'll throw an exception.
@@ -157,7 +157,7 @@ class GitLabUtil:
         """
         output = "Clonant el repositori '{}'".format(repository)
         command = 'git clone {}'.format(url)
-        if branch != 'None':
+        if branch and branch != 'None':
             output += ", amb la branca '{}'".format(branch)
             command += ' --branch {}'.format(branch)
             output += ' ... '
@@ -166,8 +166,8 @@ class GitLabUtil:
         )
         out, err = new_clone.communicate()
         if new_clone.returncode != 0:
-            output += 'FAILED TO CLONE: {} | ' \
-                      'Try cloning from https ...'.format(err)
+            output += 'FAILED TO CLONE: {}: | ' \
+                      'Try to clone from https ...'.format(out)
             err = ':clone_repository_fail::{}'.format(err)
         return output, new_clone.returncode, err
 
