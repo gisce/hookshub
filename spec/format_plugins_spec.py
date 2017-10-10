@@ -53,15 +53,13 @@ with description('PluginManager'):
                 with patch("hookshub.plugins.import_module") as import_method:
                     import_method.start()
                     model = Mock()
-                    model.TestHook.return_value = hook_data
+                    model.TestHook.return_value = hook_inst
                     import_method.return_value = model
                     expect(plugins.register(TestHook)).to(equal(TestHook))
+                    # Compare manual and PluginManager
+                    plugin, found = plugins.get_hook(TestHook)
                     import_method.stop()
-
-                # Compare manual and PluginManager
-                plugin = plugins.get_hooks()[0].hook
-                # As we update the plugins, there should not exist any more hooks
-                expect(len(plugins)).to(equal(1))
+                expect(found).to(be_true)
                 expect(plugin.name).to(equal(hook_data.name))
                 expect(plugin.hook).to(equal(hook_data.hook))
                 expect(plugin.event).to(equal(hook_data.event))
@@ -95,14 +93,15 @@ with description('PluginManager'):
                 with patch("hookshub.plugins.import_module") as import_method:
                     import_method.start()
                     model = Mock()
-                    model.TestHook.return_value = hook_data
+                    model.TestHook.return_value = hook_inst
                     import_method.return_value = model
                     expect(plugins.register(TestHook)).to(equal(TestHook))
                     import_method.stop()
 
-                # Compare manual and PluginManager
-                plugin = plugins.get_hooks()[0].hook
-                # As we update the plugins, there should not exist any more hooks
+                    # Compare manual and PluginManager
+                    plugin = plugins.get_hooks()[0]
+                # As we update the plugins,
+                #  there should not exist any more hooks
                 expect(len(plugins)).to(equal(1))
                 expect(plugin.name).to(equal(hook_data.name))
                 expect(plugin.hook).to(equal(hook_data.hook))
@@ -145,15 +144,10 @@ with description('PluginManager'):
                 'name, hook, event, repository, branch'
             )
             hook_inst = TestHook()
-            hook_data.name = hook_name
-            hook_data.hook = hook_inst
-            hook_data.event = hook_inst.event
-            hook_data.repository = hook_inst.repository
-            hook_data.branch = hook_inst.branch
             with patch("hookshub.plugins.import_module") as import_method:
                 import_method.start()
                 model = Mock()
-                model.TestHook.return_value = hook_data
+                model.TestHook.return_value = hook_inst
                 import_method.return_value = model
                 res = plugins.unregister(TestHook)
                 expect(res).to(equal(TestHook))
