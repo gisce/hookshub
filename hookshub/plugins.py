@@ -114,11 +114,8 @@ class PluginManager(InstanceManager):
     def get_hooks(self):
         return deepcopy(self._hooks_list)
 
-    def register(self, cls):
+    def get_hook(self, cls):
         cls_name = '%s.%s' % (cls.__module__, cls.__name__)
-        if self.exists(cls_name):
-            cls = self.unregister(cls)
-        self.add(cls_name)
         inst = self.get(cls_name)
         hook_name = cls_name.replace('.', '_')
         hook_data = namedtuple(
@@ -130,6 +127,29 @@ class PluginManager(InstanceManager):
         hook_data.event = inst.event
         hook_data.repository = inst.repository
         hook_data.branch = inst.branch
+        return (
+            # Hook, True if Found
+            ([hook for hook in self._hooks_list
+                    if hook.name == hook_name and
+                    hook.name == hook_data.name and
+                    hook.event == hook_data.event and
+                    hook.repository == hook_data.repository and
+                    hook.branch == hook_data.branch][0], True)
+            if any([hook for hook in self._hooks_list
+                    if hook.name == hook_name and
+                    hook.name == hook_data.name and
+                    hook.event == hook_data.event and
+                    hook.repository == hook_data.repository and
+                    hook.branch == hook_data.branch])
+            # Hook Data (new Hook), False if NotFound
+            else (hook_data, False))
+
+    def register(self, cls):
+        cls_name = '%s.%s' % (cls.__module__, cls.__name__)
+        if self.exists(cls_name):
+            cls = self.unregister(cls)
+        self.add(cls_name)
+        hook_data, found = self.get_hook(cls)
         self._hooks_list.append(hook_data)
         return cls
 
@@ -138,14 +158,9 @@ class PluginManager(InstanceManager):
         hook_name = cls_name.replace('.', '_')
         if not self.exists(cls_name):
             return False
-        inst = self.get(cls_name)
-        for hook in self._hooks_list:
-            if hook.name == hook_name and\
-                            hook.name == inst.name and\
-                            hook.event == inst.event and\
-                            hook.repository == inst.repository and\
-                            hook.branch == inst.branch:
-                self._hooks_list.remove(hook)
+        hook_data, found = self.get_hook(cls)
+        if found:
+            self._hooks_list.remove(hook_data)
         self.remove(cls_name)
         return cls
 
