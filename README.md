@@ -13,6 +13,7 @@ Our Hub of Hooks
  * [Elements](#elements-listener-hooks-and-actions)
  * [Tests](#testing)
  * [File Structure](#file-structure)
+ * [Add your own hooks](#adding-hooks)
 
 
 ## Installation
@@ -34,6 +35,7 @@ There are a few configurations in order to work properly. Check the [configurati
 * [Flask Docs](http://flask.pocoo.org/docs/0.12/)
 * [Mamba Testing](https://github.com/nestorsalceda/mamba)
 * [JSON Example](http://json.org/example.html)
+* [Entry Points](http://setuptools.readthedocs.io/en/latest/pkg_resources.html)
 
 ## Configuration
 
@@ -120,3 +122,77 @@ All the Elements are located inside the `/hookshub/` directory ready to be insta
 The tests are located in the `/spec/` directory.
 
 The test data is located in the `/test_data/` directory
+
+## Adding Hooks
+
+You can add your own hooks actions in two ways:
+
+1. Adding actions in the hook actions folder (hookshub/hooks/<origin>-hooks/executable)
+2. **Implement your own hook with entry points**
+
+The listener process may update the hooks installed so hotfixes are on!
+
+You just need to implement your own Python package with a setup and install it!
+
+Remember to add the entry point in the setup.
+
+Example setup.py with entry_point:
+
+```python
+setup(
+    name='nice-hooks',
+    version='0.1.0',
+    author='Jaume Florez',
+    author_email='jflorez@gisce.net',
+    url='https://gitlab.com/jaumef/nice-hooks', # Does not exist ;)
+    description='A HooksHub extension with nice hooks',
+    long_description=__doc__,
+    license='GNUv3',
+    packages=find_packages(),
+    install_requires=install_requires,
+    entry_points={
+        'hookshub.plugins': [
+            'foohook = nice-hooks.hook:FooVarHook'
+        ],
+    },
+    include_package_data=True,
+)
+```
+
+Where there is a file located in `/<nice-hooks-repository>/nice-hooks/hook.py`
+that contains the hook:
+
+```python
+def nice_method(args):
+  print('Doing nice things')
+
+
+class FooVarHook(Hook):
+    def __init__(self):
+        super(FooVarHook, self).__init__(
+            method=nice_method,   # Method to run by the hook
+            event=False,          # Event where the hook will trigger
+            # (you can import it from HooksHub webhooks.events)
+            repository=False,     # Repository where the hook will trigger
+            branch=False          # Branch where the hook will trigger
+        )
+
+    def get_args(self, webhook=False, conf=False):
+        # Define your own get_args method given a webhook payload and
+        # an environment conf.
+        # Returns full webhook payload by default
+        dict = {}
+        if conf:
+            dict.update({
+                'conf': True
+            })
+        if webhook:
+            dict.update({
+                'webhook': True
+            })
+        if not dict:
+            dict = {
+                'Default': True
+            }
+        return dict
+```
