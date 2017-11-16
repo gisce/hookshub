@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 with open('requirements.txt', 'r') as f:
     INSTALL_REQUIRES = f.readlines()
@@ -15,8 +15,5 @@ setup(name='hookshub',
       license='MIT',
       install_requires=INSTALL_REQUIRES,
       tests_require=TESTS_REQUIRE,
-      packages=[
-          'hookshub', 'hookshub/hooks', 'hookshub/hooks/github_hooks/',
-          'hookshub/hooks/gitlab_hooks/', 'hookshub/hooks/webhook_hooks/',
-      ],
+      packages=find_packages(),
       zip_safe=False)

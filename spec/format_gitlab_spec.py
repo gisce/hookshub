@@ -1,4 +1,4 @@
-from os.path import abspath, normpath, dirname, join, isfile
+from os.path import abspath, normpath, dirname, join, isfile, isdir
 from os import listdir
 from json import loads, dumps
 from hookshub.hooks.gitlab import GitLabWebhook as gitlab
@@ -37,11 +37,14 @@ with description('GitLab Hook'):
             file = 'push.json'
             data = open(join(data_path, file)).read()
             hook = gitlab(loads(data))
-            actions = listdir(hook.actions_path)
-            actions = [
-                action for action in actions
-                if isfile(join(hook.actions_path, action))
-                ]
+            if not isdir(hook.actions_path):
+                actions = []
+            else:
+                actions = listdir(hook.actions_path)
+                actions = [
+                    action for action in actions
+                    if isfile(join(hook.actions_path, action))
+                    ]
             expect(hook.actions).to(equal(actions))
 
         with it('must have all actions of the situation (more details'
@@ -49,28 +52,31 @@ with description('GitLab Hook'):
             file = 'push.json'
             data = open(join(data_path, file)).read()
             hook = gitlab(loads(data))
-            actions = listdir(hook.actions_path)
-            actions = [
-                action for action in actions
-                if isfile(join(hook.actions_path, action))
-                ]
-            actions = [
-                action
-                for action in actions
-                # If they start with {event}-{repository}-{branch}
-                if action.startswith('{0}-{1}-{2}'.format(
-                    hook.event, hook.repo_name, hook.branch_name
-                )) or
-                # If they start with {event}-{repository}_{name}
-                action.startswith(
-                    '{0}-{1}_'.format(hook.event, hook.repo_name)) or
-                # If they are named after {event}-{repository}
-                action == '{0}-{1}'.format(hook.event, hook.repo_name) or
-                # If they start with {event}_{name}
-                action.startswith('{0}_'.format(hook.event)) or
-                # If they are named after {event}
-                action == '{0}'.format(hook.event)
-                ]
+            if not isdir(hook.actions_path):
+                actions = []
+            else:
+                actions = listdir(hook.actions_path)
+                actions = [
+                    action for action in actions
+                    if isfile(join(hook.actions_path, action))
+                    ]
+                actions = [
+                    action
+                    for action in actions
+                    # If they start with {event}-{repository}-{branch}
+                    if action.startswith('{0}-{1}-{2}'.format(
+                        hook.event, hook.repo_name, hook.branch_name
+                    )) or
+                    # If they start with {event}-{repository}_{name}
+                    action.startswith(
+                        '{0}-{1}_'.format(hook.event, hook.repo_name)) or
+                    # If they are named after {event}-{repository}
+                    action == '{0}-{1}'.format(hook.event, hook.repo_name) or
+                    # If they start with {event}_{name}
+                    action.startswith('{0}_'.format(hook.event)) or
+                    # If they are named after {event}
+                    action == '{0}'.format(hook.event)
+                    ]
             expect(hook.event_actions).to(equal(actions))
 
         with it('must return the ssh url of the repository'
@@ -314,6 +320,24 @@ with description('GitLab Hook'):
             hook = gitlab(json_data)
             expect(hook.project_id).to(equal(None))
 
+        with it('must return the index id of the issue '
+                '(/object_attributes/iid on issue.json)'):
+            file = 'issue.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            issue_state = json_data['object_attributes']['iid']
+            expect(hook.index_id).to(equal(issue_state))
+
+        with it('must return the object id of the issue '
+                '(/object_attributes/id on issue.json)'):
+            file = 'issue.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            issue_state = json_data['object_attributes']['id']
+            expect(hook.object_id).to(equal(issue_state))
+
         with it('must return the right state of the issue '
                 '(/object_attributes/state on issue.json)'):
             file = 'issue.json'
@@ -346,6 +370,45 @@ with description('GitLab Hook'):
             json_data = loads(data)
             hook = gitlab(json_data)
             expect(hook.target_branch_name).to(equal('master'))
+
+        with it('must return the ssh url of the repository'
+                    ' (json/repository/git_ssh_url)'):
+            file = 'merge_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.ssh_url).to(equal(
+                json_data['object_attributes']['source']['git_ssh_url']
+            ))
+
+        with it('must return the http url of the repository'
+                    ' (json/repository/git_http_url)'):
+            file = 'merge_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.http_url).to(equal(
+                json_data['object_attributes']['source']['git_http_url']
+            ))
+
+        with it('must return the name of the repository'
+                    ' (json/repository/repo_name)'):
+            file = 'merge_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            expect(hook.repo_name).to(equal(
+                json_data['object_attributes']['source']['name']
+            ))
+
+        with it('must return source project id of the merge request '
+                '(object_attributes>source_project_id on merge_request.json)'):
+            file = 'merge_request.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = gitlab(json_data)
+            project_id = json_data['object_attributes']['source_project_id']
+            expect(hook.project_id).to(equal(project_id))
 
         with it('must return target project id of the merge request '
                 '(object_attributes>target_project_id on merge_request.json)'):
@@ -394,37 +457,26 @@ with description('GitLab Hook'):
             hook = gitlab(json_data)
             expect(hook.branch_name).to(equal('None'))
 
-    with context('Lektor repository events'):
-        with it('must return token, port, vhost path, ssh and http url,'
-                ' repository name and source branch name, object and index id'
-                ' of the merge request when getting action arguments with '
-                '"merge request" action'):
+    with context('GitLab repository events'):
+        with it('must return the action path for the actions, the JSON Payload'
+                'and the event to run'):
             file = 'merge_request.json'
             action = 'merge_request_lektor.py'
             data = open(join(data_path, file)).read()
             json_data = loads(data)
             config = loads(open(join(data_path, 'conf.json'), 'r').read())
             hook = gitlab(json_data)
-            json = {}
-            json.update({'token': config['gitlab_token']})
-            json.update({'port': config['nginx_port']})
-            json.update({'vhost_path': config['vhost_path']})
-            json.update({'ssh_url': hook.ssh_url})
-            json.update({'http_url': hook.http_url})
-            json.update({'repo_name': hook.repo_name})
-            json.update({'branch_name': hook.branch_name})
-            json.update({'index_id': hook.index_id})
-            json.update({'object_id': hook.object_id})
-            json.update({'project_id': hook.project_id})
-            json.update({'state': hook.state})
-            args_json = loads(hook.get_exe_action(action, config)[1])
+            args = hook.get_exe_action(action, config)
+            expect(args[0]).to(equal(join(hook.actions_path, action)))
+            args_json = loads(args[1])
+            expect(args[2]).to(equal(util.events['EVENT_MERGE_REQ']))
             checked = []
             for key in args_json.keys():
                 checked.append(key)
                 expect(args_json[key]).to(
-                    equal(json.get(key, '{} Not found'.format(key)))
+                    equal(json_data.get(key, '{} Not found'.format(key)))
                 )
-            for key in json.keys():
+            for key in json_data.keys():
                 expect(checked).to(contain(key))
 
 with description('GitLab Utils'):
@@ -460,60 +512,6 @@ with description('GitLab Utils'):
                 expect(len(log) > 0).to(equal(True))
                 expect(len(err) > 0).to(equal(True))
                 expect(result).to(equal(1))
-                popen.stop()
-
-    # pip_requirements
-    with context('Install pip requirements'):
-        with it('Must try to pip install on a dir. If can\'t it\'ll print'
-                ' another line with the error'):
-            log = util.pip_requirements(data_path)
-            expect(len(log) > 0).to(equal(True))
-
-    # docs_build
-    with context('Build Lektor'):
-        with it('Must return two strings (log + build dir -> Mocked)'):
-            # All ok
-            with patch("hookshub.hooks.gitlab.Popen") as popen:
-                popen.start()
-                popen_mock = Mock()
-                popen_mock.communicate.return_value = ['All Ok\n', 'Mocked!']
-                popen_mock.returncode = 0
-                popen.return_value = popen_mock
-                from_path = 'From folder'
-                to_path = 'To build'
-                proj = 'Project in folder'
-                log, dir = util.lektor_build(from_path, to_path, proj)
-                expect(len(log) > 0).to(equal(True))
-                expect(dir).to(equal(to_path))
-                popen.stop()
-
-        with it('Must return the log String and a False directory (Mocked)'):
-            # Simulate can't build
-            with patch("hookshub.hooks.gitlab.Popen") as popen:
-                popen.start()
-                popen_mock = Mock()
-                popen_mock.communicate.return_value = ['All Ok\n', 'Mocked!']
-                popen_mock.returncode = 1
-                popen.return_value = popen_mock
-                from_path = 'From docs'
-                to_path = 'To build'
-                proj = 'Project in folder'
-                log, dir = util.lektor_build(from_path, to_path, proj)
-                expect(len(log) > 0).to(equal(True))
-                expect(dir).to(equal(False))
-                popen.stop()
-
-        with it('Must return the error log String and a False directory'
-                ' (mocked) when Popen throws an exception'):
-            with patch("hookshub.hooks.gitlab.Popen") as popen:
-                popen.start()
-                popen.side_effect = Exception('Mocked exception')
-                from_path = 'From docs'
-                to_path = 'To build'
-                proj = 'Project in folder'
-                log, dir = util.lektor_build(from_path, to_path, proj)
-                expect(len(log) > 0).to(equal(True))
-                expect(dir).to(equal(False))
                 popen.stop()
 
     # post_comment_pr

@@ -8,7 +8,7 @@ my_path = normpath(abspath(dirname(__file__)))
 project_path = dirname(my_path)              # Project Directory
 data_path = join(project_path, 'test_data')  # Test Directory
 
-with description('Hook Listener'):
+with description('Hook Parser'):
     with context('Webhook test data'):
         with it('must return a hook with "webhook" origin on instancer method'):
             webhook_data_path = join(
@@ -156,7 +156,6 @@ with description('Hook Listener'):
                     logging.stop()
                 popen.stop()
 
-    with context('Run Actions (mocked), called from subprocess in production.'):
         with it('must fail running the action'):
             from hookshub.parser import run_action
 
@@ -197,7 +196,7 @@ with description('Hook Listener'):
                 popen.stop()
 
     with context('Log Result (mocked), called async after timeout.'):
-        with it('must log result'):
+        with it('must log result for event action'):
             with patch('hookshub.parser.logging') as logging:
                 logging.start()
                 logging.basicConfig.return_value = True
@@ -218,6 +217,177 @@ with description('Hook Listener'):
                 log_result(res)
 
                 logging.stop
+
+        with it('must log result for hook action'):
+            with patch('hookshub.parser.logging') as logging:
+                logging.start()
+                logging.basicConfig.return_value = True
+                logging.info = True
+                logger = Mock()
+                logger.info.return_value = True
+                logger.error.return_value = True
+                logging.getLogger.return_value = logger
+                from hookshub.parser import log_hook_result
+
+                hook_name = 'MOCK'
+                res_code = 0
+                res = (res_code, hook_name)
+                log_hook_result(res)
+                res_code = -1
+                res = (res_code, hook_name)
+                log_hook_result(res)
+
+                logging.stop()
+
+    with context('Load Hooks (Plugins):'):
+        with it('must get a list of hooks from HooksManager'):
+            with patch('hookshub.hook.get_hooks') as get_hook_mock:
+                get_hook_mock.start()
+                get_hook_list = [('hook_name', 'hook_used')]
+                get_hook_mock.return_value = get_hook_list
+                hook_list = HookParser.load_hooks(event='None',
+                                                  repository='None',
+                                                  branch='None')
+                expect(hook_list).to(equal(get_hook_list))
+                get_hook_mock.stop()
+
+    with context('Run Hooks (mocked), called from subprocess in production.'):
+        with it('must timeout running all hooks'):
+            with patch('hookshub.hook.get_hooks') as get_hook_mock:
+                with patch('hookshub.parser.logging') as logging:
+                    with patch('hookshub.parser.Pool') as pooler:
+                        webhook_data_path = join(
+                            data_path, join('webhook', 'default_event')
+                        )
+                        default_conf = {
+                            'github_token': 'GHT',
+                            'gitlab_token': 'GLT',
+                            'vhost_path': 'VHP'
+                        }
+                        proc = Mock()
+                        proc.wait.return_value = True
+                        proc.ready.return_value = False
+
+                        pool = Mock()
+                        pool.apply_async.return_value = proc
+
+                        pooler.start()
+                        pooler.return_value = pool
+
+                        logging.start()
+                        logging.basicConfig.return_value = True
+                        logging.info = True
+                        logger = Mock()
+                        logger.info.return_value = True
+                        logger.error.return_value = True
+                        logging.getLogger.return_value = logger
+
+                        hook_used = Mock()
+                        hook_used.get_args.return_value = {}
+                        hook_used.run_hook = lambda *a: True
+
+                        get_hook_mock.start()
+                        get_hook_list = [('hook_name', hook_used)]
+                        get_hook_mock.return_value = get_hook_list
+
+                        parser = HookParser(webhook_data_path, 'default_event',
+                                            pool=pooler())
+                        res = parser.run_event_hooks(def_conf=default_conf)
+                        expected_code = 0
+                        expected_log = '[hook_name]:Success!\n'
+                        expect(res).to(equal((expected_code, expected_log)))
+
+        with it('must run successfully all hooks'):
+            with patch('hookshub.hook.get_hooks') as get_hook_mock:
+                with patch('hookshub.parser.logging') as logging:
+                    with patch('hookshub.parser.Pool') as pooler:
+                        webhook_data_path = join(
+                            data_path, join('webhook', 'default_event')
+                        )
+                        default_conf = {
+                            'github_token': 'GHT',
+                            'gitlab_token': 'GLT',
+                            'vhost_path': 'VHP'
+                        }
+                        proc = Mock()
+                        proc.wait.return_value = True
+                        proc.ready.return_value = True
+                        proc.get.return_value = (0, 'success_hook')
+
+                        pool = Mock()
+                        pool.apply_async.return_value = proc
+
+                        pooler.start()
+                        pooler.return_value = pool
+
+                        logging.start()
+                        logging.basicConfig.return_value = True
+                        logging.info = True
+                        logger = Mock()
+                        logger.info.return_value = True
+                        logger.error.return_value = True
+                        logging.getLogger.return_value = logger
+
+                        hook_used = Mock()
+                        hook_used.get_args.return_value = {}
+                        hook_used.run_hook = lambda *a: True
+
+                        get_hook_mock.start()
+                        get_hook_list = [('hook_name', hook_used)]
+                        get_hook_mock.return_value = get_hook_list
+
+                        parser = HookParser(webhook_data_path, 'default_event',
+                                            pool=pooler())
+                        res = parser.run_event_hooks(def_conf=default_conf)
+                        expected_code = 0
+                        expected_log = '[hook_name]:Success!\n'
+                        expect(res).to(equal((expected_code, expected_log)))
+
+        with it('must fail running all hooks'):
+            with patch('hookshub.hook.get_hooks') as get_hook_mock:
+                with patch('hookshub.parser.logging') as logging:
+                    with patch('hookshub.parser.Pool') as pooler:
+                        webhook_data_path = join(
+                            data_path, join('webhook', 'default_event')
+                        )
+                        default_conf = {
+                            'github_token': 'GHT',
+                            'gitlab_token': 'GLT',
+                            'vhost_path': 'VHP'
+                        }
+                        proc = Mock()
+                        proc.wait.return_value = True
+                        proc.ready.return_value = True
+                        proc.get.return_value = (-1, 'fail_hook')
+
+                        pool = Mock()
+                        pool.apply_async.return_value = proc
+
+                        pooler.start()
+                        pooler.return_value = pool
+
+                        logging.start()
+                        logging.basicConfig.return_value = True
+                        logging.info = True
+                        logger = Mock()
+                        logger.info.return_value = True
+                        logger.error.return_value = True
+                        logging.getLogger.return_value = logger
+
+                        hook_used = Mock()
+                        hook_used.get_args.return_value = {}
+                        hook_used.run_hook = lambda *a: True
+
+                        get_hook_mock.start()
+                        get_hook_list = [('hook_name', hook_used)]
+                        get_hook_mock.return_value = get_hook_list
+
+                        parser = HookParser(webhook_data_path, 'default_event',
+                                            pool=pooler())
+                        res = parser.run_event_hooks(def_conf=default_conf)
+                        expected_code = -1
+                        expected_log = '[hook_name]:Failed!\n'
+                        expect(res).to(equal((expected_code, expected_log)))
 
     with context('GitLab test data'):
         with it('must return a hook with "GitLab" origin on instancer method'):

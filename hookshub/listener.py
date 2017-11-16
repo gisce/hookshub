@@ -1,6 +1,7 @@
 from __future__ import print_function
 from multiprocessing import Pool
-
+from copy_reg import pickle
+from types import MethodType
 import logging
 import signal
 
@@ -14,6 +15,14 @@ from flask import Flask, request, abort, jsonify
 from hookshub.parser import HookParser
 from raven.contrib.flask import Sentry
 
+
+def _pickle_method(m):
+    if m.im_self is None:
+        return getattr, (m.im_class, m.im_func.func_name)
+    else:
+        return getattr, (m.im_self, m.im_func.func_name)
+
+pickle(MethodType, _pickle_method)
 
 DEFAULT_IP = '0.0.0.0'
 DEFAULT_PORT = 5000
@@ -155,16 +164,26 @@ def index():
     log_out = ('Processing: {}...'.format(parser.event))
 
     code, output = parser.run_event_actions(config)
-
     output = '{0}|{1}'.format(log_out, output)
+    if code:  # Error executing actions
+        output = 'Fail with {}\n{}'.format(event, output)
+    else:  # All ok
+        output = 'Success with {}\n{}'.format(event, output)
+
+    code_hooks, output_hooks = parser.run_event_hooks(config)
+
     # Remove temporal file
     remove(tmpfile)
 
-    if code != 0:  # Error executing actions
-        output = 'Fail with {}\n{}'.format(event, output)
-        raise AbortException(output)
+    output_hooks = '{0}|{1}'.format(log_out, output_hooks)
+    if code_hooks:  # Error executing actions
+        output = '{}\nFail with {}\n{}'.format(
+            output, event, output_hooks)
     else:  # All ok
-        output = 'Success with {}\n{}'.format(event, output)
+        output = '{}\nSuccess with {}\n{}'.format(
+            output, event, output_hooks)
+    if code or code_hooks:
+        raise AbortException(output)
     return dumps({'msg': output})
 
 
@@ -172,9 +191,14 @@ def start_listening(host_ip=DEFAULT_IP,
                     host_port=DEFAULT_PORT,
                     proc_num=DEFAULT_PROCS):
     global config
+    from os.path import isfile
     path = normpath(abspath(dirname(__file__)))
-    with open(join(path, 'config.json'), 'r') as cfg:
-        config = loads(cfg.read())
+    config_path = join(path, 'config.json')
+    if isfile(config_path):
+        with open(config_path, 'r') as cfg:
+            config = loads(cfg.read())
+    else:
+        config = {}
     sentry = Sentry(application)
     logging.getLogger(__name__).info(
         'Start Listening on {}:{} with {} procs'.format(

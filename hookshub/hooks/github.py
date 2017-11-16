@@ -182,47 +182,6 @@ class GitHubWebhook(webhook):
                 return not self.merged
         return False
 
-    def get_exe_action(self, action, conf):
-        """
-        :param action: event to get the scripts
-            :type: String
-        :param conf: Dictionary with the environment configurations
-            :type: Dictionary
-        :return: A list with the path to the scripts, the params they need
-            and the event used
-        """
-        exe_path = join(self.actions_path, action)
-        json = {}
-        # Action for 'push', 'pull_request' event
-        #       on repository 'powerp-docs'
-        if action.startswith('{}-powerp-docs'.format(
-                GitHubUtil.events['EVENT_PUSH'])
-        ) or action.startswith('{}-powerp-docs'.format(
-            GitHubUtil.events['EVENT_PULL_REQUEST']
-        )):
-            json.update({'token': conf['github_token']})
-            json.update({'vhost_path': conf['vhost_path']})
-            json.update({'port': conf['nginx_port']})
-            json.update({'ssh_url': self.ssh_url})
-            json.update({'http_url': self.http_url})
-            json.update({'repo_name': self.repo_name})
-            json.update({'repo_full_name': self.repo_full_name})
-            json.update({'branch_name': self.branch_name})
-
-            # If 'pull_request' event, we may add more params
-            if action.startswith('{}-powerp-docs'.format(
-                    GitHubUtil.events['EVENT_PULL_REQUEST'])
-            ):
-                json.update({'action': self.action})
-                json.update({'number': self.number})
-                json.update({'merged': self.merged})
-                json.update({'closed': self.closed})
-
-            # Return the params
-            return [exe_path, dumps(json), self.event]
-        else:
-            return super(GitHubWebhook, self).get_exe_action(action, conf)
-
     @property
     def event(self):
         """
@@ -302,38 +261,49 @@ class GitHubWebhook(webhook):
             # As it has no specific payload, this one may be the last one
             return GitHubUtil.events['EVENT_PUBLIC_EVENT']
 
-    @property
-    def event_actions(self):
-        """
-        :return: All the scripts that match with the event decoded
-        :rtype: List<String>
-        """
-        # We start with all actions that start with {event}
-        # Then we filter them to not execute the actions for the same event
-        #  with different repository.
-        # Finally we filter what's left to not execute actions with the same
-        #  repository but different branches
-        events = super(GitHubWebhook, self).event_actions
-        events = [
-            event
-            for event in events
-            # If they start with {event}-{repository}-{branch}
-            if event.startswith('{0}-{1}-{2}'.format(
-                self.event, self.repo_name, self.branch_name
-            )) or
-            # If they start with {event}-{repository}_{name}
-            event.startswith('{0}-{1}_'.format(self.event, self.repo_name)) or
-            # If they are named after {event}-{repository}
-            event == '{0}-{1}.py'.format(self.event, self.repo_name) or
-            # If they start with {event}_{name}
-            event.startswith('{0}_'.format(self.event)) or
-            # If they are named after {event}
-            event == '{0}.py'.format(self.event)
-        ]
-        return events
-
 
 class GitHubUtil:
+
+    api_url = 'https://api.github.com'
+
+    actions = {
+        'ACT_ASSIGNED': 'assigned',
+        'ACT_UNASSIGN': 'unassigned',
+        'ACT_LABELED': 'labeled',
+        'ACT_UNLABELED': 'unlabeled',
+        'ACT_OPENED': 'opened',
+        'ACT_EDITED': 'edited',
+        'ACT_CLOSED': 'closed',
+        'ACT_REOPENED': 'reopened',
+        'ACT_SYNC': 'synchronize',
+        'ACT_CREATED': 'created'
+    }
+
+    events = {
+        'EVENT_COMMIT_COMMENT': 'commit_comment',
+        'EVENT_CREATE': 'create',
+        'EVENT_DELETE': 'delete',
+        'EVENT_DEPLOYMENT': 'deployment',
+        'EVENT_DEPLOYMENT_STATUS': 'deployment_status',
+        'EVENT_FORK': 'fork',
+        'EVENT_WIKI': 'gollum',
+        'EVENT_ISSUE_COMMENT': 'issue_comment',
+        'EVENT_ISSUE': 'issues',
+        'EVENT_MEMBER': 'member',
+        'EVENT_MEMBERSHIP': 'membership',
+        'EVENT_PAGE_BUILD': 'page_build',
+        'EVENT_PUBLIC_EVENT': 'public',
+        'EVENT_PULL_REQUEST': 'pull_request',
+        'EVENT_PULL_REQUEST_REVIEW': 'pull_request_review_comment',
+        'EVENT_REVIEW_PR_COMMENT': 'pull_request_review_comment',
+        'EVENT_PUSH': 'push',
+        'EVENT_RELEASE': 'release',
+        'EVENT_REPOSITORY': 'repository',
+        'EVENT_STATUS': 'status',
+        'EVENT_TEAM_ADD': 'team_add',
+        'EVENT_WATCH': 'watch'
+    }
+
     @staticmethod
     def clone_on_dir(dir, repository, url, branch=None):
         """
@@ -366,110 +336,6 @@ class GitHubUtil:
                       'Try to clone from https ...'.format(out)
             err = ':clone_repository_fail::{}'.format(err)
         return output, new_clone.returncode, err
-
-    @staticmethod
-    def pip_requirements(dir):
-        """
-        Installs all the requirements from the requirements.txt in the specified
-        directory. If no virtualenv is set previously for the Popen, they will
-        be installed in the user's python directory
-        :param dir: Directory where the requirements.txt is found. Used to call
-            Popen with the pip install.
-            :type: String
-        :return: Output with the log. Does not include any of the pip install
-            output or error prints.
-        :rtype: String
-        """
-        output = 'Instal.lant dependencies...'
-        command = 'pip install -r {}'.format(join(dir, 'requirements.txt'))
-        log_file = join(dir, "pip.log")
-        command += " > {0} 2> {0}".format(log_file)
-        dependencies = os.system(command)
-        with open(log_file, 'r') as stout:
-            out = stout.read()
-        os.system('rm {}'.format(log_file))
-        if dependencies != 0:
-            output += ' Couldn\'t install all dependencies!\n{}'.format(
-                out
-            )
-        else:
-            output += " OK"
-        return output
-
-    @staticmethod
-    def export_pythonpath(docs_path):
-        """
-        :param docs_path: Path to the docs clone. Must have the sitecustomize
-            directory, as that's what the $PYTHONPATH will point to
-            :type:  String
-        :return: An output log saying if everything was ok
-        """
-        sc_path = join(docs_path, 'sitecustomize')
-        command = 'export PYTHONPATH={}'.format(sc_path)
-        try:
-            export = Popen(
-                command.split(), cwd=docs_path, stdout=PIPE, stderr=PIPE
-            )
-            if export.returncode == 0:
-                output = 'Success to export sitecustomize path'
-            else:
-                output = 'Failed to export sitecustomize path'
-        except Exception as err:
-            output = 'Failed to export sitecustomize path'
-        return output
-
-    @staticmethod
-    def docs_build(dir, target=None, file=None, clean=True):
-        """
-        :param dir: Directory used to call the build. This MUST exist.
-            :type:  String
-        :param file: Configuration file used to build with. If None is set,
-            the '-f' option is not used, using the default 'mkdocs.yml' config
-            :type:  String
-        :param target: Directory to build to. If not set or None, the target
-            build is the default one, that is the same as 'dir'
-            :type:  String
-        :param clean: Defines if the '--clean' tag is used or not. If true,
-            this cleans the directory before the build.
-            :type:  Bool
-        :return: The command to all with the specified params, thus not all
-            environments support processes (or are not desired)
-        """
-        build_path = dir
-        output = 'Building mkdocs from {} '.format(dir)
-        command = 'cd {} && mkdocs build'.format(dir)
-        if target:
-            build_path = target
-            output += 'to {}...'.format(target)
-            command += ' -d {}'.format(target)
-        if file:
-            output += ' using file config file "{}"...'.format(file)
-            command += ' -f {}'.format(file)
-        if clean:
-            command += ' --clean'
-        log_file = join(dir, 'build.log')
-        command += " > {0} 2> {0}".format(log_file)
-        new_build = os.system(command)
-        with open(log_file, 'r') as stout:
-            out = stout.read()
-        os.system('rm {}'.format(log_file))
-        if new_build != 0:
-            output += 'FAILED TO BUILD: {}'.format(out)
-            return output, False
-        output += " OK"
-        return output, build_path
-
-    @staticmethod
-    def create_virtualenv(name='foo', dir='/tmp/venv'):
-        if not isdir(dir):
-            os.system('mkdir -p {}'.format(dir))
-        dest = join(dir, name)
-        log = '{}.log'.format(name)
-        logs = join(dir, log)
-        os.system('virtualenv {0} > {1} 2> {1}'.format(dest, logs))
-        activate = join(dest, 'bin', 'activate_this.py')
-        execfile(activate, dict(__file__=activate))
-        return dest
 
     @staticmethod
     def get_pr(token, repository, branch):
@@ -540,7 +406,7 @@ class GitHubUtil:
             return the code 0 along with a text with the error found.
         :rtype: Tuple<Int,String>
         """
-        github_api_url = "https://api.github.com"
+        github_api_url = GitHubUtil.api_url
         # POST /repos/{:owner /:repo}/issues/{:pr_id}/comments
         req_url = '{0}/repos/{1}/issues/{2}/comments'.format(
             github_api_url, repository, pr_num
@@ -572,41 +438,3 @@ class GitHubUtil:
             text = 'Failed to send comment to pull request, ' \
                              'INTERNAL ERROR [{}]'.format(err)
         return code, text
-
-    actions = {
-        'ACT_ASSIGNED': 'assigned',
-        'ACT_UNASSIGN': 'unassigned',
-        'ACT_LABELED': 'labeled',
-        'ACT_UNLABELED': 'unlabeled',
-        'ACT_OPENED': 'opened',
-        'ACT_EDITED': 'edited',
-        'ACT_CLOSED': 'closed',
-        'ACT_REOPENED': 'reopened',
-        'ACT_SYNC': 'synchronize',
-        'ACT_CREATED': 'created'
-    }
-
-    events = {
-        'EVENT_COMMIT_COMMENT': 'commit_comment',
-        'EVENT_CREATE': 'create',
-        'EVENT_DELETE': 'delete',
-        'EVENT_DEPLOYMENT': 'deployment',
-        'EVENT_DEPLOYMENT_STATUS': 'deployment_status',
-        'EVENT_FORK': 'fork',
-        'EVENT_WIKI': 'gollum',
-        'EVENT_ISSUE_COMMENT': 'issue_comment',
-        'EVENT_ISSUE': 'issues',
-        'EVENT_MEMBER': 'member',
-        'EVENT_MEMBERSHIP': 'membership',
-        'EVENT_PAGE_BUILD': 'page_build',
-        'EVENT_PUBLIC_EVENT': 'public',
-        'EVENT_PULL_REQUEST': 'pull_request',
-        'EVENT_PULL_REQUEST_REVIEW': 'pull_request_review_comment',
-        'EVENT_REVIEW_PR_COMMENT': 'pull_request_review_comment',
-        'EVENT_PUSH': 'push',
-        'EVENT_RELEASE': 'release',
-        'EVENT_REPOSITORY': 'repository',
-        'EVENT_STATUS': 'status',
-        'EVENT_TEAM_ADD': 'team_add',
-        'EVENT_WATCH': 'watch'
-    }

@@ -24,8 +24,8 @@ class TempDir(object):
 
 
 def run_action(action, hook, conf):
-    logger = logging.getLogger('__main__')
     import os
+    logger = logging.getLogger('__main__')
     pid = os.getpid()
     logger.error('[ASYNC({})]Running: {} - {}'.format(pid, action, hook.event))
     args = hook.get_exe_action(action, conf)
@@ -66,15 +66,39 @@ def log_result(res):
     ))
 
 
+def log_hook_result(res):
+    res_code, hook_name = res
+    logger = logging.getLogger('__main__')
+    if res_code == 0:
+        result = 'Success!'
+    else:
+        result = 'Failure!'
+    logger.error('[ASYNC({})] Result: {}'.format(
+        hook_name, result
+    ))
+
+
 class HookParser(object):
     def __init__(self, payload_file, event, pool=Pool(1)):
         self.event = event
         self.payload = {}
         with open(payload_file, 'r') as jsf:
             self.payload = json.loads(jsf.read())
-        import logging
         self.logger = logging.getLogger('__main__')
         self.pool = pool
+        self.hook = self.instancer(self.payload)
+
+    @staticmethod
+    def load_hooks(event=False, repository=False, branch=False):
+        from hookshub.hook import get_hooks, reload_hooks
+        reload_hooks()
+        if event == 'None':
+            event = False
+        if repository == 'None':
+            repository = False
+        if branch == 'None':
+            branch = False
+        return get_hooks(event, repository, branch)
 
     @staticmethod
     def instancer(payload):
@@ -87,35 +111,28 @@ class HookParser(object):
 
     def run_event_actions(self, def_conf):
         log = ''
-
-        if not 'nginx_port' in def_conf.keys():
+        if 'nginx_port' not in def_conf.keys():
             def_conf.update({'nginx_port': '80'})
-
-        if not 'action_timeout' in def_conf.keys():
+        if 'action_timeout' not in def_conf.keys():
             def_conf.update({'action_timeout': '30'})
-            
         conf = config_from_environment('HOOKSHUB', [
             'github_token', 'gitlab_token', 'vhost_path', 'nginx_port',
             'action_timeout'
         ], **def_conf)
-
         timeout = int(conf.get('action_timeout'))
-
-        hook = self.instancer(self.payload)
         i = 0
-
         if self.logger:
             self.logger.error('Executing {} actions for event: {}\n'.format(
-                len(hook.event_actions), hook.event
+                len(self.hook.event_actions), self.hook.event
             ))
-        for action in hook.event_actions:
+        for action in self.hook.event_actions:
             i += 1
             if self.logger:
                 self.logger.error('[Running: <{0}/{1}> - {2}]\n'.format(
-                    i, len(hook.event_actions), action)
+                    i, len(self.hook.event_actions), action)
                 )
             proc = self.pool.apply_async(
-                run_action, args=(action, hook, conf),
+                run_action, args=(action, self.hook, conf),
                 callback=log_result
             )
             proc.wait(timeout=timeout)
@@ -141,6 +158,56 @@ class HookParser(object):
                 return -1, log
             log += ('[{0}]:{1}\n[{0}]:Success!\n'.format(
                 action, output
+            ))
+
+        return 0, log
+
+    def run_event_hooks(self, def_conf):
+        log = ''
+        if 'nginx_port' not in def_conf.keys():
+            def_conf.update({'nginx_port': '80'})
+        if 'action_timeout' not in def_conf.keys():
+            def_conf.update({'action_timeout': '10'})
+        conf = config_from_environment('HOOKSHUB', [
+            'github_token', 'gitlab_token', 'vhost_path', 'nginx_port',
+            'action_timeout'
+        ], **def_conf)
+        timeout = int(conf.get('action_timeout'))
+        i = 0
+        hooks = self.load_hooks(
+            self.hook.event, self.hook.repo_name, self.hook.branch_name
+        )
+        if self.logger:
+            self.logger.error('Executing {} hooks for event: {}\n'.format(
+                len(hooks), self.hook.event
+            ))
+        for action_name, action in hooks:
+            i += 1
+            if self.logger:
+                self.logger.error('[Running: <{0}/{1}> - {2}]\n'.format(
+                    i, len(hooks), action_name)
+                )
+            args = action.get_args(self.hook, conf)
+            proc = self.pool.apply_async(
+                action.run_hook, args=(args,),
+                callback=log_hook_result
+            )
+            proc.wait(timeout=timeout)
+            if proc.ready():
+                returncode, hook_name = proc.get()
+            else:
+                strerr = 'Still running async, but answering.' \
+                                  ' Check log for detailed result...'
+                self.logger.error('[{}]:{}'.format(action.title, strerr))
+                returncode = 0
+
+            if returncode and returncode != 0:
+                log += ('[{0}]:Failed!\n'.format(
+                    action_name
+                ))
+                return -1, log
+            log += ('[{0}]:Success!\n'.format(
+                action_name
             ))
 
         return 0, log

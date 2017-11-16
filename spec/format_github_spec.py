@@ -37,41 +37,15 @@ with description('GitHub Hook'):
             file = 'status.json'
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
-            actions = listdir(hook.actions_path)
-            actions = [
-                action for action in actions
-                if isfile(join(hook.actions_path, action))
-                ]
+            if not isdir(hook.actions_path):
+                actions = []
+            else:
+                actions = listdir(hook.actions_path)
+                actions = [
+                    action for action in actions
+                    if isfile(join(hook.actions_path, action))
+                    ]
             expect(hook.actions).to(equal(actions))
-
-        with it('must have all actions of the situation (more details'
-                ' in the readme, event-actions)'):
-            file = 'status.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            actions = listdir(hook.actions_path)
-            actions = [
-                action for action in actions
-                if isfile(join(hook.actions_path, action))
-                ]
-            actions = [
-                action
-                for action in actions
-                # If they start with {event}-{repository}-{branch}
-                if action.startswith('{0}-{1}-{2}'.format(
-                    hook.event, hook.repo_name, hook.branch_name
-                )) or
-                # If they start with {event}-{repository}_{name}
-                action.startswith(
-                    '{0}-{1}_'.format(hook.event, hook.repo_name)) or
-                # If they are named after {event}-{repository}
-                action == '{0}-{1}'.format(hook.event, hook.repo_name) or
-                # If they start with {event}_{name}
-                action.startswith('{0}_'.format(hook.event)) or
-                # If they are named after {event}
-                action == '{0}'.format(hook.event)
-                ]
-            expect(hook.event_actions).to(equal(actions))
 
         with it('must return the ssh url of the repository'
                     ' (json/repository/ssh_url)'):
@@ -101,6 +75,16 @@ with description('GitHub Hook'):
             hook = github(json_data)
             expect(hook.repo_name).to(equal(
                 json_data['repository']['name']
+            ))
+
+        with it('must return the full name of the repository'
+                ' (json/repository/full_name)'):
+            file = 'status.json'
+            data = open(join(data_path, file)).read()
+            json_data = loads(data)
+            hook = github(json_data)
+            expect(hook.repo_full_name).to(equal(
+                json_data['repository']['full_name']
             ))
 
         with it('may return "None" when trying to get branch name for a '
@@ -158,6 +142,14 @@ with description('GitHub Hook'):
             data = open(join(data_path, file)).read()
             hook = github(loads(data))
             expect(hook.merged).to(equal(False))
+
+        with it('Must return "False" when getting "closed" property and event'
+                'is not "pull_request" or action is not "closed"'):
+            event = 'status'
+            file = 'status.json'
+            data = open(join(data_path, file)).read()
+            hook = github(loads(data))
+            expect(hook.closed).to(equal(False))
 
     with context('Commit Comment event'):
         with it('must have commit_comment as event'):
@@ -688,6 +680,7 @@ with description('GitHub Hook'):
             json_data = dumps(dict_json)
             exe_data = [exe_path, json_data, event]
             expect(hook.get_exe_action(event, config)).to(equal(exe_data))
+
     with context('Status event'):
         with it('must have status as event'):
             event = 'status'
@@ -776,73 +769,6 @@ with description('GitHub Hook'):
             hook = github(json_data)
             expect(hook.branch_name).to(equal('None'))
 
-    with context('With powerp-docs repository events'):
-        with it('must return token, port, vhost path, ssh and http urls, '
-                'repository and branch names, full repository name;'
-                ' with "push-powerp-docs.py" action arguments from hook'):
-            action = 'push-powerp-docs.py'
-            file = 'push.json'
-            data = open(join(data_path, file)).read()
-            json_data = loads(data)
-            config = loads(open(join(data_path, 'conf.json'), 'r').read())
-            # Set required data from default data:
-            json_data['repository']['name'] = 'powerp-docs'
-            hook = github(json_data)
-            json = {}
-            json.update({'token': config['github_token']})
-            json.update({'port': config['nginx_port']})
-            json.update({'vhost_path': config['vhost_path']})
-            json.update({'ssh_url': hook.ssh_url})
-            json.update({'http_url': hook.http_url})
-            json.update({'repo_name': hook.repo_name})
-            json.update({'repo_full_name': hook.repo_full_name})
-            json.update({'branch_name': hook.branch_name})
-            args_json = loads(hook.get_exe_action(action, config)[1])
-            checked = []
-            for key in args_json.keys():
-                checked.append(key)
-                expect(args_json[key]).to(
-                    equal(json.get(key, '{} Not found'.format(key)))
-                )
-            for key in json.keys():
-                expect(checked).to(contain(key))
-
-        with it('must return [exe_path, payload, event] when getting'
-                ' the execution params for the pull_request event.'
-                ' Payload must include: vhost_path, ssh and http url,'
-                ' repo_name, the pr_number and the action'):
-            event = 'pull_request-powerp-docs'
-            file = 'pull_request.json'
-            data = open(join(data_path, file)).read()
-            hook = github(loads(data))
-            exe_path = join(hook.actions_path, event)
-
-            config = loads(open(join(data_path, 'conf.json'), 'r').read())
-            json = {}
-            json.update({'token': config['github_token']})
-            json.update({'vhost_path': config['vhost_path']})
-            json.update({'port': config['nginx_port']})
-            json.update({'ssh_url': hook.ssh_url})
-            json.update({'http_url': hook.http_url})
-            json.update({'repo_name': hook.repo_name})
-            json.update({'repo_full_name': hook.repo_full_name})
-            json.update({'branch_name': hook.branch_name})
-            json.update({'action': hook.action})
-            json.update({'number': hook.number})
-            json.update({'merged': hook.merged})
-            json.update({'closed': hook.closed})
-
-            json_data = dumps(json)
-            args_json = loads(hook.get_exe_action(event, config)[1])
-            checked = []
-            for key in args_json.keys():
-                checked.append(key)
-                expect(args_json[key]).to(
-                    equal(json.get(key, '{} Not found'.format(key)))
-                )
-            for key in json.keys():
-                expect(checked).to(contain(key))
-
 with description('GitHub Utils'):
     # clone_on_dir
     with context('Clone on Dir'):
@@ -877,129 +803,6 @@ with description('GitHub Utils'):
                 expect(len(err) > 0).to(equal(True))
                 expect(result).to(equal(1))
                 popen.stop()
-
-    # pip_requirements
-    with context('Install pip requirements'):
-        with it('Must try to pip install on a dir and log it correctly'):
-            with patch("hookshub.hooks.github.os") as os:
-                os.start()
-                os.system = lambda x: 0
-                util_path = join(project_path, 'test_data', 'utils')
-                log = util.pip_requirements(util_path)
-                with open(join(
-                        util_path, 'pip_install_ok'
-                ), 'r') as out:
-                    output = out.read()
-                expect(log).to(equal(output))
-                os.stop()
-
-        with it('Must try to pip install on a dir. Failing must log correctly'):
-            with patch("hookshub.hooks.github.os") as os:
-                os.start()
-                os.system = lambda x: -1
-                util_path = join(project_path, 'test_data', 'utils')
-                log = util.pip_requirements(util_path)
-                with open(join(
-                        util_path, 'pip_install_bad'
-                ), 'r') as out:
-                    output = out.read()
-                expect(log).to(equal(output))
-                os.stop()
-
-    # create_virtualenv
-    with context('Create a Virtualenv'):
-        with it('Must create a virtualenv in the default directory (/tmp/foo)'):
-            dest = util.create_virtualenv()
-            expect(isdir(dest)).to(equal(True))
-            expect(dest).to(equal('/tmp/venv/foo'))
-            import os
-            os.system('rm -r {}'.format(dest))
-
-        with it('Must create a virtualenv in the specified directory and name'):
-            directory = '/tmp/venv'
-            name = 'test'
-            exp_dest = join(directory, name)
-            dest = util.create_virtualenv(name=name, dir=directory)
-            expect(isdir(dest)).to(equal(True))
-            expect(dest).to(equal(exp_dest))
-            import os
-            os.system('rm -r {}'.format(directory))
-
-
-    # export PYTHONPATH
-    with context('Export PYTHONPATH with sitecustomize'):
-        with it('Must return a log with a success message when seting the var'):
-            with patch("hookshub.hooks.github.Popen") as popen:
-                popen.start()
-                popen_mock = Mock()
-                popen_mock.communicate.return_value = ['All Ok\n']
-                popen_mock.returncode = 0
-                popen.return_value = popen_mock
-                log = util.export_pythonpath('Path')
-                expect(len(log) > 0).to(equal(True))
-                expect(log).to(equal('Success to export sitecustomize path'))
-                popen.stop()
-
-        with it('Must return a log with a failure message when seting the var'):
-            with patch("hookshub.hooks.github.Popen") as popen:
-                popen.start()
-                popen_mock = Mock()
-                popen_mock.communicate.return_value = ['All Bad\n']
-                popen_mock.returncode = -1
-                popen.return_value = popen_mock
-                log = util.export_pythonpath('Path')
-                expect(len(log) > 0).to(equal(True))
-                expect(log).to(equal('Failed to export sitecustomize path'))
-                popen.stop()
-
-        with it('Must return a log with a failure message when seting the var'
-                'and an exception is thrown'):
-            with patch("hookshub.hooks.github.Popen") as popen:
-                popen.start()
-                popen.side_effect = Exception('Mocked exception')
-                popen.return_value = 0
-                log = util.export_pythonpath('Path')
-                expect(len(log) > 0).to(equal(True))
-                expect(log).to(equal(
-                    'Failed to export sitecustomize path'
-                ))
-                popen.stop()
-
-    # docs_build
-    with context('Build docs'):
-        with it('Must return $log + $build_dir with correct docs build'):
-            with patch("hookshub.hooks.github.os") as os:
-                os.start()
-                os.system = lambda x: 0
-                from_path = join(project_path, 'test_data', 'utils')
-                to_path = 'To build'
-                file = 'Config File'
-                log, dir = util.docs_build(from_path, to_path, file, True)
-                with open(join(
-                        from_path, 'build_ok'
-                ), 'r') as out:
-                    output = out.read()
-                output = output.replace('PPATHH', from_path)
-                expect(log).to(equal(output))
-                expect(dir).to(equal(to_path))
-                os.stop()
-
-        with it('Must return $log + "False" with bad docs build'):
-            with patch("hookshub.hooks.github.os") as os:
-                os.start()
-                os.system = lambda x: -1
-                from_path = join(project_path, 'test_data', 'utils')
-                to_path = 'To build'
-                file = 'Config File'
-                log, dir = util.docs_build(from_path, to_path, file)
-                with open(join(
-                        from_path, 'build_bad'
-                ), 'r') as out:
-                    output = out.read()
-                output = output.replace('PPATHH', from_path)
-                expect(log).to(equal(output))
-                expect(dir).to(equal(False))
-                os.stop()
 
     # get_pr
     with context('Get Pull Request'):

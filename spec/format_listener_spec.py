@@ -46,6 +46,7 @@ with description('Application Requests'):
                 parser = Mock()
                 parser.event.return_value = 'Mocked Event'
                 parser.run_event_actions.return_value = (0, 'All OK')
+                parser.run_event_hooks.return_value = (0, 'All OK')
                 HookParser.return_value = parser
 
                 response = client.post(
@@ -81,6 +82,7 @@ with description('Application Requests'):
                 parser = Mock()
                 parser.event.return_value = 'Mocked Event'
                 parser.run_event_actions.return_value = (-1, 'All Bad')
+                parser.run_event_hooks.return_value = (-1, 'All Bad')
                 HookParser.return_value = parser
 
                 response = client.post('/', data=hook_data,
@@ -260,12 +262,15 @@ with description('Listener Methods'):
                     with patch('hookshub.listener.Sentry') as sentry:
                         sentry.start()
                         sentry.return_value = True
+                        with patch('os.path.isfile') as isfile:
+                            isfile.start()
+                            isfile.return_value = False
 
-                        app_mock = Mock()
-                        app_mock.run.return_value = True
-                        listener.application = app_mock
-                        listener.start_listening()
-
+                            app_mock = Mock()
+                            app_mock.run.return_value = True
+                            listener.application = app_mock
+                            listener.start_listening()
+                            isfile.stop()
                         sentry.stop()
                     logging.stop()
                 pool.stop()
