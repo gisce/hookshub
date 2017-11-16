@@ -7,7 +7,7 @@ with open('requirements-dev.txt', 'r') as f:
     TESTS_REQUIRE = f.readlines()
 
 setup(name='hookshub',
-      version='0.1',
+      version='1.0',
       description='A module for parsing and acting against JSON hooks',
       url='git@github.com:gisce/hookshub.git',
       author='Jaume Florez',
