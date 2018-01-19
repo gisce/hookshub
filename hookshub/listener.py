@@ -40,21 +40,6 @@ class AbortException(Exception):
         self.code = 500
 
 
-def close_worker(signum, frame):
-    from os import getpid
-    from signal import SIGTERM, SIGINT, SIGQUIT
-    sig = 'TERM' if signum == SIGTERM else (
-        'INT' if signum == SIGINT else (
-            'QUIT' if signum == SIGQUIT else 'UNKNOWN'
-        )
-    )
-    log = logging.getLogger(__name__)
-    log.warning('Stopping worker {} with: SIG{}'.format(
-        getpid(), sig
-    ))
-    return SIGQUIT
-
-
 def get_args():
     '''
     Parse arguments from sys.argv. Expected Arguments are:

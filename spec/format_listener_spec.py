@@ -118,31 +118,6 @@ with description('Application Requests'):
 
 
 with description('Listener Methods'):
-    with context("With Workers' init and close methods"):
-        with it('Must not close the worker and return SIGQUIT signal'):
-            import signal
-            with patch('hookshub.listener.logging') as logging:
-                logging.start()
-                logging.basicConfig.return_value = True
-                logging.info = True
-                logger = Mock()
-                logger.info.return_value = True
-                logger.error.return_value = True
-                logging.getLogger.return_value = logger
-                signal_given = signal.SIGINT
-                signal_returned = listener.close_worker(
-                    signum=signal_given, frame=None
-                )
-                expect(signal_returned).to(equal(signal.SIGQUIT))
-                logging.stop()
-
-        with it('Must replace killing signals with close method'):
-            with patch('hookshub.listener.signal') as signal_mock:
-                signal_mock.start()
-                signal_mock.signal.return_code = True
-                listener.init_worker()
-                signal_mock.stop()
-
     with context('Given a list of arguments'):
         with it('Must return default host_ip, host_port and proc_num'
                 'Given 0 arguments'):
