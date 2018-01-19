@@ -186,59 +186,47 @@ with description('Listener Methods'):
 
     with context('On Application Starting'):
         with it('Must start (mocked) with the specified args'):
-            with patch('hookshub.listener.Pool') as pool:
-                pool.start()
-                proc_pool = Mock()
-                proc_pool.terminate.return_value = True
-                pool.return_value = proc_pool
-                with patch('hookshub.listener.logging') as logging:
-                    logging.start()
-                    logging.basicConfig.return_value = True
-                    logging.info = True
-                    logger = Mock()
-                    logger.info.return_value = True
-                    logger.error.return_value = True
-                    logging.getLogger.return_value = logger
+            with patch('hookshub.listener.logging') as logging:
+                logging.start()
+                logging.basicConfig.return_value = True
+                logging.info = True
+                logger = Mock()
+                logger.info.return_value = True
+                logger.error.return_value = True
+                logging.getLogger.return_value = logger
 
-                    with patch('hookshub.listener.Sentry') as sentry:
-                        sentry.start()
-                        sentry.return_value = True
+                with patch('hookshub.listener.Sentry') as sentry:
+                    sentry.start()
+                    sentry.return_value = True
+
+                    app_mock = Mock()
+                    app_mock.run.return_value = True
+                    listener.application = app_mock
+                    listener.start_listening('1.2.3.4', 1234, 2)
+
+                    sentry.stop()
+                logging.stop()
+
+        with it('Must start (mocked) with the default args'):
+            with patch('hookshub.listener.logging') as logging:
+                logging.start()
+                logging.basicConfig.return_value = True
+                logging.info = True
+                logger = Mock()
+                logger.info.return_value = True
+                logger.error.return_value = True
+                logging.getLogger.return_value = logger
+                with patch('hookshub.listener.Sentry') as sentry:
+                    sentry.start()
+                    sentry.return_value = True
+                    with patch('os.path.isfile') as isfile:
+                        isfile.start()
+                        isfile.return_value = False
 
                         app_mock = Mock()
                         app_mock.run.return_value = True
                         listener.application = app_mock
-                        listener.start_listening('1.2.3.4', 1234, 2)
-
-                        sentry.stop()
-                    logging.stop()
-                pool.stop()
-
-        with it('Must start (mocked) with the default args'):
-            with patch('hookshub.listener.Pool') as pool:
-                pool.start()
-                proc_pool = Mock()
-                proc_pool.terminate.return_value = True
-                pool.return_value = proc_pool
-                with patch('hookshub.listener.logging') as logging:
-                    logging.start()
-                    logging.basicConfig.return_value = True
-                    logging.info = True
-                    logger = Mock()
-                    logger.info.return_value = True
-                    logger.error.return_value = True
-                    logging.getLogger.return_value = logger
-                    with patch('hookshub.listener.Sentry') as sentry:
-                        sentry.start()
-                        sentry.return_value = True
-                        with patch('os.path.isfile') as isfile:
-                            isfile.start()
-                            isfile.return_value = False
-
-                            app_mock = Mock()
-                            app_mock.run.return_value = True
-                            listener.application = app_mock
-                            listener.start_listening()
-                            isfile.stop()
-                        sentry.stop()
-                    logging.stop()
-                pool.stop()
+                        listener.start_listening()
+                        isfile.stop()
+                    sentry.stop()
+                logging.stop()
