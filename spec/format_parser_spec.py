@@ -24,6 +24,20 @@ with description('Hook Parser'):
                 pass
             expect(isfile(filepath)).to(be_false)
 
+    with context('No data for hooks'):
+        with it('must run no hooks or actions'):
+            fake_datapath = join(
+                    data_path, join('webhook', 'fake_event')
+                )
+            config_file = join(data_path, 'webhook', 'conf.json')
+            with open(config_file, 'r') as conf:
+                config = loads(conf.read())
+            parser = HookParser(fake_datapath, 'fake_event')
+            expect(parser.hook.event).to(equal('fake_event'))
+            expect(parser.event).to(equal('fake_event'))
+            parser.run_event_hooks(config)
+            parser.run_event_actions(config)
+
     with context('Webhook test data'):
         with it('must return a hook with "webhook" origin on instancer method'):
             webhook_data_path = join(
@@ -60,7 +74,10 @@ with description('Hook Parser'):
                         logger.error.return_value = True
                         logging.getLogger.return_value = logger
 
-                        parser = HookParser(webhook_data_path, 'default_event')
+                        parser = HookParser(
+                            payload_file=webhook_data_path,
+                            event='default_event',
+                            procs=0)
                         parser.logger = logger
                         result, log = parser.run_event_actions(config)
                         expect(result).to(equal(0))
