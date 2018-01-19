@@ -1,23 +1,22 @@
 from mock import patch, Mock
 from expects import *
+from mamba import *
 from hookshub import listener
 
 # These Test must execute before mocks on listner!
 #   Just leave the tests in this description in top of the file :D
 with description('Application Requests'):
     with context('On Sample Hook'):
+        with before.all:
+            from os.path import abspath, normpath, dirname
+            self.app = listener.application
+            self.client = self.app.test_client()
+            self.project_path = dirname(normpath(abspath(dirname(__file__))))
+
         with it('Must make a simple response (act as PONG from PING request)'):
-            from os.path import abspath, normpath, dirname, join
             from json import loads
-
-            my_path = normpath(abspath(dirname(__file__)))
-            project_path = dirname(my_path)  # Project Directory
-            app = listener.application
-            global client
-            client = app.test_client()
             hook_headers = None
-
-            response = client.post('/', headers=hook_headers)
+            response = self.client.post('/', headers=hook_headers)
             data = loads(response.data)
             expected_data = {
                 'msg': 'pong'
@@ -25,13 +24,10 @@ with description('Application Requests'):
             expect(expected_data).to(equal(data))
 
         with it('Must make a response with hook parser message'):
-            from os.path import abspath, normpath, dirname, join
+            from os.path import join
             from json import loads, dumps
-
-            my_path = normpath(abspath(dirname(__file__)))
-            project_path = dirname(my_path)  # Project Directory
-
-            data_path = join(project_path, 'test_data', 'github', 'gollum.json')
+            data_path = join(
+                self.project_path, 'test_data', 'github', 'gollum.json')
             with open(data_path, 'r') as f:
                 hook_data = dumps(loads(f.read()))
             hook_headers = {
@@ -39,17 +35,18 @@ with description('Application Requests'):
                 'Content-Length': len(hook_data)
             }
             hook_headers = loads(dumps(hook_headers))
-            global client
 
             with patch('hookshub.listener.HookParser') as HookParser:
                 HookParser.start()
                 parser = Mock()
+                parser.__enter__ = Mock(return_value=parser)
+                parser.__exit__ = Mock(return_value=False)
                 parser.event.return_value = 'Mocked Event'
                 parser.run_event_actions.return_value = (0, 'All OK')
                 parser.run_event_hooks.return_value = (0, 'All OK')
                 HookParser.return_value = parser
 
-                response = client.post(
+                response = self.client.post(
                     '/', data=hook_data, headers=hook_headers
                 )
                 ping_data = {
@@ -61,13 +58,12 @@ with description('Application Requests'):
                 HookParser.stop()
 
         with it('Must make an abort response with hook parser message'):
-            from os.path import abspath, normpath, dirname, join
+            from hookshub.parser import HookParser
+            from os.path import join
             from json import loads, dumps
 
-            my_path = normpath(abspath(dirname(__file__)))
-            project_path = dirname(my_path)  # Project Directory
-
-            data_path = join(project_path, 'test_data', 'github', 'gollum.json')
+            data_path = join(
+                self.project_path, 'test_data', 'github', 'gollum.json')
             with open(data_path, 'r') as f:
                 hook_data = dumps(loads(f.read()))
             hook_headers = {
@@ -75,18 +71,19 @@ with description('Application Requests'):
                 'Content-Length': len(hook_data)
             }
             hook_headers = loads(dumps(hook_headers))
-            global client
 
             with patch('hookshub.listener.HookParser') as HookParser:
                 HookParser.start()
-                parser = Mock()
+                parser = HookParser()
+                parser.__enter__ = Mock(return_value=parser)
+                parser.__exit__ = Mock(return_value=False)
                 parser.event.return_value = 'Mocked Event'
                 parser.run_event_actions.return_value = (-1, 'All Bad')
                 parser.run_event_hooks.return_value = (-1, 'All Bad')
                 HookParser.return_value = parser
 
-                response = client.post('/', data=hook_data,
-                                       headers=hook_headers)
+                response = self.client.post('/', data=hook_data,
+                                            headers=hook_headers)
                 ping_data = {
                     'msg': 'pong'
                 }
@@ -97,14 +94,11 @@ with description('Application Requests'):
                 HookParser.stop()
 
         with it('Must make an abort response with bad hook data'):
-            from os.path import abspath, normpath, dirname, join
+            from os.path import join
             from json import loads, dumps
 
-            my_path = normpath(abspath(dirname(__file__)))
-            project_path = dirname(my_path)  # Project Directory
-
             data_path = join(
-                project_path, 'test_data', 'github', 'bad_push.json'
+                self.project_path, 'test_data', 'github', 'bad_push.json'
             )
             with open(data_path, 'r') as f:
                 hook_data = dumps(loads(f.read()))
@@ -113,11 +107,10 @@ with description('Application Requests'):
                 'Content-Length': len(hook_data)
             }
             hook_headers = loads(dumps(hook_headers))
-            global client
             with patch('hookshub.listener.loads') as load:
                 load.side_effect = Exception('Mocked Bad JSON Data')
-                response = client.post('/', data=hook_data,
-                                           headers=hook_headers)
+                response = self.client.post('/', data=hook_data,
+                                            headers=hook_headers)
                 ping_data = {
                     'msg': 'pong'
                 }
