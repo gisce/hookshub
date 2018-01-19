@@ -156,10 +156,8 @@ def index():
         pf.write(dumps(payload))
 
     # Use HooksHub to run actions
-    global pool
-    if not ('pool' in globals()):
-        pool = None
-    parser = HookParser(tmpfile, event, pool)
+    processes_per_task = config.get('processes', False)
+    parser = HookParser(tmpfile, event=event, procs=processes_per_task)
 
     log_out = ('Processing: {}...'.format(parser.event))
 

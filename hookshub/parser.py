@@ -79,13 +79,13 @@ def log_hook_result(res):
 
 
 class HookParser(object):
-    def __init__(self, payload_file, event, pool=Pool(1)):
+    def __init__(self, payload_file, event, procs=False):
         self.event = event
         self.payload = {}
         with open(payload_file, 'r') as jsf:
             self.payload = json.loads(jsf.read())
         self.logger = logging.getLogger('__main__')
-        self.pool = pool
+        self.procs = int(procs)
         self.hook = self.instancer(self.payload)
 
     @staticmethod
@@ -121,17 +121,26 @@ class HookParser(object):
         ], **def_conf)
         timeout = int(conf.get('action_timeout'))
         i = 0
+        # Do a pool with specified procs OR a proc for each action
+        procs = self.procs or len(self.hook.event_actions)
+        if not procs:
+            # If no tasks to do → do nothing
+            return 0, log
         if self.logger:
             self.logger.error('Executing {} actions for event: {}\n'.format(
                 len(self.hook.event_actions), self.hook.event
             ))
+            self.logger.info('Running actions on {} processes'.format(
+                procs
+            ))
+        pool = Pool(processes=procs)
         for action in self.hook.event_actions:
             i += 1
             if self.logger:
                 self.logger.error('[Running: <{0}/{1}> - {2}]\n'.format(
                     i, len(self.hook.event_actions), action)
                 )
-            proc = self.pool.apply_async(
+            proc = pool.apply_async(
                 run_action, args=(action, self.hook, conf),
                 callback=log_result
             )
@@ -177,10 +186,19 @@ class HookParser(object):
         hooks = self.load_hooks(
             self.hook.event, self.hook.repo_name, self.hook.branch_name
         )
+        # Do a pool with specified procs OR a proc for each action
+        procs = self.procs or len(self.hook.event_actions)
+        if not procs:
+            # If no tasks to do → do nothing
+            return 0, log
         if self.logger:
             self.logger.error('Executing {} hooks for event: {}\n'.format(
                 len(hooks), self.hook.event
             ))
+            self.logger.info('Running actions on {} processes'.format(
+                procs
+            ))
+        pool = Pool(processes=procs)
         for action_name, action in hooks:
             i += 1
             if self.logger:
@@ -188,7 +206,7 @@ class HookParser(object):
                     i, len(hooks), action_name)
                 )
             args = action.get_args(self.hook, conf)
-            proc = self.pool.apply_async(
+            proc = pool.apply_async(
                 action.run_hook, args=(args,),
                 callback=log_hook_result
             )
