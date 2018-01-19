@@ -1,1 +1,1 @@
-{"hook": "webhook", "test": "True"}
+{"hook": "webhook", "test": "True", "event": "default_event"}

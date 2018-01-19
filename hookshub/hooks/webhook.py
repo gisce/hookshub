@@ -26,7 +26,7 @@ class webhook(object):
 
     @property
     def event(self):
-        return 'default_event'
+        return self.json['event']
 
     @property
     def actions(self):
