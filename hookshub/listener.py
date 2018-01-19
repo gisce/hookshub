@@ -56,17 +56,6 @@ def close_worker(signum, frame):
     return SIGQUIT
 
 
-def init_worker():
-    '''
-    This method initializes the workers from the action pool.
-    Basically this makes SIGINT to be 'ignored' so it can be catched in the
-    parent process.
-    '''
-    signal.signal(signal.SIGTERM, close_worker)
-    signal.signal(signal.SIGINT, close_worker)
-    signal.signal(signal.SIGQUIT, close_worker)
-
-
 def get_args():
     '''
     Parse arguments from sys.argv. Expected Arguments are:
@@ -197,19 +186,14 @@ def start_listening(host_ip=DEFAULT_IP,
             config = loads(cfg.read())
     else:
         config = {}
-    sentry = Sentry(application)
+    config.update({'processes': config.get('processes', False) or proc_num})
     logging.getLogger(__name__).info(
-        'Start Listening on {}:{} with {} procs'.format(
+        'Start Listening on {}:{} with {} procs per task'.format(
             host_ip, host_port, proc_num
         )
     )
-    global pool
-    pool = Pool(processes=proc_num, initializer=init_worker)
-    try:
-        application.run(debug=False, host=host_ip, port=host_port)
-    finally:
-        pool.terminate()
-        pool.close()
+    sentry = Sentry(application)
+    application.run(debug=False, host=host_ip, port=host_port)
 
 
 logging.basicConfig(format='%(asctime)s %(message)s',
