@@ -2,6 +2,7 @@ from os.path import abspath, normpath, dirname, join
 from json import loads
 from hookshub.parser import HookParser
 from expects import *
+from mamba import *
 from mock import patch, Mock
 
 my_path = normpath(abspath(dirname(__file__)))
@@ -9,6 +10,20 @@ project_path = dirname(my_path)              # Project Directory
 data_path = join(project_path, 'test_data')  # Test Directory
 
 with description('Hook Parser'):
+    with it('must use context manager and remove the payload file on exit'):
+        from os.path import join, isfile
+        from hookshub.parser import TempDir
+        with TempDir() as tmpdir:
+            filepath = join(tmpdir.dir, 'test_file')
+            with open(filepath, 'w') as tmp_data:
+                with open(join(
+                        data_path, join('webhook', 'default_event')
+                ), 'r') as hook_data_path:
+                    tmp_data.write(hook_data_path.read())
+            with HookParser(filepath, 'default_event') as p:
+                pass
+            expect(isfile(filepath)).to(be_false)
+
     with context('Webhook test data'):
         with it('must return a hook with "webhook" origin on instancer method'):
             webhook_data_path = join(
