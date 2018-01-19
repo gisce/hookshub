@@ -81,12 +81,16 @@ def log_hook_result(res):
 class HookParser(object):
     def __init__(self, payload_file, event, procs=False):
         self.event = event
-        self.payload = {}
-        with open(payload_file, 'r') as jsf:
-            self.payload = json.loads(jsf.read())
+        self.payload_file = payload_file
         self.logger = logging.getLogger('__main__')
         self.procs = int(procs)
         self.hook = self.instancer(self.payload)
+
+    @property
+    def payload(self):
+        with open(self.payload_file, 'r') as jsf:
+            payload = json.loads(jsf.read())
+        return payload
 
     @staticmethod
     def load_hooks(event=False, repository=False, branch=False):
