@@ -86,6 +86,13 @@ class HookParser(object):
         self.procs = int(procs)
         self.hook = self.instancer(self.payload)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        from os import remove
+        remove(self.payload_file)
+
     @property
     def payload(self):
         with open(self.payload_file, 'r') as jsf:
