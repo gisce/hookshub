@@ -275,6 +275,45 @@ with description('Hook Parser'):
 
                 logging.stop()
 
+        with it('must timout running all actions'):
+            default_conf = {
+                'github_token': 'GHT',
+                'gitlab_token': 'GLT',
+                'vhost_path': 'VHP'
+            }
+            webhook_data_path = join(
+                data_path, join('webhook', 'default_event')
+            )
+            with open(
+                    join(data_path, 'utils', 'async_timeout.log'), 'r'
+            ) as log_file:
+                expected_log = log_file.read()
+            with patch('hookshub.parser.logging') as logging:
+                logging.start()
+                logging.basicConfig.return_value = True
+                logging.info = True
+                logger = Mock()
+                logger.info.return_value = True
+                logger.error.return_value = True
+                logging.getLogger.return_value = logger
+                with patch('hookshub.parser.Pool') as pooler:
+                    proc = Mock()
+                    proc.wait.return_value = True
+                    proc.ready.return_value = False
+
+                    pool = Mock()
+                    pool.apply_async.return_value = proc
+
+                    pooler.start()
+                    pooler.return_value = pool
+                    parser = HookParser(webhook_data_path,
+                                        event='default_event',
+                                        procs=1)
+                    res = parser.run_event_actions(def_conf=default_conf)
+                    expect(res).to(equal(
+                        (0, expected_log)
+                    ))
+
     with context('Load Hooks (Plugins):'):
         with it('must get a list of hooks from HooksManager'):
             with patch('hookshub.hook.get_hooks') as get_hook_mock:
