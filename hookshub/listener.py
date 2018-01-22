@@ -1,5 +1,4 @@
 from __future__ import print_function
-from multiprocessing import Pool
 from copy_reg import pickle
 from types import MethodType
 import logging
@@ -8,7 +7,7 @@ import signal
 from json import loads, dumps
 from tempfile import mkstemp
 from sys import argv
-from os import remove, fdopen
+from os import fdopen
 from os.path import abspath, normpath, dirname, join
 
 from flask import Flask, request, abort, jsonify
@@ -39,32 +38,6 @@ class AbortException(Exception):
         msg = 'Internal Server Error\n{}'.format(msg)
         self.message = msg
         self.code = 500
-
-
-def close_worker(signum, frame):
-    from os import getpid
-    from signal import SIGTERM, SIGINT, SIGQUIT
-    sig = 'TERM' if signum == SIGTERM else (
-        'INT' if signum == SIGINT else (
-            'QUIT' if signum == SIGQUIT else 'UNKNOWN'
-        )
-    )
-    log = logging.getLogger(__name__)
-    log.warning('Stopping worker {} with: SIG{}'.format(
-        getpid(), sig
-    ))
-    return SIGQUIT
-
-
-def init_worker():
-    '''
-    This method initializes the workers from the action pool.
-    Basically this makes SIGINT to be 'ignored' so it can be catched in the
-    parent process.
-    '''
-    signal.signal(signal.SIGTERM, close_worker)
-    signal.signal(signal.SIGINT, close_worker)
-    signal.signal(signal.SIGQUIT, close_worker)
 
 
 def get_args():
@@ -156,33 +129,30 @@ def index():
         pf.write(dumps(payload))
 
     # Use HooksHub to run actions
-    global pool
-    if not ('pool' in globals()):
-        pool = None
-    parser = HookParser(tmpfile, event, pool)
+    processes_per_task = config.get('processes', False)
+    with HookParser(
+            payload_file=tmpfile,
+            event=event,
+            procs=processes_per_task
+    ) as parser:
+        code_actions, output_actions = parser.run_event_actions(config)
 
-    log_out = ('Processing: {}...'.format(parser.event))
+        code_hooks, output_hooks = parser.run_event_hooks(config)
 
-    code, output = parser.run_event_actions(config)
-    output = '{0}|{1}'.format(log_out, output)
-    if code:  # Error executing actions
-        output = 'Fail with {}\n{}'.format(event, output)
-    else:  # All ok
-        output = 'Success with {}\n{}'.format(event, output)
-
-    code_hooks, output_hooks = parser.run_event_hooks(config)
-
-    # Remove temporal file
-    remove(tmpfile)
-
-    output_hooks = '{0}|{1}'.format(log_out, output_hooks)
-    if code_hooks:  # Error executing actions
-        output = '{}\nFail with {}\n{}'.format(
-            output, event, output_hooks)
-    else:  # All ok
-        output = '{}\nSuccess with {}\n{}'.format(
-            output, event, output_hooks)
-    if code or code_hooks:
+    # Log Header (one for actions and one for hooks)
+    log_out = ('Processing: {} '.format(parser.event))
+    # Log Actions
+    result = 'Fail' if code_actions else 'Success'
+    output_actions = '{0} actions|{1}'.format(log_out, output_actions)
+    output_actions = '{}\n{} with {} on {}'.format(
+        output_actions, result, code_actions, event)
+    # Log Hooks
+    result = 'Fail' if code_hooks else 'Success'
+    output_hooks = '{0} hooks|{1}'.format(log_out, output_hooks)
+    output_hooks = '{}\n{} with {} on {}'.format(
+        output_hooks, result, code_hooks, event)
+    output = output_actions + '\n' + output_hooks
+    if code_actions or code_hooks:
         raise AbortException(output)
     return dumps({'msg': output})
 
@@ -199,19 +169,14 @@ def start_listening(host_ip=DEFAULT_IP,
             config = loads(cfg.read())
     else:
         config = {}
-    sentry = Sentry(application)
+    config.update({'processes': config.get('processes', False) or proc_num})
     logging.getLogger(__name__).info(
-        'Start Listening on {}:{} with {} procs'.format(
+        'Start Listening on {}:{} with {} procs per task'.format(
             host_ip, host_port, proc_num
         )
     )
-    global pool
-    pool = Pool(processes=proc_num, initializer=init_worker)
-    try:
-        application.run(debug=False, host=host_ip, port=host_port)
-    finally:
-        pool.terminate()
-        pool.close()
+    sentry = Sentry(application)
+    application.run(debug=False, host=host_ip, port=host_port)
 
 
 logging.basicConfig(format='%(asctime)s %(message)s',

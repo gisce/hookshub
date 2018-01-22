@@ -2,6 +2,7 @@ from os.path import abspath, normpath, dirname, join
 from json import loads
 from hookshub.parser import HookParser
 from expects import *
+from mamba import *
 from mock import patch, Mock
 
 my_path = normpath(abspath(dirname(__file__)))
@@ -9,6 +10,34 @@ project_path = dirname(my_path)              # Project Directory
 data_path = join(project_path, 'test_data')  # Test Directory
 
 with description('Hook Parser'):
+    with it('must use context manager and remove the payload file on exit'):
+        from os.path import join, isfile
+        from hookshub.parser import TempDir
+        with TempDir() as tmpdir:
+            filepath = join(tmpdir.dir, 'test_file')
+            with open(filepath, 'w') as tmp_data:
+                with open(join(
+                        data_path, join('webhook', 'default_event')
+                ), 'r') as hook_data_path:
+                    tmp_data.write(hook_data_path.read())
+            with HookParser(filepath, 'default_event') as p:
+                pass
+            expect(isfile(filepath)).to(be_false)
+
+    with context('No data for hooks'):
+        with it('must run no hooks or actions'):
+            fake_datapath = join(
+                    data_path, join('webhook', 'fake_event')
+                )
+            config_file = join(data_path, 'webhook', 'conf.json')
+            with open(config_file, 'r') as conf:
+                config = loads(conf.read())
+            parser = HookParser(fake_datapath, 'fake_event')
+            expect(parser.hook.event).to(equal('fake_event'))
+            expect(parser.event).to(equal('fake_event'))
+            parser.run_event_hooks(config)
+            parser.run_event_actions(config)
+
     with context('Webhook test data'):
         with it('must return a hook with "webhook" origin on instancer method'):
             webhook_data_path = join(
@@ -28,12 +57,14 @@ with description('Hook Parser'):
                     config = loads(conf.read())
                 with patch("hookshub.parser.Pool") as pool:
                     pool.start()
+                    action_return = ('All Ok\n', '', 0, 0)
                     apply_async = Mock()
                     apply_async.wait.return_value = True
                     apply_async.ready.return_value = True
-                    action_return = ['All Ok\n', '', 0, 0]
                     apply_async.get.return_value = action_return
-                    pool.apply_async.return_value = apply_async
+                    pool_mock = Mock()
+                    pool_mock.apply_async.return_value = apply_async
+                    pool.return_value = pool_mock
                     with patch('hookshub.parser.logging') as logging:
                         logging.start()
                         logging.basicConfig.return_value = True
@@ -43,9 +74,11 @@ with description('Hook Parser'):
                         logger.error.return_value = True
                         logging.getLogger.return_value = logger
 
-                        parser = HookParser(webhook_data_path, 'default_event')
+                        parser = HookParser(
+                            payload_file=webhook_data_path,
+                            event='default_event',
+                            procs=0)
                         parser.logger = logger
-                        parser.pool = pool
                         result, log = parser.run_event_actions(config)
                         expect(result).to(equal(0))
                         logging.stop()
@@ -59,25 +92,26 @@ with description('Hook Parser'):
                 config_file = join(data_path, 'webhook', 'conf.json')
                 with open(config_file, 'r') as conf:
                     config = loads(conf.read())
-                with patch("hookshub.parser.Pool") as pool:
-                    with patch('hookshub.parser.logging') as logging:
-                        logging.start()
-                        logging.basicConfig.return_value = True
-                        logging.info = True
-                        logger = Mock()
-                        logger.info.return_value = True
-                        logger.error.return_value = True
-                        logging.getLogger.return_value = logger
+                with patch('hookshub.parser.logging') as logging:
+                    logging.start()
+                    logging.basicConfig.return_value = True
+                    logging.info = True
+                    logger = Mock()
+                    logger.info.return_value = True
+                    logger.error.return_value = True
+                    logging.getLogger.return_value = logger
 
+                    with patch("hookshub.parser.Pool") as pool:
                         parser = HookParser(webhook_data_path, 'default_event')
                         parser.logger = logger
-                        action_return = ['All Bad\n', '', -1, 0]
-                        pool.start()
+                        action_return = ('All Bad\n', '', -1, 0)
                         apply_async = Mock()
                         apply_async.wait.return_value = True
                         apply_async.ready.return_value = True
                         apply_async.get.return_value = action_return
-                        pool.apply_async.return_value = apply_async
+                        pool_mock = Mock()
+                        pool_mock.apply_async.return_value = apply_async
+                        pool.return_value = pool_mock
                         parser.pool = pool
                         result, log = parser.run_event_actions(config)
                         expect(result).to(equal(-1))
@@ -93,25 +127,27 @@ with description('Hook Parser'):
                 config_file = join(data_path, 'webhook', 'conf.json')
                 with open(config_file, 'r') as conf:
                     config = loads(conf.read())
-                with patch("hookshub.parser.Pool") as pool:
-                    with patch('hookshub.parser.logging') as logging:
-                        logging.start()
-                        logging.basicConfig.return_value = True
-                        logging.info = True
-                        logger = Mock()
-                        logger.info.return_value = True
-                        logger.error.return_value = True
-                        logging.getLogger.return_value = logger
+                with patch('hookshub.parser.logging') as logging:
+                    logging.start()
+                    logging.basicConfig.return_value = True
+                    logging.info = True
+                    logger = Mock()
+                    logger.info.return_value = True
+                    logger.error.return_value = True
+                    logging.getLogger.return_value = logger
+
+                    with patch("hookshub.parser.Pool") as pool:
 
                         parser = HookParser(webhook_data_path, 'default_event')
                         parser.logger = logger
-                        action_return = ['All Ok\n', '', 0, 0]
-                        pool.start()
+                        action_return = ('All Ok\n', '', 0, 0)
                         apply_async = Mock()
                         apply_async.wait.return_value = True
-                        apply_async.ready.return_value = False
-                        pool.apply_async.return_value = apply_async
-                        parser.pool = pool
+                        apply_async.ready.return_value = True
+                        apply_async.get.return_value = action_return
+                        pool_mock = Mock()
+                        pool_mock.apply_async.return_value = apply_async
+                        pool.return_value = pool_mock
                         result, log = parser.run_event_actions(config)
                         expect(result).to(equal(0))
                         logging.stop()
@@ -239,6 +275,45 @@ with description('Hook Parser'):
 
                 logging.stop()
 
+        with it('must timout running all actions'):
+            default_conf = {
+                'github_token': 'GHT',
+                'gitlab_token': 'GLT',
+                'vhost_path': 'VHP'
+            }
+            webhook_data_path = join(
+                data_path, join('webhook', 'default_event')
+            )
+            with open(
+                    join(data_path, 'utils', 'async_timeout.log'), 'r'
+            ) as log_file:
+                expected_log = log_file.read()
+            with patch('hookshub.parser.logging') as logging:
+                logging.start()
+                logging.basicConfig.return_value = True
+                logging.info = True
+                logger = Mock()
+                logger.info.return_value = True
+                logger.error.return_value = True
+                logging.getLogger.return_value = logger
+                with patch('hookshub.parser.Pool') as pooler:
+                    proc = Mock()
+                    proc.wait.return_value = True
+                    proc.ready.return_value = False
+
+                    pool = Mock()
+                    pool.apply_async.return_value = proc
+
+                    pooler.start()
+                    pooler.return_value = pool
+                    parser = HookParser(webhook_data_path,
+                                        event='default_event',
+                                        procs=1)
+                    res = parser.run_event_actions(def_conf=default_conf)
+                    expect(res).to(equal(
+                        (0, expected_log)
+                    ))
+
     with context('Load Hooks (Plugins):'):
         with it('must get a list of hooks from HooksManager'):
             with patch('hookshub.hook.get_hooks') as get_hook_mock:
@@ -290,8 +365,9 @@ with description('Hook Parser'):
                         get_hook_list = [('hook_name', hook_used)]
                         get_hook_mock.return_value = get_hook_list
 
-                        parser = HookParser(webhook_data_path, 'default_event',
-                                            pool=pooler())
+                        parser = HookParser(webhook_data_path,
+                                            event='default_event',
+                                            procs=1)
                         res = parser.run_event_hooks(def_conf=default_conf)
                         expected_code = 0
                         expected_log = '[hook_name]:Success!\n'
@@ -336,8 +412,9 @@ with description('Hook Parser'):
                         get_hook_list = [('hook_name', hook_used)]
                         get_hook_mock.return_value = get_hook_list
 
-                        parser = HookParser(webhook_data_path, 'default_event',
-                                            pool=pooler())
+                        parser = HookParser(webhook_data_path,
+                                            event='default_event',
+                                            procs=1)
                         res = parser.run_event_hooks(def_conf=default_conf)
                         expected_code = 0
                         expected_log = '[hook_name]:Success!\n'
@@ -382,8 +459,9 @@ with description('Hook Parser'):
                         get_hook_list = [('hook_name', hook_used)]
                         get_hook_mock.return_value = get_hook_list
 
-                        parser = HookParser(webhook_data_path, 'default_event',
-                                            pool=pooler())
+                        parser = HookParser(webhook_data_path,
+                                            event='default_event',
+                                            procs=1)
                         res = parser.run_event_hooks(def_conf=default_conf)
                         expected_code = -1
                         expected_log = '[hook_name]:Failed!\n'
